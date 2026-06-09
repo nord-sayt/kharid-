@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بازارنو — خرید و فروش آنلاین ایران</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root {
+  --g0: #04342C;
+  --g1: #085041;
+  --g2: #0F6E56;
+  --g3: #1D9E75;
+  --g4: #5DCAA5;
+  --g5: #9FE1CB;
+  --g6: #E1F5EE;
+  --red: #E24B4A;
+  --red-l: #fff0f0;
+  --amber: #EF9F27;
+  --amber-l: #fef9ee;
+  --bg: #F2F4F3;
+  --surface: #ffffff;
+  --surface2: #F8FAF9;
+  --text: #111714;
+  --text2: #4A5550;
+  --text3: #8A9690;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.13);
+  --r: 14px;
+  --r-sm: 8px;
+  --r-pill: 999px;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.06);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
+  --shadow-green: 0 6px 24px rgba(29,158,117,0.3);
+}
+
+/* ══════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 15px; }
+body { font-family: 'Vazirmatn', sans-serif; direction: rtl; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { text-decoration: none; color: inherit; }
+button { font-family: 'Vazirmatn', sans-serif; cursor: pointer; }
+input, select, textarea { font-family: 'Vazirmatn', sans-serif; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: #cdd5d0; border-radius: 4px; }
+::selection { background: var(--g6); color: var(--g2); }
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  height: 66px; padding: 0 2rem;
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+.logo { font-size: 21px; font-weight: 700; color: var(--g2); letter-spacing: -0.5px; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g3); display: inline-block; margin-bottom: 1px; }
+.logo em { color: var(--text2); font-style: normal; font-weight: 400; }
+
+/* search */
+.nav-search { flex: 1; max-width: 500px; position: relative; }
+.nav-search input {
+  width: 100%; height: 42px; padding: 0 44px 0 16px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--r-pill);
+  font-size: 13px; background: var(--bg); color: var(--text);
+  transition: all .2s;
+}
+.nav-search input:focus { outline: none; border-color: var(--g3); background: #fff; box-shadow: 0 0 0 4px rgba(29,158,117,0.1); }
+.nav-search .search-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 18px; pointer-events: none; }
+.nav-search .clear-btn { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: var(--text3); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center; }
+.nav-search input:not(:placeholder-shown) ~ .clear-btn { display: flex; }
+
+.nav-spacer { flex: 1; }
+.nav-pill-link { padding: 8px 14px; border: none; background: none; color: var(--text2); font-size: 13px; border-radius: var(--r-sm); transition: .15s; }
+.nav-pill-link:hover { background: var(--g6); color: var(--g2); }
+.nav-pill-link.on { color: var(--g2); font-weight: 600; }
+.btn-new {
+  height: 40px; padding: 0 20px; border: none;
+  background: var(--g3); color: #fff;
+  border-radius: var(--r-pill); font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  box-shadow: var(--shadow-green); transition: all .2s;
+}
+.btn-new:hover { background: var(--g2); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(29,158,117,0.38); }
+.btn-new:active { transform: none; }
+
+/* ══════════════════════════════════════
+   PAGES
+══════════════════════════════════════ */
+.page { display: none; }
+.page.on { display: block; }
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero {
+  background: var(--g1);
+  padding: 56px 2rem 64px;
+  text-align: center; color: #fff;
+  position: relative; overflow: hidden;
+}
+/* subtle mesh */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0; opacity: .12;
+  background-image: radial-gradient(circle at 20% 50%, var(--g4) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, var(--g3) 0%, transparent 40%),
+                    radial-gradient(circle at 60% 80%, var(--g5) 0%, transparent 35%);
+}
+.hero > * { position: relative; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--r-pill); padding: 5px 16px 5px 12px;
+  font-size: 12px; color: rgba(255,255,255,.9);
+  margin-bottom: 1.5rem;
+}
+.hero-eyebrow .dot2 { width: 6px; height: 6px; border-radius: 50%; background: var(--g4); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.hero h1 { font-size: 38px; font-weight: 700; letter-spacing: -1px; line-height: 1.2; margin-bottom: 12px; }
+.hero h1 span { color: var(--g4); }
+.hero-sub { font-size: 15px; opacity: .75; margin-bottom: 2.5rem; }
+
+/* hero search bar */
+.hero-searchbar {
+  max-width: 580px; margin: 0 auto 3rem;
+  display: flex; background: #fff; border-radius: var(--r-pill);
+  box-shadow: 0 16px 48px rgba(0,0,0,.22);
+  overflow: hidden; border: 2px solid rgba(255,255,255,.3);
+}
+.hero-searchbar input {
+  flex: 1; padding: 0 22px; height: 56px; border: none; outline: none;
+  font-size: 14px; color: var(--text); background: transparent;
+}
+.hero-searchbar select {
+  border: none; border-right: 1px solid var(--border); outline: none;
+  padding: 0 14px; font-size: 13px; color: var(--text2); background: var(--surface2);
+  cursor: pointer; min-width: 110px;
+}
+.hero-searchbar button {
+  background: var(--g3); color: #fff; border: none;
+  padding: 0 28px; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  transition: .2s;
+}
+.hero-searchbar button:hover { background: var(--g2); }
+
+/* hero stats */
+.hero-stats { display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap; }
+.hstat .n { font-size: 26px; font-weight: 700; color: var(--g4); }
+.hstat .l { font-size: 12px; opacity: .65; margin-top: 2px; }
+
+.hero-wave { display: block; color: var(--bg); margin-top: -1px; }
+
+/* ══════════════════════════════════════
+   CATS
+══════════════════════════════════════ */
+.cats-wrap { padding: 2rem 2rem 0; max-width: 1120px; margin: 0 auto; }
+.sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.sec-title { font-size: 16px; font-weight: 700; }
+.link-all { font-size: 13px; color: var(--g3); background: none; border: none; display: flex; align-items: center; gap: 3px; }
+.link-all:hover { color: var(--g2); }
+.cats-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+.cats-scroll::-webkit-scrollbar { display: none; }
+.cat-chip {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px; gap: 7px;
+  white-space: nowrap; font-size: 12px; color: var(--text2);
+  min-width: 80px; transition: all .18s; flex-shrink: 0;
+}
+.cat-chip .ci { font-size: 22px; }
+.cat-chip:hover { border-color: var(--g3); color: var(--g2); transform: translateY(-2px); box-shadow: var(--shadow); }
+.cat-chip.on { border-color: var(--g3); background: var(--g6); color: var(--g2); font-weight: 600; box-shadow: 0 0 0 3px rgba(29,158,117,.12); }
+
+/* ══════════════════════════════════════
+   TOOLBAR
+══════════════════════════════════════ */
+.toolbar-wrap { padding: 1.5rem 2rem .75rem; max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.res-label { font-size: 15px; font-weight: 600; }
+.res-count { background: var(--g6); color: var(--g2); border-radius: var(--r-pill); padding: 3px 11px; font-size: 12px; font-weight: 600; }
+.sort-row { display: flex; gap: 6px; }
+.sort-btn {
+  border: 1.5px solid var(--border2); border-radius: var(--r-pill);
+  padding: 6px 14px; font-size: 12px; background: var(--surface); color: var(--text2); transition: .15s;
+}
+.sort-btn:hover { border-color: var(--g3); color: var(--g2); }
+.sort-btn.on { border-color: var(--g3); background: var(--g6); color: var(--g2); font-weight: 600; }
+
+/* ══════════════════════════════════════
+   GRID
+══════════════════════════════════════ */
+.grid-wrap { padding: 0 2rem 3rem; max-width: 1120px; margin: 0 auto; }
+.ads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+
+/* ── card ── */
+.ad-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r); overflow: hidden; cursor: pointer;
+  transition: all .2s; display: flex; flex-direction: column;
+}
+.ad-card:hover { border-color: var(--g3); box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+.ad-img {
+  aspect-ratio: 1; background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px; position: relative; overflow: hidden;
+}
+.ad-img-inner { transition: transform .25s; }
+.ad-card:hover .ad-img-inner { transform: scale(1.08); }
+.cond-badge {
+  position: absolute; bottom: 8px; right: 8px;
+  font-size: 10px; padding: 3px 10px; border-radius: var(--r-pill); font-weight: 600;
+}
+.cb-new { background: var(--g3); color: #fff; }
+.cb-good { background: #fff3cd; color: #6b4c00; border: 1px solid #ffc10740; }
+.cb-used { background: #e8edf0; color: #3a5060; }
+.cb-fix { background: var(--red-l); color: var(--red); border: 1px solid rgba(226,75,74,.2); }
+.fav-btn {
+  position: absolute; top: 9px; left: 9px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.82); border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--text3); transition: .15s;
+  backdrop-filter: blur(6px);
+}
+.fav-btn:hover { color: var(--red); transform: scale(1.12); }
+.fav-btn.on { color: var(--red); }
+.ad-body { padding: 13px; flex: 1; display: flex; flex-direction: column; }
+.ad-title { font-size: 13px; font-weight: 500; line-height: 1.5; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+.ad-location { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.ad-location i { font-size: 12px; }
+.ad-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.ad-price { font-size: 15px; font-weight: 700; color: var(--g2); line-height: 1.2; }
+.ad-price small { display: block; font-size: 10px; color: var(--text3); font-weight: 400; margin-top: 1px; }
+.ad-price.neg small::after { content: ' · توافقی'; color: var(--g4); }
+.see-btn {
+  width: 32px; height: 32px; flex-shrink: 0;
+  background: var(--g6); border: none; border-radius: 50%;
+  color: var(--g2); display: flex; align-items: center; justify-content: center;
+  font-size: 15px; transition: .15s;
+}
+.ad-card:hover .see-btn { background: var(--g3); color: #fff; }
+
+/* ── skeleton ── */
+.skeleton { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.skel-img { aspect-ratio: 1; background: linear-gradient(90deg, var(--surface2) 25%, #eef1ef 50%, var(--surface2) 75%); background-size: 200%; animation: shimmer 1.4s infinite; }
+.skel-line { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--surface2) 25%, #eef1ef 50%, var(--surface2) 75%); background-size: 200%; animation: shimmer 1.4s infinite; margin: 12px 13px 6px; }
+.skel-line.short { width: 55%; margin-top: 4px; }
+.skel-line.price { width: 40%; margin-top: 8px; height: 16px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ── empty ── */
+.empty-state { grid-column: 1/-1; text-align: center; padding: 5rem 2rem; color: var(--text3); }
+.empty-state .big-icon { font-size: 56px; display: block; margin-bottom: 14px; }
+.empty-state h3 { font-size: 18px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.empty-state p { font-size: 14px; line-height: 1.7; }
+.empty-state .btn-first { margin-top: 1.5rem; display: inline-flex; align-items: center; gap: 7px; background: var(--g3); color: #fff; border: none; border-radius: var(--r-pill); padding: 11px 24px; font-size: 14px; font-weight: 600; }
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+.modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-bg.on { display: flex; animation: fadeIn .2s; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal {
+  background: var(--surface); border-radius: 20px;
+  max-width: 540px; width: 100%; max-height: 92vh;
+  overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,.25);
+  animation: slideUp .25s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:none;opacity:1} }
+.modal-top { position: sticky; top: 0; background: var(--surface); padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 1; border-radius: 20px 20px 0 0; }
+.modal-top-title { font-size: 14px; font-weight: 600; }
+.modal-x { background: var(--surface2); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--text2); transition: .15s; }
+.modal-x:hover { background: var(--border2); }
+.modal-body { padding: 1.25rem; }
+.modal-hero-img { background: var(--surface2); border-radius: var(--r); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; font-size: 80px; margin-bottom: 1.25rem; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.modal-price-big { font-size: 26px; font-weight: 700; color: var(--g2); margin-bottom: .5rem; }
+.modal-price-big small { font-size: 14px; font-weight: 400; color: var(--text3); }
+.nego-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; background: var(--g6); color: var(--g2); border-radius: var(--r-pill); padding: 3px 12px; margin-bottom: 1rem; }
+.seller-row { display: flex; align-items: center; gap: 12px; background: var(--surface2); border-radius: var(--r-sm); padding: 13px; margin-bottom: 1rem; }
+.seller-ava { width: 44px; height: 44px; border-radius: 50%; background: var(--g6); color: var(--g2); display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700; flex-shrink: 0; }
+.seller-name { font-size: 14px; font-weight: 600; }
+.seller-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.dg-item { background: var(--surface2); border-radius: var(--r-sm); padding: 10px 13px; }
+.dg-item .dl { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+.dg-item .dv { font-size: 13px; font-weight: 500; }
+.desc-block { background: var(--surface2); border-radius: var(--r-sm); padding: 13px; font-size: 13px; line-height: 1.8; color: var(--text2); margin-bottom: 1.25rem; }
+.modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-call { background: var(--g3); color: #fff; border: none; border-radius: var(--r-sm); padding: 13px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 7px; transition: .2s; }
+.btn-call:hover { background: var(--g2); }
+.btn-save-m { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text2); border-radius: var(--r-sm); padding: 13px; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 7px; transition: .2s; }
+.btn-save-m:hover { border-color: var(--g3); color: var(--g2); }
+.views-tag { text-align: center; font-size: 11px; color: var(--text3); margin-top: 10px; }
+
+/* ══════════════════════════════════════
+   SELL PAGE
+══════════════════════════════════════ */
+.sell-wrap { max-width: 680px; margin: 0 auto; padding: 2rem; }
+.sell-pg-head { margin-bottom: 1.75rem; }
+.sell-pg-head h2 { font-size: 22px; font-weight: 700; }
+.sell-pg-head p { font-size: 13px; color: var(--text3); margin-top: 5px; }
+
+/* progress */
+.progress-bar { display: flex; gap: 0; margin-bottom: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-pill); overflow: hidden; }
+.pb-step { flex: 1; text-align: center; padding: 10px 6px; font-size: 12px; color: var(--text3); position: relative; transition: .2s; }
+.pb-step.done { background: var(--g6); color: var(--g2); font-weight: 600; }
+.pb-step .pn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--border2); color: #fff; font-size: 10px; margin-left: 5px; }
+.pb-step.done .pn { background: var(--g3); }
+
+/* card-step */
+.step-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); padding: 1.5rem; margin-bottom: 12px; }
+.step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--g3); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-head-title { font-size: 15px; font-weight: 700; }
+.step-head-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* fields */
+.field { margin-bottom: 1rem; }
+.field:last-child { margin-bottom: 0; }
+.field > label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.req { color: var(--red); }
+.field input, .field textarea, .field select {
+  width: 100%; height: 44px; padding: 0 14px;
+  border: 1.5px solid var(--border2); border-radius: var(--r-sm);
+  font-size: 13px; background: #fff; color: var(--text);
+  transition: all .2s;
+}
+.field textarea { height: auto; padding: 12px 14px; resize: vertical; min-height: 100px; line-height: 1.7; }
+.field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--g3); box-shadow: 0 0 0 3px rgba(29,158,117,.1); }
+.field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; display: flex; align-items: center; justify-content: space-between; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* cond */
+.cond-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cond-opt {
+  border: 1.5px solid var(--border2); border-radius: var(--r-sm);
+  padding: 11px 13px; background: #fff; color: var(--text2);
+  display: flex; align-items: center; gap: 9px; font-size: 13px; transition: .15s;
+}
+.cond-opt .cico { font-size: 19px; }
+.cond-opt:hover { border-color: var(--g3); }
+.cond-opt.on { border-color: var(--g3); background: var(--g6); color: var(--g2); font-weight: 600; }
+
+/* upload */
+.upload-area {
+  border: 2px dashed var(--border2); border-radius: var(--r);
+  padding: 2.25rem 2rem; text-align: center; color: var(--text3);
+  cursor: pointer; transition: .2s;
+}
+.upload-area:hover { border-color: var(--g3); color: var(--g3); background: var(--g6); }
+.upload-area i { font-size: 34px; display: block; margin-bottom: 8px; }
+.upload-area .ut { font-size: 14px; font-weight: 600; color: var(--text2); }
+.upload-area .us { font-size: 12px; margin-top: 4px; }
+.thumb-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.thumb { width: 76px; height: 76px; border-radius: var(--r-sm); background: var(--surface2); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; position: relative; }
+.thumb .tdel { position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; border-radius: 50%; background: var(--red); color: #fff; border: 2px solid #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; transition: .15s; }
+.thumb .tdel:hover { background: #a32d2d; transform: scale(1.1); }
+
+/* submit */
+.submit-area { display: flex; gap: 10px; }
+.btn-post {
+  flex: 1; height: 52px; background: var(--g3); color: #fff;
+  border: none; border-radius: var(--r-pill);
+  font-size: 15px; font-weight: 700; transition: all .2s;
+  box-shadow: var(--shadow-green); display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-post:hover { background: var(--g2); transform: translateY(-1px); }
+.btn-cancel { height: 52px; padding: 0 22px; background: none; border: 1.5px solid var(--border2); border-radius: var(--r-pill); font-size: 14px; color: var(--text2); transition: .15s; }
+.btn-cancel:hover { border-color: var(--text2); }
+
+/* success */
+.success-wrap { max-width: 440px; margin: 5rem auto; text-align: center; padding: 2rem; }
+.success-ring { width: 96px; height: 96px; border-radius: 50%; background: var(--g6); display: flex; align-items: center; justify-content: center; font-size: 42px; margin: 0 auto 1.5rem; border: 3px solid var(--g4); }
+.success-wrap h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.success-wrap p { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: 1.5rem; }
+.success-info-card { background: var(--g6); border-radius: var(--r); padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: right; }
+.sic-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(29,158,117,.15); }
+.sic-row:last-child { border: none; }
+.sic-row .sl { color: var(--g2); font-weight: 500; }
+.btn-golist { background: var(--g3); color: #fff; border: none; border-radius: var(--r-pill); padding: 13px 32px; font-size: 15px; font-weight: 700; box-shadow: var(--shadow-green); }
+.btn-golist:hover { background: var(--g2); }
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; z-index: 999;
+  transform: translateX(-50%) translateY(100px);
+  background: #111; color: #fff;
+  padding: 13px 24px; border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,.28);
+  transition: transform .35s cubic-bezier(.34,1.4,.64,1);
+  pointer-events: none; display: flex; align-items: center; gap: 8px;
+  max-width: 360px; text-align: center;
+}
+.toast.on { transform: translateX(-50%) translateY(0); }
+.toast.ok { background: var(--g2); }
+.toast.err { background: #a32d2d; }
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+.footer { background: var(--g0); color: rgba(255,255,255,.75); padding: 3.5rem 2rem 2rem; margin-top: 4rem; }
+.footer-inner { max-width: 1120px; margin: 0 auto; }
+.footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; }
+.footer-logo { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.footer-logo em { opacity: .55; font-style: normal; }
+.footer-tagline { font-size: 13px; opacity: .6; line-height: 1.7; }
+.footer-col h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+.footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,.55); margin-bottom: 9px; transition: .15s; }
+.footer-col a:hover { color: var(--g4); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 1.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: rgba(255,255,255,.35); }
+.badges { display: flex; gap: 10px; }
+.badge-trust { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: var(--r-sm); padding: 6px 12px; font-size: 11px; color: rgba(255,255,255,.65); }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 700px) {
+  .nav { padding: 0 1rem; }
+  .nav-pill-link { display: none; }
+  .hero { padding: 36px 1rem 48px; }
+  .hero h1 { font-size: 26px; }
+  .hero-searchbar { flex-direction: column; border-radius: var(--r); }
+  .hero-searchbar select { border-right: none; border-top: 1px solid var(--border); }
+  .hero-searchbar button { padding: 14px; border-radius: 0 0 var(--r) var(--r); }
+  .cats-wrap, .toolbar-wrap, .grid-wrap, .sell-wrap { padding-left: 1rem; padding-right: 1rem; }
+  .two { grid-template-columns: 1fr; }
+  .cond-opts { grid-template-columns: 1fr 1fr; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+  .modal-btns { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ────────────────── NAV ────────────────── -->
+<nav class="nav">
+  <a class="logo" href="#"><span class="dot"></span>بازار<em>نو</em></a>
+  <div class="nav-search">
+    <i class="ti ti-search search-icon"></i>
+    <input type="text" id="navQ" placeholder="جستجو در آگهی‌ها...">
+    <button class="clear-btn" onclick="clearSearch()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="nav-spacer"></div>
+  <button class="nav-pill-link on" data-goto="home">خانه</button>
+  <button class="nav-pill-link" data-goto="sell">ثبت آگهی</button>
+  <button class="btn-new" id="navPostBtn"><i class="ti ti-plus" style="font-size:15px"></i> آگهی بده</button>
+</nav>
+
+<!-- ════════════════ HOME PAGE ════════════════ -->
+<div class="page on" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow"><span class="dot2"></span> بزرگ‌ترین بازارچه آنلاین ایران</div>
+    <h1>بفروش، <span>پیدا کن</span>,<br>بدون واسطه</h1>
+    <p class="hero-sub">آگهی رایگان بده — مستقیم با خریدار ارتباط بگیر</p>
+
+    <div class="hero-searchbar">
+      <input type="text" id="heroQ" placeholder="دنبال چی می‌گردی؟ مثلاً آیفون، کاناپه، دوچرخه...">
+      <select id="heroCat">
+        <option value="">همه دسته‌ها</option>
+        <option>موبایل و تبلت</option>
+        <option>کامپیوتر و لپ‌تاپ</option>
+        <option>لوازم خانگی</option>
+        <option>پوشاک و کفش</option>
+        <option>کتاب و تحصیل</option>
+        <option>خودرو و موتور</option>
+        <option>ورزش و سرگرمی</option>
+        <option>وسایل کودک</option>
+      </select>
+      <button onclick="doHeroSearch()"><i class="ti ti-search" style="font-size:16px"></i> جستجو</button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hstat"><div class="n" id="totalStat">—</div><div class="l">آگهی فعال</div></div>
+      <div class="hstat"><div class="n">رایگان</div><div class="l">ثبت آگهی</div></div>
+      <div class="hstat"><div class="n">امن</div><div class="l">بدون واسطه</div></div>
+    </div>
+  </section>
+  <svg class="hero-wave" viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,48 C480,0 960,0 1440,48 L1440,48 L0,48 Z" fill="var(--bg)"/></svg>
+
+  <!-- CATS -->
+  <div class="cats-wrap">
+    <div class="sec-head"><span class="sec-title">دسته‌بندی‌ها</span></div>
+    <div class="cats-scroll" id="catsRow">
+      <button class="cat-chip on" data-cat=""><span class="ci">🛍️</span>همه</button>
+      <button class="cat-chip" data-cat="موبایل و تبلت"><span class="ci">📱</span>موبایل</button>
+      <button class="cat-chip" data-cat="کامپیوتر و لپ‌تاپ"><span class="ci">💻</span>کامپیوتر</button>
+      <button class="cat-chip" data-cat="لوازم خانگی"><span class="ci">🏠</span>خانگی</button>
+      <button class="cat-chip" data-cat="پوشاک و کفش"><span class="ci">👗</span>پوشاک</button>
+      <button class="cat-chip" data-cat="کتاب و تحصیل"><span class="ci">📚</span>کتاب</button>
+      <button class="cat-chip" data-cat="خودرو و موتور"><span class="ci">🚗</span>خودرو</button>
+      <button class="cat-chip" data-cat="ورزش و سرگرمی"><span class="ci">⚽</span>ورزش</button>
+      <button class="cat-chip" data-cat="وسایل کودک"><span class="ci">🧸</span>کودک</button>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar-wrap">
+    <div class="toolbar-left">
+      <span class="res-label" id="resLabel">جدیدترین آگهی‌ها</span>
+      <span class="res-count" id="resCnt">…</span>
+    </div>
+    <div class="sort-row">
+      <button class="sort-btn on" data-sort="newest">جدیدترین</button>
+      <button class="sort-btn" data-sort="cheapest">ارزان‌ترین</button>
+      <button class="sort-btn" data-sort="expensive">گران‌ترین</button>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid-wrap">
+    <div class="ads-grid" id="adsGrid">
+      <!-- skeletons on load -->
+      <div class="skeleton"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-line price"></div></div>
+      <div class="skeleton"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-line price"></div></div>
+      <div class="skeleton"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-line price"></div></div>
+      <div class="skeleton"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-line price"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ SELL PAGE ════════════════ -->
+<div class="page" id="page-sell">
+  <div class="sell-wrap" id="formArea">
+    <div class="sell-pg-head">
+      <h2>ثبت آگهی رایگان</h2>
+      <p>در چند دقیقه آگهی‌ات رو ثبت کن — مستقیم با خریدار در ارتباط باش</p>
+    </div>
+
+    <!-- STEP 1: IMAGES -->
+    <div class="step-card">
+      <div class="step-head">
+        <span class="step-num">۱</span>
+        <div><div class="step-head-title">عکس محصول</div><div class="step-head-sub">عکس بیشتر = فروش سریع‌تر</div></div>
+      </div>
+      <div class="upload-area" id="uploadArea">
+        <i class="ti ti-photo-plus"></i>
+        <div class="ut">عکس اضافه کن</div>
+        <div class="us">کلیک کن — حداکثر ۸ عکس</div>
+      </div>
+      <div class="thumb-row" id="thumbRow"></div>
+    </div>
+
+    <!-- STEP 2: INFO -->
+    <div class="step-card">
+      <div class="step-head">
+        <span class="step-num">۲</span>
+        <div><div class="step-head-title">اطلاعات آگهی</div><div class="step-head-sub">هر چی دقیق‌تر، بهتر</div></div>
+      </div>
+      <div class="field">
+        <label>عنوان آگهی <span class="req">*</span></label>
+        <input type="text" id="fTitle" maxlength="80" placeholder="مثلاً: سامسونگ S23 Ultra — ۵۱۲ گیگ — مشکی">
+        <div class="field-hint"><span>عنوانی بنویس که خریدار سریع بفهمه</span><span id="tc">0</span>/80</div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>دسته‌بندی <span class="req">*</span></label>
+          <select id="fCat">
+            <option value="">انتخاب کن...</option>
+            <option>موبایل و تبلت</option>
+            <option>کامپیوتر و لپ‌تاپ</option>
+            <option>لوازم خانگی</option>
+            <option>پوشاک و کفش</option>
+            <option>کتاب و تحصیل</option>
+            <option>خودرو و موتور</option>
+            <option>ورزش و سرگرمی</option>
+            <option>وسایل کودک</option>
+            <option>سایر</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>برند / مدل</label>
+          <input type="text" id="fBrand" placeholder="مثلاً: Apple, Samsung, IKEA">
+        </div>
+      </div>
+      <div class="field">
+        <label>وضعیت کالا</label>
+        <div class="cond-opts" id="condOpts">
+          <button class="cond-opt on" data-v="نو"><span class="cico">✨</span>نو — استفاده نشده</button>
+          <button class="cond-opt" data-v="در حد نو"><span class="cico">👌</span>در حد نو</button>
+          <button class="cond-opt" data-v="کارکرده سالم"><span class="cico">🔧</span>کارکرده — سالم</button>
+          <button class="cond-opt" data-v="نیاز به تعمیر"><span class="cico">⚠️</span>نیاز به تعمیر</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>توضیحات</label>
+        <textarea id="fDesc" maxlength="700" placeholder="ویژگی‌ها، دلیل فروش، نکات مهم که خریدار باید بدونه..."></textarea>
+        <div class="field-hint"><span>هرچه کامل‌تر، سریع‌تر می‌فروشی</span><span id="dc">0</span>/700</div>
+      </div>
+    </div>
+
+    <!-- STEP 3: PRICE -->
+    <div class="step-card">
+      <div class="step-head">
+        <span class="step-num">۳</span>
+        <div><div class="step-head-title">قیمت و تماس</div><div class="step-head-sub">اطلاعاتی که خریدار می‌بینه</div></div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>قیمت (تومان) <span class="req">*</span></label>
+          <input type="text" id="fPrice" placeholder="۱۲,۵۰۰,۰۰۰">
+        </div>
+        <div class="field">
+          <label>قابل مذاکره؟</label>
+          <select id="fNego">
+            <option value="بله">بله — می‌شه حرف زد</option>
+            <option value="خیر">خیر — قیمت ثابت</option>
+          </select>
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>شماره تماس <span class="req">*</span></label>
+          <input type="tel" id="fPhone" maxlength="11" placeholder="09xxxxxxxxx">
+          <div class="field-hint"><span>فقط به خریدار نشان داده می‌شه</span></div>
+        </div>
+        <div class="field">
+          <label>شهر <span class="req">*</span></label>
+          <input type="text" id="fCity" placeholder="مثلاً: تهران، مشهد...">
+        </div>
+      </div>
+      <div class="field">
+        <label>نام فروشنده</label>
+        <input type="text" id="fName" placeholder="نام یا نام مستعار (اختیاری)">
+      </div>
+      <div class="submit-area">
+        <button class="btn-post" id="submitBtn"><i class="ti ti-check" style="font-size:17px"></i> ثبت آگهی</button>
+        <button class="btn-cancel" onclick="goHome()">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-wrap" id="successArea" style="display:none">
+    <div class="success-ring">🎉</div>
+    <h2>آگهی‌ات ثبت شد!</h2>
+    <p>آگهی‌ات الان توی بازارنو منتشره. خریداران می‌تونن ببیننش و باهات تماس بگیرن.</p>
+    <div class="success-info-card" id="sicCard"></div>
+    <button class="btn-golist" onclick="goHome()">مشاهده همه آگهی‌ها</button>
+  </div>
+</div>
+
+<!-- ════════════════ MODAL ════════════════ -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox">
+    <div class="modal-top">
+      <span class="modal-top-title" id="mTopTitle">جزئیات آگهی</span>
+      <button class="modal-x" id="modalXBtn"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-hero-img" id="mHeroImg"></div>
+      <div class="modal-title" id="mTitle"></div>
+      <div class="modal-price-big" id="mPrice"></div>
+      <div id="mNegoTag"></div>
+      <div class="seller-row" id="mSeller"></div>
+      <div class="detail-grid" id="mDetailGrid"></div>
+      <div class="desc-block" id="mDesc"></div>
+      <div class="modal-btns">
+        <button class="btn-call" id="mCallBtn"><i class="ti ti-phone"></i> تماس با فروشنده</button>
+        <button class="btn-save-m" id="mFavBtn"><i class="ti ti-heart"></i> ذخیره آگهی</button>
+      </div>
+      <div class="views-tag" id="mViews"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">بازار<em>نو</em></div>
+        <p class="footer-tagline">بزرگ‌ترین بازارچه آنلاین ایران برای خرید و فروش مستقیم بین مردم، بدون واسطه و رایگان.</p>
+      </div>
+      <div class="footer-col">
+        <h4>بازارنو</h4>
+        <a href="#">درباره ما</a><a href="#">تماس با ما</a><a href="#">مشاغل</a><a href="#">وبلاگ</a>
+      </div>
+      <div class="footer-col">
+        <h4>راهنما</h4>
+        <a href="#">نحوه ثبت آگهی</a><a href="#">قوانین و مقررات</a><a href="#">ایمنی در معاملات</a><a href="#">سوالات متداول</a>
+      </div>
+      <div class="footer-col">
+        <h4>پشتیبانی</h4>
+        <a href="#">چت آنلاین</a><a href="#">021-12345</a><a href="#">info@bazarno.ir</a><a href="#">۷ روز — ۹ تا ۲۱</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© ۱۴۰۴ بازارنو — تمامی حقوق محفوظ است</span>
+      <div class="badges">
+        <span class="badge-trust"><i class="ti ti-shield-check" style="color:var(--g4);font-size:13px"></i> پرداخت امن</span>
+        <span class="badge-trust"><i class="ti ti-certificate" style="color:var(--g4);font-size:13px"></i> نماد اعتماد الکترونیکی</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+const EMOJIS = {
+  'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠',
+  'پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗',
+  'ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'
+};
+const THUMB_EMOJIS = ['🖼️','📸','🤳','📷','🎨','✨','🌟','💡'];
+let state = { cat:'', sort:'newest', q:'', page:'home' };
+let currentCond = 'نو';
+let uploadCount = 0;
+let activeAd = null;
+let savedIds = new Set(JSON.parse(localStorage.getItem('saved')||'[]'));
+
+/* ══════════════════════════════════
+   UTILS
+══════════════════════════════════ */
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg; el.className = 'toast on ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('on'), 2600);
+}
+
+function fmtNum(n) {
+  const s = String(n).replace(/\D/g,'');
+  return s ? parseInt(s).toLocaleString('fa-IR') : '';
+}
+function fmtNumEn(n) {
+  return String(n).replace(/\D/g,'') ? parseInt(String(n).replace(/\D/g,'')).toLocaleString('en') : '';
+}
+
+function relTime(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'همین الان';
+  if (d < 3600000) return Math.floor(d/60000) + ' دقیقه پیش';
+  if (d < 86400000) return Math.floor(d/3600000) + ' ساعت پیش';
+  return Math.floor(d/86400000) + ' روز پیش';
+}
+
+/* ══════════════════════════════════
+   API
+══════════════════════════════════ */
+async function fetchListings() {
+  const params = new URLSearchParams();
+  if (state.cat) params.set('cat', state.cat);
+  if (state.q) params.set('q', state.q);
+  params.set('sort', state.sort);
+  const r = await fetch('/api/listings?' + params);
+  return r.json();
+}
+
+async function postListing(data) {
+  const r = await fetch('/api/listings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  return r.json();
+}
+
+async function patchView(id) {
+  fetch('/api/listings/' + id + '/view', { method:'PATCH' }).catch(()=>{});
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const j = await r.json();
+    document.getElementById('totalStat').textContent = fmtNum(j.total) || '۰';
+  } catch {}
+}
+
+/* ══════════════════════════════════
+   RENDER
+══════════════════════════════════ */
+async function render() {
+  const grid = document.getElementById('adsGrid');
+  // skeletons
+  grid.innerHTML = Array(6).fill(`<div class="skeleton"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-line price"></div></div>`).join('');
+
+  let res;
+  try { res = await fetchListings(); }
+  catch { toast('❌ خطا در دریافت آگهی‌ها', 'err'); grid.innerHTML=''; return; }
+
+  document.getElementById('resCnt').textContent = res.count + ' آگهی';
+
+  if (!res.data.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <span class="big-icon">📋</span>
+      <h3>${state.q ? 'نتیجه‌ای پیدا نشد' : 'هنوز آگهی‌ای نیست'}</h3>
+      <p>${state.q ? 'جستجوی «' + state.q + '» نتیجه‌ای نداشت. کلمات دیگری امتحان کن.' : 'اولین نفر باش — آگهی رایگان ثبت کن!'}</p>
+      ${!state.q ? '<button class="btn-first" onclick="goSell()"><i class="ti ti-plus" style="font-size:15px"></i> ثبت اولین آگهی</button>' : ''}
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = res.data.map(ad => {
+    const em = EMOJIS[ad.cat] || '📦';
+    const isSaved = savedIds.has(ad.id);
+    let cbClass = '', cbTxt = '';
+    if (ad.cond==='نو'){cbClass='cb-new';cbTxt='نو';}
+    else if (ad.cond==='در حد نو'){cbClass='cb-good';cbTxt='در حد نو';}
+    else if (ad.cond==='کارکرده سالم'){cbClass='cb-used';cbTxt='کارکرده';}
+    else if (ad.cond==='نیاز به تعمیر'){cbClass='cb-fix';cbTxt='نیاز تعمیر';}
+    return `
+    <div class="ad-card" data-id="${ad.id}">
+      <div class="ad-img">
+        <div class="ad-img-inner">${em}</div>
+        ${cbTxt ? `<span class="cond-badge ${cbClass}">${cbTxt}</span>` : ''}
+        <button class="fav-btn ${isSaved?'on':''}" data-fid="${ad.id}" onclick="event.stopPropagation();toggleSave('${ad.id}',this)" aria-label="ذخیره"><i class="ti ti-heart"></i></button>
+      </div>
+      <div class="ad-body">
+        <div class="ad-title">${ad.title}</div>
+        <div class="ad-location"><i class="ti ti-map-pin"></i>${ad.city} · ${relTime(ad.ts)}</div>
+        <div class="ad-bottom">
+          <div class="ad-price ${ad.nego==='بله'?'neg':''}">${fmtNum(ad.price)} <small>تومان</small></div>
+          <button class="see-btn" aria-label="مشاهده"><i class="ti ti-arrow-left" style="font-size:14px"></i></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.ad-card').forEach(c => {
+    c.addEventListener('click', () => openModal(c.dataset.id, res.data));
+  });
+}
+
+/* ══════════════════════════════════
+   MODAL
+══════════════════════════════════ */
+function openModal(id, data) {
+  const ad = data.find(a => a.id === id);
+  if (!ad) return;
+  activeAd = ad;
+  patchView(id);
+
+  document.getElementById('mTopTitle').textContent = ad.cat || 'جزئیات آگهی';
+  document.getElementById('mHeroImg').textContent = EMOJIS[ad.cat] || '📦';
+  document.getElementById('mTitle').textContent = ad.title;
+  document.getElementById('mPrice').innerHTML = fmtNum(ad.price) + ' <small>تومان</small>';
+  document.getElementById('mNegoTag').innerHTML = ad.nego === 'بله'
+    ? '<span class="nego-tag"><i class="ti ti-repeat" style="font-size:12px"></i> قابل مذاکره</span>'
+    : '';
+  const init = (ad.name||'ن').charAt(0);
+  document.getElementById('mSeller').innerHTML = `
+    <div class="seller-ava">${init}</div>
+    <div><div class="seller-name">${ad.name||'ناشناس'}</div>
+    <div class="seller-sub">${ad.city} · فروشنده عادی</div></div>`;
+  document.getElementById('mDetailGrid').innerHTML = [
+    {l:'وضعیت',v:ad.cond},{l:'دسته‌بندی',v:ad.cat},
+    {l:'شهر',v:ad.city},{l:'تاریخ',v:relTime(ad.ts)},
+    ad.brand?{l:'برند',v:ad.brand}:null
+  ].filter(Boolean).map(x=>`<div class="dg-item"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
+  document.getElementById('mDesc').textContent = ad.desc || 'توضیحاتی وارد نشده.';
+  document.getElementById('mViews').textContent = '👁 ' + ((ad.views||0)+1) + ' بازدید';
+  const isSaved = savedIds.has(ad.id);
+  document.getElementById('mFavBtn').innerHTML = `<i class="ti ti-heart${isSaved?'-filled':''}"></i> ${isSaved?'ذخیره شده':'ذخیره آگهی'}`;
+  document.getElementById('modalBg').classList.add('on');
+}
+
+document.getElementById('modalXBtn').onclick = () => document.getElementById('modalBg').classList.remove('on');
+document.getElementById('modalBg').addEventListener('click', e => { if(e.target===e.currentTarget) e.currentTarget.classList.remove('on'); });
+document.getElementById('mCallBtn').onclick = () => { if(activeAd) toast('📞 شماره فروشنده: <b>' + activeAd.phone + '</b>', 'ok'); };
+document.getElementById('mFavBtn').onclick = () => {
+  if (!activeAd) return;
+  toggleSave(activeAd.id, null);
+  const isSaved = savedIds.has(activeAd.id);
+  document.getElementById('mFavBtn').innerHTML = `<i class="ti ti-heart${isSaved?'-filled':''}"></i> ${isSaved?'ذخیره شده':'ذخیره آگهی'}`;
+};
+
+function toggleSave(id, btn) {
+  if (savedIds.has(id)) { savedIds.delete(id); toast('آگهی از ذخیره‌ها حذف شد'); }
+  else { savedIds.add(id); toast('❤️ آگهی ذخیره شد', 'ok'); }
+  localStorage.setItem('saved', JSON.stringify([...savedIds]));
+  if (btn) btn.classList.toggle('on', savedIds.has(id));
+}
+
+/* ══════════════════════════════════
+   FILTER / SORT / SEARCH
+══════════════════════════════════ */
+document.getElementById('catsRow').addEventListener('click', e => {
+  const c = e.target.closest('.cat-chip');
+  if (!c) return;
+  document.querySelectorAll('.cat-chip').forEach(x => x.classList.remove('on'));
+  c.classList.add('on');
+  state.cat = c.dataset.cat;
+  document.getElementById('resLabel').textContent = state.cat || 'جدیدترین آگهی‌ها';
+  render();
+});
+
+document.querySelectorAll('.sort-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    state.sort = b.dataset.sort;
+    render();
+  });
+});
+
+let searchTimer;
+document.getElementById('navQ').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  state.q = this.value.trim();
+  searchTimer = setTimeout(render, 380);
+});
+
+function clearSearch() {
+  document.getElementById('navQ').value = '';
+  state.q = '';
+  render();
+}
+
+function doHeroSearch() {
+  const q = document.getElementById('heroQ').value.trim();
+  const cat = document.getElementById('heroCat').value;
+  if (cat) {
+    state.cat = cat;
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('on', c.dataset.cat === cat));
+  }
+  state.q = q;
+  document.getElementById('navQ').value = q;
+  goHome();
+  render();
+}
+
+/* ══════════════════════════════════
+   NAV
+══════════════════════════════════ */
+function goHome() {
+  switchPage('home');
+}
+function goSell() {
+  resetForm();
+  switchPage('sell');
+}
+function switchPage(p) {
+  state.page = p;
+  document.querySelectorAll('.page').forEach(el => el.classList.toggle('on', el.id === 'page-' + p));
+  document.querySelectorAll('.nav-pill-link').forEach(b => b.classList.toggle('on', b.dataset.goto === p));
+}
+
+document.querySelectorAll('.nav-pill-link').forEach(b => {
+  b.addEventListener('click', () => {
+    if (b.dataset.goto === 'sell') { resetForm(); }
+    switchPage(b.dataset.goto);
+  });
+});
+document.getElementById('navPostBtn').onclick = () => { resetForm(); switchPage('sell'); };
+
+/* ══════════════════════════════════
+   FORM
+══════════════════════════════════ */
+document.getElementById('condOpts').addEventListener('click', e => {
+  const b = e.target.closest('.cond-opt');
+  if (!b) return;
+  document.querySelectorAll('.cond-opt').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  currentCond = b.dataset.v;
+});
+
+document.getElementById('uploadArea').addEventListener('click', () => {
+  if (uploadCount >= 8) { toast('حداکثر ۸ عکس', 'err'); return; }
+  const row = document.getElementById('thumbRow');
+  const d = document.createElement('div');
+  d.className = 'thumb';
+  d.innerHTML = THUMB_EMOJIS[uploadCount % THUMB_EMOJIS.length] + `<button class="tdel" onclick="this.parentNode.remove();uploadCount--"><i class="ti ti-x" style="font-size:10px"></i></button>`;
+  row.appendChild(d); uploadCount++;
+  toast('✅ عکس اضافه شد', 'ok');
+});
+
+document.getElementById('fTitle').addEventListener('input', function() {
+  document.getElementById('tc').textContent = this.value.length;
+});
+document.getElementById('fDesc').addEventListener('input', function() {
+  document.getElementById('dc').textContent = this.value.length;
+});
+document.getElementById('fPrice').addEventListener('input', function() {
+  const raw = this.value.replace(/[^0-9]/g,'');
+  if (raw) this.value = fmtNumEn(raw);
+});
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const title = document.getElementById('fTitle').value.trim();
+  const cat = document.getElementById('fCat').value;
+  const price = document.getElementById('fPrice').value.replace(/,/g,'').trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const city = document.getElementById('fCity').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  const nego = document.getElementById('fNego').value;
+  const name = document.getElementById('fName').value.trim();
+  const brand = document.getElementById('fBrand').value.trim();
+
+  if (!title) { toast('⚠️ عنوان آگهی رو بنویس', 'err'); return; }
+  if (!cat) { toast('⚠️ دسته‌بندی رو انتخاب کن', 'err'); return; }
+  if (!price) { toast('⚠️ قیمت رو وارد کن', 'err'); return; }
+  if (!phone || phone.replace(/\D/g,'').length < 10) { toast('⚠️ شماره تماس معتبر وارد کن', 'err'); return; }
+  if (!city) { toast('⚠️ شهر رو بنویس', 'err'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = '⏳ در حال ثبت...'; btn.disabled = true;
+
+  const res = await postListing({ title, cat, cond: currentCond, desc, price, nego, phone, city, name: name||'ناشناس', brand });
+
+  btn.innerHTML = '<i class="ti ti-check" style="font-size:17px"></i> ثبت آگهی'; btn.disabled = false;
+
+  if (!res.ok) { toast('❌ ' + (res.error||'خطا در ثبت'), 'err'); return; }
+
+  document.getElementById('formArea').style.display = 'none';
+  document.getElementById('sicCard').innerHTML = [
+    {l:'عنوان', v: title},
+    {l:'قیمت', v: fmtNum(price) + ' تومان'},
+    {l:'شهر', v: city},
+    {l:'تماس', v: phone},
+  ].map(r=>`<div class="sic-row"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
+  document.getElementById('successArea').style.display = '';
+  loadStats();
+  render();
+});
+
+function resetForm() {
+  document.getElementById('formArea').style.display = '';
+  document.getElementById('successArea').style.display = 'none';
+  ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fName','fBrand'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('tc').textContent = '0';
+  document.getElementById('dc').textContent = '0';
+  document.getElementById('thumbRow').innerHTML = '';
+  uploadCount = 0;
+  document.querySelectorAll('.cond-opt').forEach((b,i) => b.classList.toggle('on', i===0));
+  currentCond = 'نو';
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+loadStats();
+render();
+</script>
+</body>
+</html>
