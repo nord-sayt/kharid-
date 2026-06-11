@@ -859,6 +859,108 @@ document.head.appendChild(style);
 ══════════════════════════ */
 loadStats();
 render();
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://ffpzdohwrhdrdgtczzjc.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let ST = { cat:'', sort:'newest', q:'' };
+let pickedFiles = [];
+let currentData = [];
+let saved = new Set(JSON.parse(localStorage.getItem('bazar_saved')||'[]'));
+
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.innerHTML=msg;
+  el.className='toast on '+type;
+  setTimeout(()=>el.classList.remove('on'),2500);
+}
+
+function fmtFA(n){
+  return Number(n||0).toLocaleString('fa-IR');
+}
+
+/* ───────── LOAD ADS ───────── */
+async function render(){
+  let query = sb.from('listings').select('*');
+
+  if(ST.cat) query = query.eq('cat', ST.cat);
+  if(ST.q) query = query.ilike('title', `%${ST.q}%`);
+
+  if(ST.sort === 'cheapest') query = query.order('price', {ascending:true});
+  else if(ST.sort === 'expensive') query = query.order('price', {ascending:false});
+  else query = query.order('created_at', {ascending:false});
+
+  const {data, error} = await query;
+
+  const grid = document.getElementById('adsGrid');
+
+  if(error){
+    toast('خطا در دریافت دیتا','err');
+    return;
+  }
+
+  currentData = data || [];
+
+  if(!currentData.length){
+    grid.innerHTML = "<div style='text-align:center;padding:40px'>آگهی‌ای نیست</div>";
+    return;
+  }
+
+  grid.innerHTML = currentData.map(ad => `
+    <div class="adcard" onclick="openModal('${ad.id}')">
+      <div class="adcard-img">
+        <div class="adcard-emoji">📦</div>
+      </div>
+      <div class="adcard-body">
+        <div class="adcard-title">${ad.title}</div>
+        <div class="adcard-loc">${ad.city}</div>
+        <div class="adcard-price">${fmtFA(ad.price)} تومان</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ───────── ADD AD ───────── */
+document.getElementById('submitBtn').onclick = async () => {
+
+  const title = fTitle.value;
+  const cat = fCat.value;
+  const price = fPrice.value.replace(/,/g,'');
+  const phone = fPhone.value;
+  const city = fCity.value;
+  const desc = fDesc.value;
+
+  if(!title || !cat || !price){
+    toast('فیلدها خالیه','err');
+    return;
+  }
+
+  const {data, error} = await sb.from('listings').insert([{
+    title, cat, price, phone, city, desc
+  }]);
+
+  if(error){
+    toast('خطا در ثبت','err');
+    console.log(error);
+    return;
+  }
+
+  toast('ثبت شد ✔️','ok');
+  render();
+};
+
+/* ───────── SEARCH ───────── */
+document.getElementById('navQ').addEventListener('input', e=>{
+  ST.q = e.target.value;
+  render();
+});
+
+/* ───────── INIT ───────── */
+render();
 </script>
 </body>
 </html>
