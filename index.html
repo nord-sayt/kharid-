@@ -1,3 +1,6 @@
+bash
+
+cat > /mnt/user-data/outputs/bazarno-v3.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -8,428 +11,417 @@
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- ════════════════════════════════
-  ⚙️  فقط دو خط رو عوض کن
-════════════════════════════════ -->
 <script>
+/* ══════════════════════════════
+   ⚙️  فقط اینجا رو عوض کن
+══════════════════════════════ */
 const SUPABASE_URL = "https://XXXXXXXXXX.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
-</script>
-<!--
-SQL برای Supabase:
+/*
+SQL برای Supabase — SQL Editor:
 
 create table listings (
   id uuid default gen_random_uuid() primary key,
   title text, cat text, cond text, desc text, brand text,
   price text, nego text, phone text, city text, name text,
   images text[], views int default 0,
+  is_ad boolean default false,
+  ad_package text,
   created_at timestamptz default now()
 );
 alter table listings enable row level security;
 create policy "all" on listings for all using (true) with check (true);
 
-Storage: bucket بساز به اسم "images" و public بذارش
--->
+Storage: bucket بساز اسمش "images" و public بذارش
+*/
+</script>
 
 <style>
-:root {
-  /* palette — سبز تیره ایرانی + کرم گرم */
-  --ink:    #0E1A14;
-  --ink2:   #2C3B32;
-  --forest: #14542E;
-  --green:  #1A7A47;
-  --mint:   #25B067;
-  --lime:   #7ED957;
-  --cream:  #F5F0E8;
-  --sand:   #EBE4D5;
-  --paper:  #FDFBF7;
-  --red:    #D94F3D;
-  --amber:  #E8A020;
-  --white:  #ffffff;
-  --card:   #ffffff;
-  --bd:     rgba(14,26,20,.09);
-  --bd2:    rgba(14,26,20,.16);
-  --t1:     #0E1A14;
-  --t2:     #3D5045;
-  --t3:     #7A9080;
-  --r:      16px;
-  --rsm:    10px;
-  --pill:   999px;
-  --shg:    0 6px 28px rgba(26,122,71,.32);
-  --shh:    0 16px 48px rgba(14,26,20,.14);
+:root{
+  --ink:#0E1A14;--ink2:#2C3B32;--forest:#14542E;--green:#1A7A47;--mint:#25B067;--lime:#7ED957;
+  --cream:#F5F0E8;--sand:#EBE4D5;--paper:#FDFBF7;
+  --red:#D94F3D;--amber:#E8A020;--amber-l:#FEF6E4;--blue:#2563EB;
+  --card:#ffffff;--bd:rgba(14,26,20,.09);--bd2:rgba(14,26,20,.16);
+  --t1:#0E1A14;--t2:#3D5045;--t3:#7A9080;
+  --r:16px;--rsm:10px;--pill:999px;
+  --shg:0 6px 28px rgba(26,122,71,.32);--shh:0 16px 48px rgba(14,26,20,.14);
 }
-
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
-html { scroll-behavior:smooth; font-size:14px }
-body { font-family:'Vazirmatn',sans-serif; direction:rtl; background:var(--cream); color:var(--t1); line-height:1.65; -webkit-font-smoothing:antialiased }
-button { font-family:'Vazirmatn',sans-serif; cursor:pointer }
-input,select,textarea { font-family:'Vazirmatn',sans-serif }
-::-webkit-scrollbar { width:5px; height:5px }
-::-webkit-scrollbar-thumb { background:#b8c8be; border-radius:4px }
-::selection { background:var(--lime); color:var(--ink) }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:14px}
+body{font-family:'Vazirmatn',sans-serif;direction:rtl;background:var(--cream);color:var(--t1);line-height:1.65;-webkit-font-smoothing:antialiased}
+button{font-family:'Vazirmatn',sans-serif;cursor:pointer}
+input,select,textarea{font-family:'Vazirmatn',sans-serif}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#b8c8be;border-radius:4px}
+::selection{background:var(--lime);color:var(--ink)}
+a{text-decoration:none;color:inherit}
 
 /* ══ NAV ══ */
-.nav {
-  position:sticky; top:0; z-index:90;
-  height:64px; padding:0 1.75rem;
-  display:flex; align-items:center; gap:14px;
-  background:rgba(253,251,247,.94);
-  backdrop-filter:blur(20px) saturate(160%);
-  border-bottom:1px solid var(--bd);
-}
-.logo { font-size:21px; font-weight:800; color:var(--forest); letter-spacing:-1px; display:flex; align-items:center; gap:3px; text-decoration:none; flex-shrink:0 }
-.logo-mark { font-size:18px; margin-left:2px }
-.logo em { color:var(--mint); font-style:normal }
-.nav-q { flex:1; max-width:460px; position:relative }
-.nav-q input { width:100%; height:42px; padding:0 44px 0 16px; border:1.5px solid var(--bd2); border-radius:var(--pill); font-size:13px; background:var(--sand); color:var(--t1); transition:.2s }
-.nav-q input:focus { outline:none; border-color:var(--mint); background:var(--paper); box-shadow:0 0 0 4px rgba(37,176,103,.12) }
-.nav-q i { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--t3); font-size:17px; pointer-events:none }
-.sp { flex:1 }
-.nav-link { padding:7px 14px; border:none; background:none; color:var(--t2); font-size:13px; border-radius:var(--rsm); transition:.15s; font-weight:500 }
-.nav-link:hover { background:var(--sand); color:var(--forest) }
-.nav-link.on { color:var(--forest); font-weight:700 }
-.btn-new {
-  height:40px; padding:0 20px; border:none;
-  background:var(--forest); color:var(--lime);
-  border-radius:var(--pill); font-size:13px; font-weight:700;
-  display:flex; align-items:center; gap:7px; white-space:nowrap;
-  letter-spacing:-.2px; transition:.2s;
-  box-shadow:0 3px 14px rgba(20,84,46,.35);
-}
-.btn-new:hover { background:var(--green); transform:translateY(-1px); box-shadow:0 6px 22px rgba(20,84,46,.4) }
-.btn-new i { font-size:16px }
+.nav{position:sticky;top:0;z-index:90;height:64px;padding:0 1.5rem;display:flex;align-items:center;gap:12px;background:rgba(253,251,247,.95);backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--bd)}
+.logo{font-size:20px;font-weight:800;color:var(--forest);letter-spacing:-1px;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.logo em{color:var(--mint);font-style:normal}
+.nav-q{flex:1;max-width:440px;position:relative}
+.nav-q input{width:100%;height:40px;padding:0 42px 0 14px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:13px;background:var(--sand);color:var(--t1);transition:.2s}
+.nav-q input:focus{outline:none;border-color:var(--mint);background:var(--paper);box-shadow:0 0 0 4px rgba(37,176,103,.1)}
+.nav-q i{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:17px;pointer-events:none}
+.sp{flex:1}
+.nav-link{padding:7px 12px;border:none;background:none;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;font-weight:500}
+.nav-link:hover{background:var(--sand);color:var(--forest)}
+.nav-link.on{color:var(--forest);font-weight:700}
+.nav-saved-btn{position:relative;padding:7px 12px;border:none;background:none;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;display:flex;align-items:center;gap:5px;font-weight:500}
+.nav-saved-btn:hover{background:var(--sand);color:var(--forest)}
+.nav-saved-btn.on{color:var(--forest);font-weight:700}
+.saved-badge{background:var(--red);color:#fff;border-radius:50%;width:17px;height:17px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.btn-new{height:38px;padding:0 18px;border:none;background:var(--forest);color:var(--lime);border-radius:var(--pill);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:var(--shg);transition:.2s;white-space:nowrap}
+.btn-new:hover{background:var(--green);transform:translateY(-1px)}
 
 /* ══ PAGES ══ */
-.page { display:none }
-.page.on { display:block }
+.page{display:none}.page.on{display:block}
 
 /* ══ HERO ══ */
-.hero {
-  background:var(--ink);
-  padding:64px 2rem 0;
-  overflow:hidden; position:relative;
-}
-/* grid texture */
-.hero::before {
-  content:'';
-  position:absolute; inset:0;
-  background-image:
-    linear-gradient(rgba(126,217,87,.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(126,217,87,.06) 1px, transparent 1px);
-  background-size:40px 40px;
-  mask-image:radial-gradient(ellipse 80% 70% at 50% 0%, black 0%, transparent 100%);
-}
-.hero::after {
-  content:'';
-  position:absolute; bottom:0; left:0; right:0; height:60%;
-  background:radial-gradient(ellipse 60% 50% at 50% 100%, rgba(26,122,71,.22) 0%, transparent 80%);
-  pointer-events:none;
-}
-.hero-inner { position:relative; z-index:1; text-align:center; color:var(--white) }
-.hero-eyebrow {
-  display:inline-flex; align-items:center; gap:8px;
-  background:rgba(126,217,87,.12); border:1px solid rgba(126,217,87,.25);
-  border-radius:var(--pill); padding:6px 18px; font-size:12px; font-weight:600;
-  color:var(--lime); letter-spacing:.5px; margin-bottom:1.5rem;
-}
-.live-dot { width:6px; height:6px; border-radius:50%; background:var(--lime); flex-shrink:0; animation:livepulse 1.8s infinite }
-@keyframes livepulse { 0%,100%{box-shadow:0 0 0 0 rgba(126,217,87,.6)} 50%{box-shadow:0 0 0 6px rgba(126,217,87,0)} }
-.hero h1 {
-  font-size:clamp(32px,5vw,56px);
-  font-weight:800; letter-spacing:-2px; line-height:1.08;
-  margin-bottom:16px; color:var(--white);
-}
-.hero h1 .accent { color:var(--lime) }
-.hero-sub { font-size:16px; opacity:.6; margin-bottom:2.5rem; font-weight:400 }
-.hero-search {
-  max-width:580px; margin:0 auto 0;
-  display:flex; background:var(--paper);
-  border-radius:var(--r); overflow:hidden;
-  box-shadow:0 20px 60px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.08);
-}
-.hero-search input { flex:1; padding:0 22px; height:58px; border:none; outline:none; font-size:14px; color:var(--t1); background:transparent; font-weight:500 }
-.hero-search select { border:none; border-right:1px solid var(--bd); outline:none; padding:0 14px; font-size:12px; color:var(--t2); background:var(--sand); min-width:110px }
-.hero-search button { background:var(--mint); color:var(--white); border:none; padding:0 28px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; transition:.2s; letter-spacing:-.2px }
-.hero-search button:hover { background:var(--green) }
-.hero-wave-wrap { position:relative; height:80px; margin-top:3rem }
-.hero-wave { position:absolute; bottom:0; left:0; right:0 }
+.hero{background:var(--ink);padding:60px 1.5rem 0;overflow:hidden;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(126,217,87,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(126,217,87,.06) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,black 0%,transparent 100%)}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60%;background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(26,122,71,.22) 0%,transparent 80%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;text-align:center;color:#fff}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(126,217,87,.12);border:1px solid rgba(126,217,87,.25);border-radius:var(--pill);padding:6px 18px;font-size:12px;font-weight:600;color:var(--lime);letter-spacing:.5px;margin-bottom:1.5rem}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);animation:livepulse 1.8s infinite}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(126,217,87,.6)}50%{box-shadow:0 0 0 6px rgba(126,217,87,0)}}
+.hero h1{font-size:clamp(28px,5vw,52px);font-weight:800;letter-spacing:-2px;line-height:1.1;margin-bottom:14px}
+.hero h1 .accent{color:var(--lime)}
+.hero-sub{font-size:15px;opacity:.6;margin-bottom:2.25rem}
+.hero-sb{max-width:560px;margin:0 auto;display:flex;background:var(--paper);border-radius:var(--r);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.hero-sb input{flex:1;padding:0 20px;height:56px;border:none;outline:none;font-size:14px;color:var(--t1);background:transparent;font-weight:500}
+.hero-sb select{border:none;border-right:1px solid var(--bd);outline:none;padding:0 12px;font-size:12px;color:var(--t2);background:var(--sand);min-width:100px}
+.hero-sb button{background:var(--mint);color:#fff;border:none;padding:0 26px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;transition:.2s}
+.hero-sb button:hover{background:var(--green)}
+.hero-wave-wrap{height:76px;position:relative;margin-top:3rem}
+.hero-wave{position:absolute;bottom:0;left:0;right:0}
+.stats-bar{background:var(--forest);padding:16px 1.5rem;display:flex;align-items:center;justify-content:center;gap:2.5rem;flex-wrap:wrap}
+.sbar-item{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.75)}
+.sbar-item i{color:var(--lime);font-size:18px}
+.sbar-num{font-size:19px;font-weight:800;color:#fff}
+.sbar-lbl{font-size:11px;margin-top:1px}
+.sbar-sep{width:1px;height:34px;background:rgba(255,255,255,.12)}
 
-/* stats bar */
-.stats-bar {
-  background:var(--forest);
-  padding:18px 2rem;
-  display:flex; align-items:center; justify-content:center; gap:3rem;
-  flex-wrap:wrap;
-}
-.sbar-item { display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.75) }
-.sbar-item i { color:var(--lime); font-size:18px }
-.sbar-num { font-size:20px; font-weight:800; color:var(--white) }
-.sbar-lbl { font-size:12px; margin-top:1px }
-.sbar-sep { width:1px; height:36px; background:rgba(255,255,255,.12) }
+/* ══ AD PROMO BANNER (تبلیغات) ══ */
+.ad-promo{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:1.5rem;border-radius:var(--r);margin:1.5rem auto;max-width:1140px;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;position:relative;overflow:hidden}
+.ad-promo::before{content:'✦';position:absolute;left:1.5rem;top:.75rem;font-size:40px;opacity:.06;color:#fff}
+.ad-promo-left{display:flex;align-items:center;gap:14px}
+.ad-promo-icon{width:52px;height:52px;border-radius:var(--r);background:linear-gradient(135deg,var(--amber),#f59e0b);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.ad-promo-text strong{display:block;font-size:16px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.3px}
+.ad-promo-text span{font-size:12px;color:rgba(255,255,255,.55)}
+.ad-promo-packages{display:flex;gap:8px;flex-wrap:wrap}
+.pkg-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:var(--rsm);padding:8px 16px;color:rgba(255,255,255,.85);font-size:12px;font-weight:600;transition:.2s;display:flex;align-items:center;gap:6px}
+.pkg-btn:hover{background:rgba(255,255,255,.15);border-color:var(--amber)}
+.pkg-btn .pkg-tag{background:var(--amber);color:var(--ink);border-radius:var(--pill);padding:2px 8px;font-size:10px;font-weight:800}
+.btn-ad-order{background:var(--amber);color:var(--ink);border:none;border-radius:var(--pill);padding:10px 22px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
+.btn-ad-order:hover{background:#f59e0b;transform:translateY(-1px)}
 
-/* ══ CAT PILLS ══ */
-.cats-section { padding:2rem 1.75rem 0; max-width:1140px; margin:0 auto }
-.sec-hd { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1rem }
-.sec-title { font-size:16px; font-weight:800; color:var(--ink); letter-spacing:-.3px }
-.sec-link { font-size:13px; color:var(--mint); font-weight:600; background:none; border:none; display:flex; align-items:center; gap:3px }
-.sec-link:hover { color:var(--green) }
-.cats-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px }
-.cats-scroll::-webkit-scrollbar { display:none }
-.cat-chip {
-  display:flex; align-items:center; gap:9px;
-  background:var(--paper); border:1.5px solid var(--bd);
-  border-radius:var(--pill); padding:9px 16px;
-  font-size:13px; font-weight:500; color:var(--t2);
-  white-space:nowrap; flex-shrink:0; transition:.2s;
-}
-.cat-chip:hover { border-color:var(--mint); color:var(--forest); background:var(--white); transform:translateY(-1px) }
-.cat-chip.on { background:var(--forest); border-color:var(--forest); color:var(--lime); font-weight:700 }
-.cat-chip .ci { font-size:17px }
-
-/* ══ FEATURED BANNER ══ */
-.featured-wrap { padding:1.5rem 1.75rem; max-width:1140px; margin:0 auto }
-.featured-banner {
-  background:var(--forest);
-  border-radius:var(--r); padding:1.25rem 1.5rem;
-  display:flex; align-items:center; justify-content:space-between; gap:1rem;
-  flex-wrap:wrap;
-}
-.featured-left { display:flex; align-items:center; gap:12px }
-.featured-icon { font-size:28px }
-.featured-text strong { display:block; font-size:15px; font-weight:700; color:var(--white) }
-.featured-text span { font-size:12px; color:rgba(255,255,255,.6) }
-.featured-btn { background:var(--lime); color:var(--ink); border:none; border-radius:var(--pill); padding:9px 20px; font-size:13px; font-weight:700; white-space:nowrap; transition:.2s }
-.featured-btn:hover { background:#9aed6f }
+/* ══ CATS ══ */
+.cats-wrap{padding:1.5rem 1.5rem 0;max-width:1140px;margin:0 auto}
+.sec-t{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:1rem;display:block}
+.cats-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cat-chip{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--pill);padding:9px 16px;font-size:13px;font-weight:500;color:var(--t2);white-space:nowrap;flex-shrink:0;transition:.2s}
+.cat-chip:hover{border-color:var(--mint);color:var(--forest);transform:translateY(-1px)}
+.cat-chip.on{background:var(--forest);border-color:var(--forest);color:var(--lime);font-weight:700}
+.cat-chip .ci{font-size:17px}
 
 /* ══ TOOLBAR ══ */
-.toolbar { padding:.75rem 1.75rem; max-width:1140px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px }
-.tl-left { display:flex; align-items:center; gap:10px }
-.res-lbl { font-size:15px; font-weight:800; color:var(--ink); letter-spacing:-.3px }
-.res-cnt { background:var(--sand); color:var(--t2); border-radius:var(--pill); padding:3px 12px; font-size:12px; font-weight:600 }
-.sorts { display:flex; gap:5px }
-.sort-b { border:1.5px solid var(--bd2); border-radius:var(--pill); padding:7px 14px; font-size:12px; font-weight:500; background:var(--paper); color:var(--t2); transition:.15s }
-.sort-b:hover { border-color:var(--mint); color:var(--forest) }
-.sort-b.on { border-color:var(--forest); background:var(--forest); color:var(--lime); font-weight:700 }
+.toolbar{padding:.75rem 1.5rem;max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.res-lbl{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+.res-cnt{background:var(--sand);color:var(--t2);border-radius:var(--pill);padding:3px 12px;font-size:12px;font-weight:600;margin-right:8px}
+.sorts{display:flex;gap:5px}
+.sort-b{border:1.5px solid var(--bd2);border-radius:var(--pill);padding:7px 14px;font-size:12px;font-weight:500;background:var(--paper);color:var(--t2);transition:.15s}
+.sort-b:hover{border-color:var(--mint);color:var(--forest)}
+.sort-b.on{border-color:var(--forest);background:var(--forest);color:var(--lime);font-weight:700}
 
 /* ══ GRID ══ */
-.grid-wrap { padding:0 1.75rem 4rem; max-width:1140px; margin:0 auto }
-.ads-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px }
+.grid-wrap{padding:0 1.5rem 4rem;max-width:1140px;margin:0 auto}
+.ads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+
+/* ── SPONSORED ROW ── */
+.sponsored-row{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sponsored-label{font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:5px}
+.sponsored-line{flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(232,160,32,.3))}
 
 /* ── card ── */
-.adcard { background:var(--card); border:1.5px solid var(--bd); border-radius:var(--r); overflow:hidden; cursor:pointer; transition:all .22s; display:flex; flex-direction:column; position:relative }
-.adcard:hover { border-color:var(--mint); box-shadow:var(--shh); transform:translateY(-5px) }
-.adcard-img { aspect-ratio:1; background:var(--sand); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden }
-.adcard-img img { width:100%; height:100%; object-fit:cover; transition:transform .32s }
-.adcard:hover .adcard-img img { transform:scale(1.07) }
-.adcard-emoji { font-size:56px; transition:transform .25s }
-.adcard:hover .adcard-emoji { transform:scale(1.1) }
-.cond-tag { position:absolute; bottom:8px; right:8px; font-size:10px; padding:3px 10px; border-radius:var(--pill); font-weight:700 }
-.ct-new  { background:var(--mint); color:#fff }
-.ct-good { background:#FFF3CC; color:#7A5800 }
-.ct-used { background:#E8EDF0; color:#3A4A55 }
-.ct-fix  { background:#FDE8E6; color:var(--red) }
-.fav-btn { position:absolute; top:9px; left:9px; width:32px; height:32px; border-radius:50%; background:rgba(253,251,247,.88); border:none; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--t3); backdrop-filter:blur(6px); transition:.18s; z-index:1 }
-.fav-btn:hover,.fav-btn.on { color:var(--red); transform:scale(1.12) }
-.new-badge { position:absolute; top:9px; right:9px; background:var(--lime); color:var(--ink); font-size:9px; font-weight:800; padding:3px 8px; border-radius:var(--pill); letter-spacing:.5px }
-.adcard-body { padding:13px; flex:1; display:flex; flex-direction:column }
-.adcard-cat { font-size:10px; font-weight:700; color:var(--mint); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px }
-.adcard-title { font-size:13px; font-weight:600; line-height:1.5; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; flex:1; color:var(--t1) }
-.adcard-loc { font-size:11px; color:var(--t3); display:flex; align-items:center; gap:4px; margin-bottom:10px }
-.adcard-loc i { font-size:12px }
-.adcard-foot { display:flex; align-items:center; justify-content:space-between; gap:6px; padding-top:9px; border-top:1px solid var(--bd) }
-.adcard-price { font-size:15px; font-weight:800; color:var(--forest); letter-spacing:-.3px }
-.adcard-price small { display:block; font-size:10px; font-weight:400; color:var(--t3); margin-top:1px; letter-spacing:0 }
-.adcard-price.neg small::after { content:' · توافقی'; color:var(--mint) }
-.arrow-chip { background:var(--sand); border:none; border-radius:var(--pill); padding:5px 10px; font-size:11px; font-weight:600; color:var(--t2); display:flex; align-items:center; gap:4px; transition:.15s }
-.adcard:hover .arrow-chip { background:var(--forest); color:var(--lime) }
+.adcard{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .22s;display:flex;flex-direction:column;position:relative}
+.adcard:hover{border-color:var(--mint);box-shadow:var(--shh);transform:translateY(-5px)}
+.adcard.is-ad{border-color:rgba(232,160,32,.4);box-shadow:0 0 0 1px rgba(232,160,32,.15)}
+.adcard.is-ad:hover{border-color:var(--amber)}
+.adcard-img{aspect-ratio:1;background:var(--sand);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.adcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .32s}
+.adcard:hover .adcard-img img{transform:scale(1.07)}
+.adcard-emoji{font-size:56px;transition:transform .25s}
+.adcard:hover .adcard-emoji{transform:scale(1.1)}
+.cond-tag{position:absolute;bottom:8px;right:8px;font-size:10px;padding:3px 10px;border-radius:var(--pill);font-weight:700}
+.ct-new{background:var(--mint);color:#fff}
+.ct-good{background:#FFF3CC;color:#7A5800}
+.ct-used{background:#E8EDF0;color:#3A4A55}
+.ct-fix{background:#FDE8E6;color:var(--red)}
+.fav-btn{position:absolute;top:9px;left:9px;width:32px;height:32px;border-radius:50%;background:rgba(253,251,247,.88);border:none;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--t3);backdrop-filter:blur(6px);transition:.18s;z-index:1}
+.fav-btn:hover,.fav-btn.on{color:var(--red);transform:scale(1.12)}
+.ad-star-badge{position:absolute;top:9px;right:9px;background:var(--amber);color:var(--ink);font-size:9px;font-weight:800;padding:3px 9px;border-radius:var(--pill);letter-spacing:.4px;display:flex;align-items:center;gap:3px}
+.new-badge{position:absolute;top:9px;right:9px;background:var(--lime);color:var(--ink);font-size:9px;font-weight:800;padding:3px 9px;border-radius:var(--pill)}
+.adcard-body{padding:13px;flex:1;display:flex;flex-direction:column}
+.adcard-cat{font-size:10px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.adcard-title{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;color:var(--t1)}
+.adcard-loc{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:4px;margin-bottom:10px}
+.adcard-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;padding-top:9px;border-top:1px solid var(--bd)}
+.adcard-price{font-size:15px;font-weight:800;color:var(--forest);letter-spacing:-.3px}
+.adcard-price small{display:block;font-size:10px;font-weight:400;color:var(--t3);margin-top:1px}
+.adcard-price.neg small::after{content:' · توافقی';color:var(--mint)}
+.arrow-chip{background:var(--sand);border:none;border-radius:var(--pill);padding:5px 11px;font-size:11px;font-weight:600;color:var(--t2);display:flex;align-items:center;gap:4px;transition:.15s}
+.adcard:hover .arrow-chip{background:var(--forest);color:var(--lime)}
 
 /* skeleton */
-.skel { background:var(--card); border:1.5px solid var(--bd); border-radius:var(--r); overflow:hidden }
-.skel-img { aspect-ratio:1; background:linear-gradient(90deg,var(--sand) 25%,var(--cream) 50%,var(--sand) 75%); background-size:200%; animation:shim 1.5s infinite }
-@keyframes shim { to { background-position:-200% 0 } }
-.skel-line { height:11px; border-radius:6px; background:linear-gradient(90deg,var(--sand) 25%,var(--cream) 50%,var(--sand) 75%); background-size:200%; animation:shim 1.5s infinite; margin:11px 13px 5px }
-.skel-line.s { width:55%; margin-top:3px }
-.skel-line.p { width:42%; height:16px; margin-top:8px }
+.skel{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.skel-img{aspect-ratio:1;background:linear-gradient(90deg,var(--sand) 25%,var(--cream) 50%,var(--sand) 75%);background-size:200%;animation:shim 1.5s infinite}
+@keyframes shim{to{background-position:-200% 0}}
+.skel-line{height:11px;border-radius:6px;background:linear-gradient(90deg,var(--sand) 25%,var(--cream) 50%,var(--sand) 75%);background-size:200%;animation:shim 1.5s infinite;margin:11px 13px 5px}
+.skel-line.s{width:55%;margin-top:3px}.skel-line.p{width:42%;height:16px;margin-top:8px}
+.empty{grid-column:1/-1;text-align:center;padding:5rem 1rem}
+.empty .ei{font-size:56px;display:block;margin-bottom:16px}
+.empty h3{font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.3px}
+.empty p{font-size:13px;color:var(--t3);line-height:1.7}
+.btn-first{margin-top:1.5rem;display:inline-flex;align-items:center;gap:7px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:12px 26px;font-size:14px;font-weight:700}
 
-/* empty */
-.empty { grid-column:1/-1; text-align:center; padding:5rem 1rem }
-.empty .ei { font-size:56px; display:block; margin-bottom:16px }
-.empty h3 { font-size:18px; font-weight:800; color:var(--ink); margin-bottom:8px; letter-spacing:-.3px }
-.empty p { font-size:14px; color:var(--t3); line-height:1.7 }
-.btn-first { margin-top:1.5rem; display:inline-flex; align-items:center; gap:7px; background:var(--forest); color:var(--lime); border:none; border-radius:var(--pill); padding:12px 26px; font-size:14px; font-weight:700 }
+/* ══ SAVED PAGE ══ */
+.saved-pg{max-width:1140px;margin:0 auto;padding:2rem 1.5rem}
+.saved-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
+.saved-hd h2{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.btn-clear-saved{background:none;border:1.5px solid var(--bd2);border-radius:var(--pill);padding:8px 16px;font-size:12px;font-weight:600;color:var(--red);transition:.15s}
+.btn-clear-saved:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.saved-empty{text-align:center;padding:4rem 1rem;color:var(--t3)}
+.saved-empty .se-icon{font-size:52px;display:block;margin-bottom:14px}
+.saved-empty h3{font-size:17px;font-weight:700;color:var(--t2);margin-bottom:6px}
 
 /* ══ MODAL ══ */
-.modal-bg { display:none; position:fixed; inset:0; z-index:200; background:rgba(14,26,20,.65); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1rem }
-.modal-bg.on { display:flex; animation:mfade .2s }
-@keyframes mfade { from{opacity:0} }
-.modal {
-  background:var(--paper); border-radius:20px;
-  max-width:560px; width:100%; max-height:92vh; overflow-y:auto;
-  box-shadow:0 40px 100px rgba(0,0,0,.35);
-  animation:mup .24s cubic-bezier(.34,1.4,.64,1);
-}
-@keyframes mup { from{transform:translateY(40px);opacity:0} }
-.modal-top { position:sticky; top:0; background:var(--paper); padding:1rem 1.25rem; border-bottom:1px solid var(--bd); display:flex; align-items:center; justify-content:space-between; border-radius:20px 20px 0 0; z-index:1 }
-.modal-cat-pill { display:flex; align-items:center; gap:6px; background:var(--sand); border-radius:var(--pill); padding:4px 12px; font-size:12px; font-weight:700; color:var(--t2) }
-.modal-x { width:32px; height:32px; border-radius:50%; background:var(--sand); border:none; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--t2); transition:.15s }
-.modal-x:hover { background:var(--bd2) }
-.modal-body { padding:1.25rem }
-.m-gallery { border-radius:var(--r); overflow:hidden; aspect-ratio:4/3; background:var(--sand); display:flex; align-items:center; justify-content:center; margin-bottom:10px; position:relative }
-.m-gallery img { width:100%; height:100%; object-fit:cover }
-.m-emoji { font-size:88px }
-.m-thumbs { display:flex; gap:8px; margin-bottom:1.25rem; overflow-x:auto }
-.m-thumb { width:60px; height:60px; border-radius:var(--rsm); overflow:hidden; flex-shrink:0; cursor:pointer; border:2.5px solid transparent; transition:.15s }
-.m-thumb.on { border-color:var(--mint) }
-.m-thumb img { width:100%; height:100%; object-fit:cover }
-.modal-title { font-size:19px; font-weight:800; color:var(--ink); margin-bottom:6px; letter-spacing:-.5px; line-height:1.3 }
-.modal-price-row { display:flex; align-items:baseline; gap:10px; margin-bottom:.5rem }
-.modal-price { font-size:26px; font-weight:800; color:var(--forest); letter-spacing:-.5px }
-.modal-price small { font-size:14px; font-weight:500; color:var(--t3) }
-.nego-chip { display:inline-flex; align-items:center; gap:5px; background:#E8F8EF; color:var(--green); border-radius:var(--pill); padding:4px 13px; font-size:12px; font-weight:700; margin-bottom:1.1rem }
-.seller-card { display:flex; align-items:center; gap:12px; background:var(--sand); border-radius:var(--r); padding:14px; margin-bottom:1.1rem; border:1px solid var(--bd) }
-.seller-av { width:46px; height:46px; border-radius:50%; background:var(--forest); color:var(--lime); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; flex-shrink:0 }
-.seller-nm { font-size:14px; font-weight:700; color:var(--ink) }
-.seller-mt { font-size:12px; color:var(--t3); margin-top:2px }
-.detail-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1.1rem }
-.dchip { background:var(--sand); border-radius:var(--rsm); padding:8px 13px; border:1px solid var(--bd) }
-.dchip .dl { font-size:10px; color:var(--t3); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:3px }
-.dchip .dv { font-size:13px; font-weight:700; color:var(--ink) }
-.desc-block { background:var(--sand); border-radius:var(--rsm); padding:14px; font-size:13px; line-height:1.85; color:var(--t2); margin-bottom:1.25rem; border:1px solid var(--bd) }
-.modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px }
-.btn-call { background:var(--forest); color:var(--lime); border:none; border-radius:var(--rsm); padding:14px; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; transition:.2s; letter-spacing:-.2px }
-.btn-call:hover { background:var(--green) }
-.btn-save { background:var(--paper); border:1.5px solid var(--bd2); color:var(--t2); border-radius:var(--rsm); padding:14px; font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:7px; transition:.2s }
-.btn-save:hover { border-color:var(--mint); color:var(--forest) }
-.phone-reveal { background:var(--sand); border-radius:var(--rsm); padding:14px; text-align:center; font-size:16px; font-weight:800; color:var(--forest); letter-spacing:1px; display:none; border:1.5px solid var(--mint) }
-.views-row { display:flex; align-items:center; justify-content:center; gap:14px; font-size:11px; color:var(--t3); margin-top:10px }
-.views-row span { display:flex; align-items:center; gap:4px }
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(14,26,20,.65);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem}
+.modal-bg.on{display:flex;animation:mfade .2s}
+@keyframes mfade{from{opacity:0}}
+.modal{background:var(--paper);border-radius:20px;max-width:560px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.35);animation:mup .24s cubic-bezier(.34,1.4,.64,1)}
+@keyframes mup{from{transform:translateY(40px);opacity:0}}
+.modal-top{position:sticky;top:0;background:var(--paper);padding:.9rem 1.25rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;border-radius:20px 20px 0 0;z-index:1}
+.modal-cat-pill{display:flex;align-items:center;gap:6px;background:var(--sand);border-radius:var(--pill);padding:4px 12px;font-size:12px;font-weight:700;color:var(--t2)}
+.modal-x{width:32px;height:32px;border-radius:50%;background:var(--sand);border:none;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--t2);transition:.15s}
+.modal-x:hover{background:var(--bd2)}
+.modal-body{padding:1.25rem}
+.m-gallery{border-radius:var(--r);overflow:hidden;aspect-ratio:4/3;background:var(--sand);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.m-gallery img{width:100%;height:100%;object-fit:cover}
+.m-emoji{font-size:88px}
+.m-thumbs{display:flex;gap:8px;margin-bottom:1.25rem;overflow-x:auto}
+.m-thumb{width:60px;height:60px;border-radius:var(--rsm);overflow:hidden;flex-shrink:0;cursor:pointer;border:2.5px solid transparent;transition:.15s}
+.m-thumb.on{border-color:var(--mint)}
+.m-thumb img{width:100%;height:100%;object-fit:cover}
+.modal-ad-banner{background:linear-gradient(135deg,rgba(232,160,32,.12),rgba(232,160,32,.06));border:1px solid rgba(232,160,32,.3);border-radius:var(--rsm);padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--amber);font-weight:600}
+.modal-title{font-size:19px;font-weight:800;color:var(--ink);margin-bottom:6px;letter-spacing:-.5px;line-height:1.3}
+.modal-price{font-size:26px;font-weight:800;color:var(--forest);letter-spacing:-.5px;margin-bottom:.5rem}
+.modal-price small{font-size:14px;font-weight:500;color:var(--t3)}
+.nego-chip{display:inline-flex;align-items:center;gap:5px;background:#E8F8EF;color:var(--green);border-radius:var(--pill);padding:4px 13px;font-size:12px;font-weight:700;margin-bottom:1.1rem}
+.seller-card{display:flex;align-items:center;gap:12px;background:var(--sand);border-radius:var(--r);padding:14px;margin-bottom:1.1rem;border:1px solid var(--bd)}
+.seller-av{width:46px;height:46px;border-radius:50%;background:var(--forest);color:var(--lime);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+.seller-nm{font-size:14px;font-weight:700;color:var(--ink)}
+.seller-mt{font-size:12px;color:var(--t3);margin-top:2px}
+.detail-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.1rem}
+.dchip{background:var(--sand);border-radius:var(--rsm);padding:8px 13px;border:1px solid var(--bd)}
+.dchip .dl{font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.dchip .dv{font-size:13px;font-weight:700;color:var(--ink)}
+.desc-block{background:var(--sand);border-radius:var(--rsm);padding:14px;font-size:13px;line-height:1.85;color:var(--t2);margin-bottom:1.25rem;border:1px solid var(--bd)}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.btn-call{background:var(--forest);color:var(--lime);border:none;border-radius:var(--rsm);padding:13px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s}
+.btn-call:hover{background:var(--green)}
+.btn-save-m{background:var(--paper);border:1.5px solid var(--bd2);color:var(--t2);border-radius:var(--rsm);padding:13px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s}
+.btn-save-m:hover{border-color:var(--mint);color:var(--forest)}
+.phone-reveal{background:#E8F8EF;border:1.5px solid var(--mint);border-radius:var(--rsm);padding:14px;text-align:center;font-size:17px;font-weight:800;color:var(--forest);letter-spacing:1.5px;display:none;margin-bottom:8px}
+.views-row{display:flex;align-items:center;justify-content:center;gap:16px;font-size:11px;color:var(--t3);margin-top:8px}
+.views-row span{display:flex;align-items:center;gap:4px}
 
 /* ══ SELL FORM ══ */
-.sell-pg { max-width:680px; margin:0 auto; padding:2rem 1.75rem }
-.sell-hd { margin-bottom:1.75rem }
-.sell-hd h2 { font-size:24px; font-weight:800; letter-spacing:-.5px; color:var(--ink) }
-.sell-hd p { font-size:14px; color:var(--t3); margin-top:6px }
-.step-card { background:var(--paper); border:1.5px solid var(--bd); border-radius:var(--r); padding:1.5rem; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,.04) }
-.step-hd { display:flex; align-items:center; gap:12px; margin-bottom:1.3rem; padding-bottom:1rem; border-bottom:1px solid var(--bd) }
-.snum { width:30px; height:30px; border-radius:50%; background:var(--forest); color:var(--lime); font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
-.step-hd-t { font-size:15px; font-weight:800; color:var(--ink); letter-spacing:-.3px }
-.step-hd-s { font-size:12px; color:var(--t3); margin-top:2px }
-.field { margin-bottom:1.1rem }
-.field:last-child { margin-bottom:0 }
-.field > label { display:block; font-size:13px; font-weight:700; color:var(--t2); margin-bottom:6px }
-.req { color:var(--red) }
-.field input,.field textarea,.field select { width:100%; height:46px; padding:0 14px; border:1.5px solid var(--bd2); border-radius:var(--rsm); font-size:13px; background:var(--paper); color:var(--t1); transition:.2s; font-weight:500 }
-.field textarea { height:auto; padding:13px 14px; resize:vertical; min-height:100px; line-height:1.7 }
-.field input:focus,.field textarea:focus,.field select:focus { outline:none; border-color:var(--mint); box-shadow:0 0 0 4px rgba(37,176,103,.1) }
-.field-hint { font-size:11px; color:var(--t3); margin-top:5px; display:flex; justify-content:space-between }
-.two { display:grid; grid-template-columns:1fr 1fr; gap:12px }
-.cond-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px }
-.copt { border:1.5px solid var(--bd2); border-radius:var(--rsm); padding:11px 14px; background:var(--paper); color:var(--t2); display:flex; align-items:center; gap:9px; font-size:13px; font-weight:500; transition:.15s }
-.copt .ci2 { font-size:20px }
-.copt:hover { border-color:var(--mint) }
-.copt.on { border-color:var(--forest); background:#E8F4EE; color:var(--forest); font-weight:700 }
+.sell-pg{max-width:680px;margin:0 auto;padding:2rem 1.5rem}
+.sell-hd{margin-bottom:1.75rem}
+.sell-hd h2{font-size:23px;font-weight:800;letter-spacing:-.5px;color:var(--ink)}
+.sell-hd p{font-size:13px;color:var(--t3);margin-top:6px}
 
-/* upload */
-.upload-zone { border:2px dashed var(--bd2); border-radius:var(--r); padding:2.25rem 2rem; text-align:center; cursor:pointer; transition:.2s; color:var(--t3); background:var(--paper) }
-.upload-zone:hover { border-color:var(--mint); background:#F0FCF6; color:var(--forest) }
-.upload-zone i { font-size:36px; display:block; margin-bottom:10px }
-.upload-zone .ut { font-size:14px; font-weight:700; color:var(--t2); margin-bottom:4px }
-.upload-zone .us { font-size:12px }
-.thumb-row { display:flex; gap:9px; flex-wrap:wrap; margin-top:12px }
-.thumb { width:76px; height:76px; border-radius:var(--rsm); background:var(--sand); border:1.5px solid var(--bd); overflow:hidden; position:relative; flex-shrink:0 }
-.thumb img { width:100%; height:100%; object-fit:cover }
-.tdel { position:absolute; top:-8px; left:-8px; width:22px; height:22px; border-radius:50%; background:var(--red); color:#fff; border:2.5px solid var(--paper); font-size:10px; display:flex; align-items:center; justify-content:center; transition:.15s }
-.tdel:hover { background:#a32d2d; transform:scale(1.1) }
+/* تبلیغ toggle */
+.ad-toggle-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.ad-toggle-left{display:flex;align-items:center;gap:12px}
+.ad-toggle-icon{font-size:26px}
+.ad-toggle-text strong{display:block;font-size:14px;font-weight:800;color:#fff;margin-bottom:3px}
+.ad-toggle-text span{font-size:12px;color:rgba(255,255,255,.5)}
+.toggle-wrap{display:flex;gap:7px;align-items:center}
+.toggle-btn{border:none;border-radius:var(--pill);padding:8px 16px;font-size:12px;font-weight:700;transition:.2s;cursor:pointer}
+.toggle-btn.off{background:rgba(255,255,255,.08);color:rgba(255,255,255,.5)}
+.toggle-btn.off:hover{background:rgba(255,255,255,.14)}
+.toggle-btn.on{background:var(--amber);color:var(--ink)}
 
-/* price input with currency */
-.price-wrap { position:relative }
-.price-wrap input { padding-left:60px }
-.price-unit { position:absolute; left:0; top:0; height:100%; display:flex; align-items:center; padding:0 14px; font-size:12px; font-weight:700; color:var(--t3); border-right:1px solid var(--bd2); pointer-events:none }
+.step-card{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.5rem;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.step-hd{display:flex;align-items:center;gap:12px;margin-bottom:1.3rem;padding-bottom:1rem;border-bottom:1px solid var(--bd)}
+.snum{width:30px;height:30px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-hd-t{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+.step-hd-s{font-size:12px;color:var(--t3);margin-top:2px}
+.field{margin-bottom:1.1rem}
+.field:last-child{margin-bottom:0}
+.field>label{display:block;font-size:13px;font-weight:700;color:var(--t2);margin-bottom:6px}
+.req{color:var(--red)}
+.field input,.field textarea,.field select{width:100%;height:46px;padding:0 14px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-size:13px;background:var(--paper);color:var(--t1);transition:.2s;font-weight:500}
+.field textarea{height:auto;padding:13px 14px;resize:vertical;min-height:100px;line-height:1.7}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--mint);box-shadow:0 0 0 4px rgba(37,176,103,.1)}
+.field-hint{font-size:11px;color:var(--t3);margin-top:5px;display:flex;justify-content:space-between}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cond-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.copt{border:1.5px solid var(--bd2);border-radius:var(--rsm);padding:11px 14px;background:var(--paper);color:var(--t2);display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;transition:.15s}
+.copt .ci2{font-size:20px}
+.copt:hover{border-color:var(--mint)}
+.copt.on{border-color:var(--forest);background:#E8F4EE;color:var(--forest);font-weight:700}
+.upload-zone{border:2px dashed var(--bd2);border-radius:var(--r);padding:2.25rem 2rem;text-align:center;cursor:pointer;transition:.2s;color:var(--t3)}
+.upload-zone:hover{border-color:var(--mint);background:#F0FCF6;color:var(--forest)}
+.upload-zone i{font-size:36px;display:block;margin-bottom:10px}
+.upload-zone .ut{font-size:14px;font-weight:700;color:var(--t2);margin-bottom:4px}
+.upload-zone .us{font-size:12px}
+.thumb-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.thumb{width:76px;height:76px;border-radius:var(--rsm);background:var(--sand);border:1.5px solid var(--bd);overflow:hidden;position:relative;flex-shrink:0}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.tdel{position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2.5px solid var(--paper);font-size:10px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.tdel:hover{background:#a32d2d;transform:scale(1.1)}
+.price-wrap{position:relative}
+.price-wrap input{padding-left:60px}
+.price-unit{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;padding:0 14px;font-size:12px;font-weight:700;color:var(--t3);border-right:1px solid var(--bd2);pointer-events:none}
+.submit-row{display:flex;gap:10px}
+.btn-submit{flex:1;height:52px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:var(--shg);transition:.2s;letter-spacing:-.3px}
+.btn-submit:hover{background:var(--green);transform:translateY(-1px)}
+.btn-submit:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-cancel{height:52px;padding:0 22px;background:none;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:14px;font-weight:600;color:var(--t2);transition:.15s}
+.btn-cancel:hover{border-color:var(--t2)}
+.success-pg{max-width:440px;margin:5rem auto;text-align:center;padding:1.5rem}
+.sring{width:96px;height:96px;border-radius:50%;background:#E8F8EF;border:3px solid var(--lime);display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 1.5rem}
+.success-pg h2{font-size:24px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px}
+.success-pg p{font-size:14px;color:var(--t3);line-height:1.7;margin-bottom:1.5rem}
+.sic{background:var(--sand);border-radius:var(--r);padding:1.1rem 1.3rem;margin-bottom:1.5rem;text-align:right;border:1px solid var(--bd)}
+.sic-r{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid var(--bd)}
+.sic-r:last-child{border:none}
+.sic-r .sl{color:var(--forest);font-weight:700}
+.btn-back{background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:13px 32px;font-size:15px;font-weight:800;box-shadow:var(--shg)}
+.btn-back:hover{background:var(--green)}
 
-.submit-row { display:flex; gap:10px }
-.btn-submit { flex:1; height:52px; background:var(--forest); color:var(--lime); border:none; border-radius:var(--pill); font-size:15px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:9px; box-shadow:var(--shg); transition:.2s; letter-spacing:-.3px }
-.btn-submit:hover { background:var(--green); transform:translateY(-1px) }
-.btn-submit:disabled { opacity:.55; cursor:not-allowed; transform:none }
-.btn-cancel { height:52px; padding:0 22px; background:none; border:1.5px solid var(--bd2); border-radius:var(--pill); font-size:14px; font-weight:600; color:var(--t2); transition:.15s }
-.btn-cancel:hover { border-color:var(--t2) }
+/* ══ AD ORDER MODAL ══ */
+.ad-modal-bg{display:none;position:fixed;inset:0;z-index:300;background:rgba(14,26,20,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem}
+.ad-modal-bg.on{display:flex;animation:mfade .2s}
+.ad-modal{background:var(--paper);border-radius:20px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.4);animation:mup .24s cubic-bezier(.34,1.4,.64,1)}
+.ad-modal-head{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.ad-modal-head h3{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.ad-modal-body{padding:1.25rem}
+.ad-packages{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
+.pkg-card{border:2px solid var(--bd2);border-radius:var(--r);padding:1rem 1.25rem;cursor:pointer;transition:.2s;position:relative;background:var(--paper)}
+.pkg-card:hover{border-color:var(--amber)}
+.pkg-card.on{border-color:var(--amber);background:var(--amber-l)}
+.pkg-card .pk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.pkg-card .pk-name{font-size:15px;font-weight:800;color:var(--ink)}
+.pkg-card .pk-price{font-size:16px;font-weight:800;color:var(--amber)}
+.pkg-card .pk-desc{font-size:12px;color:var(--t3);line-height:1.6}
+.pkg-card .pk-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;border-radius:var(--pill);padding:2px 8px;margin-right:6px}
+.pkg-card.on::after{content:'✓';position:absolute;top:10px;left:14px;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ad-contact-info{background:var(--sand);border-radius:var(--r);padding:1.25rem;border:1px solid var(--bd);margin-bottom:1rem}
+.ad-contact-info h4{font-size:13px;font-weight:800;margin-bottom:.75rem;color:var(--ink)}
+.contact-link{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px;font-weight:500;color:var(--t1);text-decoration:none;transition:.15s}
+.contact-link:last-child{border:none;padding-bottom:0}
+.contact-link:hover{color:var(--forest)}
+.contact-link i{font-size:18px;color:var(--mint);flex-shrink:0}
+.contact-link .cl-tag{margin-right:auto;font-size:11px;color:var(--t3)}
+.btn-contact-ad{width:100%;background:var(--amber);color:var(--ink);border:none;border-radius:var(--pill);padding:13px;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s}
+.btn-contact-ad:hover{background:#f59e0b;transform:translateY(-1px)}
 
-/* success */
-.success-pg { max-width:440px; margin:5rem auto; text-align:center; padding:1.5rem }
-.sring { width:96px; height:96px; border-radius:50%; background:#E8F8EF; border:3px solid var(--lime); display:flex; align-items:center; justify-content:center; font-size:42px; margin:0 auto 1.5rem }
-.success-pg h2 { font-size:24px; font-weight:800; margin-bottom:8px; letter-spacing:-.5px }
-.success-pg p { font-size:14px; color:var(--t3); line-height:1.7; margin-bottom:1.5rem }
-.sic { background:var(--sand); border-radius:var(--r); padding:1.1rem 1.3rem; margin-bottom:1.5rem; text-align:right; border:1px solid var(--bd) }
-.sic-r { display:flex; justify-content:space-between; padding:7px 0; font-size:13px; border-bottom:1px solid var(--bd) }
-.sic-r:last-child { border:none }
-.sic-r .sl { color:var(--forest); font-weight:700 }
-.btn-back { background:var(--forest); color:var(--lime); border:none; border-radius:var(--pill); padding:13px 32px; font-size:15px; font-weight:800; box-shadow:var(--shg) }
-.btn-back:hover { background:var(--green) }
+/* ══ SUPPORT FLOAT ══ */
+.support-float{position:fixed;bottom:28px;left:28px;z-index:80;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.support-btn{background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:10px 18px 10px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(20,84,46,.4);transition:.2s;cursor:pointer;white-space:nowrap}
+.support-btn:hover{background:var(--green);transform:translateY(-2px);box-shadow:0 10px 28px rgba(20,84,46,.5)}
+.support-btn i{font-size:17px}
+.support-menu{background:var(--paper);border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--shh);overflow:hidden;display:none;min-width:220px}
+.support-menu.on{display:block;animation:mfade .18s}
+.support-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bd);transition:.15s;text-decoration:none;color:var(--t1);cursor:pointer}
+.support-item:last-child{border:none}
+.support-item:hover{background:var(--sand)}
+.support-item i{font-size:18px;color:var(--mint);flex-shrink:0}
+.support-item .si-title{font-size:13px;font-weight:700;color:var(--ink)}
+.support-item .si-sub{font-size:11px;color:var(--t3);margin-top:1px}
 
 /* toast */
-.toast { position:fixed; bottom:26px; left:50%; z-index:999; transform:translateX(-50%) translateY(100px); background:var(--ink); color:#fff; padding:13px 24px; border-radius:var(--pill); font-size:13px; font-weight:600; box-shadow:0 10px 40px rgba(0,0,0,.3); transition:transform .32s cubic-bezier(.34,1.4,.64,1); pointer-events:none; display:flex; align-items:center; gap:8px; max-width:360px }
-.toast.on { transform:translateX(-50%) translateY(0) }
-.toast.ok { background:var(--forest) }
-.toast.err { background:#8B2A22 }
+.toast{position:fixed;bottom:24px;left:50%;z-index:999;transform:translateX(-50%) translateY(100px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:var(--pill);font-size:13px;font-weight:600;box-shadow:0 10px 40px rgba(0,0,0,.28);transition:transform .32s cubic-bezier(.34,1.4,.64,1);pointer-events:none;display:flex;align-items:center;gap:7px;max-width:340px}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--forest)}
+.toast.err{background:#8B2A22}
 
 /* footer */
-footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75rem 2rem; margin-top:5rem }
-.ft-inner { max-width:1140px; margin:0 auto }
-.ft-top { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:2.5rem; margin-bottom:3rem }
-.ft-brand .ft-logo { font-size:22px; font-weight:800; color:#fff; letter-spacing:-1px; margin-bottom:10px }
-.ft-brand .ft-logo em { color:var(--lime); font-style:normal }
-.ft-brand p { font-size:13px; opacity:.5; line-height:1.8 }
-.ft-brand .social-row { display:flex; gap:8px; margin-top:1rem }
-.soc-btn { width:34px; height:34px; border-radius:var(--rsm); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.6); font-size:15px; transition:.15s }
-.soc-btn:hover { background:rgba(126,217,87,.15); color:var(--lime) }
-.ft-col h4 { font-size:12px; font-weight:800; color:#fff; margin-bottom:14px; text-transform:uppercase; letter-spacing:.6px }
-.ft-col a { display:block; font-size:13px; color:rgba(255,255,255,.45); margin-bottom:9px; text-decoration:none; transition:.15s }
-.ft-col a:hover { color:var(--lime) }
-.ft-bottom { border-top:1px solid rgba(255,255,255,.07); padding-top:1.75rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; color:rgba(255,255,255,.3) }
-.trust-row { display:flex; gap:8px }
-.tbadge { display:flex; align-items:center; gap:5px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); border-radius:var(--rsm); padding:6px 12px; font-size:11px; color:rgba(255,255,255,.55) }
-.tbadge i { color:var(--lime); font-size:14px }
+footer{background:var(--ink);color:rgba(255,255,255,.7);padding:3.5rem 1.5rem 2rem;margin-top:5rem}
+.ft-inner{max-width:1140px;margin:0 auto}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+.ft-brand .ft-logo{font-size:22px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:10px}
+.ft-brand .ft-logo em{color:var(--lime);font-style:normal}
+.ft-brand p{font-size:12px;opacity:.5;line-height:1.8;margin-bottom:1rem}
+.social-row{display:flex;gap:8px}
+.soc-btn{width:34px;height:34px;border-radius:var(--rsm);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:15px;transition:.15s}
+.soc-btn:hover{background:rgba(126,217,87,.15);color:var(--lime)}
+.ft-col h4{font-size:11px;font-weight:800;color:#fff;margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px}
+.ft-col a{display:block;font-size:12px;color:rgba(255,255,255,.45);margin-bottom:9px;transition:.15s}
+.ft-col a:hover{color:var(--lime)}
+/* support section in footer */
+.ft-support{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:1.25rem}
+.ft-support h4{font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-bottom:1rem}
+.ft-contact-link{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.65);font-size:12px;text-decoration:none;transition:.15s}
+.ft-contact-link:last-child{border:none;padding-bottom:0}
+.ft-contact-link:hover{color:var(--lime)}
+.ft-contact-link i{color:var(--lime);font-size:16px;flex-shrink:0}
+.ft-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:1.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;color:rgba(255,255,255,.3)}
+.trust-row{display:flex;gap:8px}
+.tbadge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:var(--rsm);padding:5px 11px;font-size:11px;color:rgba(255,255,255,.55)}
+.tbadge i{color:var(--lime);font-size:13px}
 
-@media(max-width:700px) {
-  .nav-link { display:none }
-  .hero h1 { font-size:28px }
-  .hero-search { flex-direction:column; border-radius:var(--r) }
-  .hero-search select { border-right:none; border-top:1px solid var(--bd) }
-  .hero-search button { padding:15px; border-radius:0 0 var(--r) var(--r) }
-  .cats-section,.featured-wrap,.toolbar,.grid-wrap,.sell-pg { padding-left:1rem; padding-right:1rem }
-  .two,.cond-grid { grid-template-columns:1fr 1fr }
-  .ft-top { grid-template-columns:1fr 1fr }
-  .modal-actions { grid-template-columns:1fr }
-  .stats-bar { gap:1.5rem }
-  .sbar-sep { display:none }
+@media(max-width:720px){
+  .nav-link{display:none}
+  .hero h1{font-size:26px}
+  .hero-sb{flex-direction:column;border-radius:var(--r)}
+  .hero-sb select{border-right:none;border-top:1px solid var(--bd)}
+  .hero-sb button{padding:15px;border-radius:0 0 var(--r) var(--r)}
+  .cats-wrap,.toolbar,.grid-wrap,.sell-pg,.saved-pg{padding-left:1rem;padding-right:1rem}
+  .ad-promo{margin:1rem;flex-direction:column;align-items:flex-start}
+  .two,.cond-grid{grid-template-columns:1fr 1fr}
+  .ft-top{grid-template-columns:1fr 1fr}
+  .modal-actions{grid-template-columns:1fr}
+  .stats-bar{gap:1.25rem}
+  .sbar-sep{display:none}
+  .support-float{bottom:20px;left:16px}
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ══ NAV ══ -->
 <nav class="nav">
-  <a class="logo" href="#"><span class="logo-mark">🛍</span>بازار<em>نو</em></a>
+  <a class="logo" href="#">🛍 بازار<em>نو</em></a>
   <div class="nav-q">
     <i class="ti ti-search"></i>
-    <input type="text" id="navQ" placeholder="جستجوی آگهی، برند، شهر...">
+    <input type="text" id="navQ" placeholder="جستجو در آگهی‌ها...">
   </div>
   <div class="sp"></div>
   <button class="nav-link on" data-to="home">آگهی‌ها</button>
+  <button class="nav-saved-btn" data-to="saved" id="savedNavBtn">
+    <i class="ti ti-bookmark"></i>نشان‌ها
+    <span class="saved-badge" id="savedBadge" style="display:none">0</span>
+  </button>
   <button class="nav-link" data-to="sell">ثبت آگهی</button>
-  <button class="btn-new" id="btnNewAd"><i class="ti ti-plus"></i>آگهی رایگان</button>
+  <button class="btn-new" id="btnNewAd"><i class="ti ti-plus" style="font-size:15px"></i>آگهی رایگان</button>
 </nav>
 
-<!-- HOME -->
+<!-- ════ HOME ════ -->
 <div class="page on" id="page-home">
 
-  <!-- HERO -->
   <section class="hero">
     <div class="hero-inner">
       <div class="hero-eyebrow"><span class="live-dot"></span>بازارچه آنلاین ایران · رایگان و بدون واسطه</div>
       <h1>وسیله‌ات رو بفروش<br><span class="accent">همین الان</span></h1>
-      <p class="hero-sub">میلیون‌ها خریدار منتظرن — آگهی در ۲ دقیقه</p>
-      <div class="hero-search">
+      <p class="hero-sub">ثبت آگهی در ۲ دقیقه — ارتباط مستقیم با خریدار</p>
+      <div class="hero-sb">
         <input type="text" id="heroQ" placeholder="دنبال چی می‌گردی؟ مثلاً: آیفون، کاناپه، دوچرخه...">
         <select id="heroCat">
           <option value="">همه دسته‌ها</option>
@@ -438,17 +430,16 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
           <option>کتاب و تحصیل</option><option>خودرو و موتور</option>
           <option>ورزش و سرگرمی</option><option>وسایل کودک</option>
         </select>
-        <button onclick="heroSearch()"><i class="ti ti-search" style="font-size:16px"></i>جستجو</button>
+        <button onclick="heroSearch()"><i class="ti ti-search" style="font-size:15px"></i>جستجو</button>
       </div>
     </div>
     <div class="hero-wave-wrap">
-      <svg class="hero-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,80 C240,20 480,0 720,40 C960,80 1200,20 1440,0 L1440,80 L0,80Z" fill="var(--forest)"/>
+      <svg class="hero-wave" viewBox="0 0 1440 76" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,76 C240,20 480,0 720,38 C960,76 1200,20 1440,0 L1440,76 L0,76Z" fill="var(--forest)"/>
       </svg>
     </div>
   </section>
 
-  <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="sbar-item"><i class="ti ti-list-check"></i><div><div class="sbar-num" id="hTotal">—</div><div class="sbar-lbl">آگهی فعال</div></div></div>
     <div class="sbar-sep"></div>
@@ -456,15 +447,33 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
     <div class="sbar-sep"></div>
     <div class="sbar-item"><i class="ti ti-shield-check"></i><div><div class="sbar-num">امن</div><div class="sbar-lbl">ارتباط مستقیم</div></div></div>
     <div class="sbar-sep"></div>
-    <div class="sbar-item"><i class="ti ti-clock"></i><div><div class="sbar-num">۲ دقیقه</div><div class="sbar-lbl">ثبت سریع</div></div></div>
+    <div class="sbar-item"><i class="ti ti-speakerphone"></i><div><div class="sbar-num" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px" onclick="openAdModal()">تبلیغ کن</div><div class="sbar-lbl">دیده بشو</div></div></div>
+  </div>
+
+  <!-- PROMO AD BANNER -->
+  <div style="padding:0 1.5rem;max-width:1140px;margin:1.5rem auto 0">
+    <div class="ad-promo">
+      <div class="ad-promo-left">
+        <div class="ad-promo-icon">📣</div>
+        <div class="ad-promo-text">
+          <strong>آگهی‌ات رو تبلیغ کن — بیشتر دیده بشو</strong>
+          <span>با تبلیغ ویژه، آگهی‌ات بالای همه نشون داده میشه</span>
+        </div>
+      </div>
+      <div class="ad-promo-packages">
+        <button class="pkg-btn" onclick="openAdModal()"><span class="pkg-tag">ویژه</span>یک هفته — ۵۰ هزار</button>
+        <button class="pkg-btn" onclick="openAdModal()"><span class="pkg-tag">طلایی</span>یک ماه — ۱۵۰ هزار</button>
+      </div>
+      <button class="btn-ad-order" onclick="openAdModal()"><i class="ti ti-star" style="font-size:15px"></i>سفارش تبلیغ</button>
+    </div>
   </div>
 
   <!-- CATS -->
-  <div class="cats-section">
-    <div class="sec-hd"><span class="sec-title">دسته‌بندی‌ها</span></div>
+  <div class="cats-wrap">
+    <span class="sec-t">دسته‌بندی‌ها</span>
     <div class="cats-scroll" id="catsRow">
       <button class="cat-chip on" data-cat=""><span class="ci">🛍️</span>همه آگهی‌ها</button>
-      <button class="cat-chip" data-cat="موبایل و تبلت"><span class="ci">📱</span>موبایل و تبلت</button>
+      <button class="cat-chip" data-cat="موبایل و تبلت"><span class="ci">📱</span>موبایل</button>
       <button class="cat-chip" data-cat="کامپیوتر و لپ‌تاپ"><span class="ci">💻</span>کامپیوتر</button>
       <button class="cat-chip" data-cat="لوازم خانگی"><span class="ci">🏠</span>لوازم خانگی</button>
       <button class="cat-chip" data-cat="پوشاک و کفش"><span class="ci">👗</span>پوشاک</button>
@@ -475,23 +484,8 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
     </div>
   </div>
 
-  <!-- FEATURED BANNER -->
-  <div class="featured-wrap">
-    <div class="featured-banner">
-      <div class="featured-left">
-        <div class="featured-icon">⚡</div>
-        <div class="featured-text">
-          <strong>آگهی‌ات رو الان ثبت کن</strong>
-          <span>رایگان، سریع و بدون واسطه — مستقیم با خریدار ارتباط بگیر</span>
-        </div>
-      </div>
-      <button class="featured-btn" onclick="goSell()">شروع کن ←</button>
-    </div>
-  </div>
-
-  <!-- TOOLBAR -->
   <div class="toolbar">
-    <div class="tl-left">
+    <div style="display:flex;align-items:center">
       <span class="res-lbl" id="resLbl">جدیدترین آگهی‌ها</span>
       <span class="res-cnt" id="resCnt">…</span>
     </div>
@@ -502,7 +496,6 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
     </div>
   </div>
 
-  <!-- GRID -->
   <div class="grid-wrap">
     <div class="ads-grid" id="adsGrid">
       <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
@@ -513,52 +506,56 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
   </div>
 </div>
 
-<!-- SELL PAGE -->
+<!-- ════ SAVED PAGE ════ -->
+<div class="page" id="page-saved">
+  <div class="saved-pg">
+    <div class="saved-hd">
+      <h2>🔖 آگهی‌های نشان‌شده</h2>
+      <button class="btn-clear-saved" onclick="clearAllSaved()"><i class="ti ti-trash" style="font-size:14px"></i>حذف همه</button>
+    </div>
+    <div class="ads-grid" id="savedGrid">
+      <div class="saved-empty"><span class="se-icon">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SELL ════ -->
 <div class="page" id="page-sell">
   <div class="sell-pg" id="formArea">
-    <div class="sell-hd">
-      <h2>ثبت آگهی رایگان</h2>
-      <p>چند دقیقه وقت بذار — مستقیم با خریدار ارتباط بگیر</p>
+    <div class="sell-hd"><h2>ثبت آگهی رایگان</h2><p>چند دقیقه وقت بذار — مستقیم با خریدار ارتباط بگیر</p></div>
+
+    <!-- تبلیغ ویژه toggle -->
+    <div class="ad-toggle-card">
+      <div class="ad-toggle-left">
+        <div class="ad-toggle-icon">⭐</div>
+        <div class="ad-toggle-text">
+          <strong>آگهی ویژه (تبلیغ)</strong>
+          <span>بالای لیست نمایش داده می‌شه · بیشتر دیده میشه</span>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <button class="toggle-btn off on" id="toggleNoAd" onclick="setAdMode(false)">معمولی</button>
+        <button class="toggle-btn off" id="toggleIsAd" onclick="openAdModal()">ویژه ⭐</button>
+      </div>
     </div>
 
-    <!-- عکس -->
     <div class="step-card">
-      <div class="step-hd"><span class="snum">۱</span><div><div class="step-hd-t">عکس‌های محصول</div><div class="step-hd-s">تا ۸ عکس — عکس بیشتر = فروش سریع‌تر</div></div></div>
-      <div class="upload-zone" id="uploadZone">
-        <i class="ti ti-photo-plus"></i>
-        <div class="ut">اینجا کلیک کن یا عکس بکش بنداز</div>
-        <div class="us">JPG · PNG · WEBP — حداکثر ۵MB هر عکس</div>
-      </div>
+      <div class="step-hd"><span class="snum">۱</span><div><div class="step-hd-t">عکس محصول</div><div class="step-hd-s">تا ۸ عکس — عکس بیشتر = فروش سریع‌تر</div></div></div>
+      <div class="upload-zone" id="uploadZone"><i class="ti ti-photo-plus"></i><div class="ut">برای آپلود کلیک کن</div><div class="us">JPG · PNG · WEBP — حداکثر ۵MB</div></div>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
       <div class="thumb-row" id="thumbRow"></div>
     </div>
 
-    <!-- اطلاعات -->
     <div class="step-card">
       <div class="step-hd"><span class="snum">۲</span><div><div class="step-hd-t">اطلاعات آگهی</div><div class="step-hd-s">هر چه دقیق‌تر، سریع‌تر می‌فروشی</div></div></div>
-      <div class="field">
-        <label>عنوان آگهی <span class="req">*</span></label>
-        <input type="text" id="fTitle" maxlength="80" placeholder="مثلاً: آیفون ۱۴ پرو — ۲۵۶ گیگ — بنفش">
-        <div class="field-hint"><span>واضح و مشخص بنویس</span><span><span id="tc">0</span>/80</span></div>
-      </div>
+      <div class="field"><label>عنوان <span class="req">*</span></label><input type="text" id="fTitle" maxlength="80" placeholder="مثلاً: آیفون ۱۴ پرو — ۲۵۶ گیگ — بنفش"><div class="field-hint"><span>واضح بنویس</span><span id="tc">0</span>/80</div></div>
       <div class="two">
-        <div class="field">
-          <label>دسته‌بندی <span class="req">*</span></label>
-          <select id="fCat">
-            <option value="">انتخاب کن...</option>
-            <option>موبایل و تبلت</option><option>کامپیوتر و لپ‌تاپ</option>
-            <option>لوازم خانگی</option><option>پوشاک و کفش</option>
-            <option>کتاب و تحصیل</option><option>خودرو و موتور</option>
-            <option>ورزش و سرگرمی</option><option>وسایل کودک</option><option>سایر</option>
-          </select>
+        <div class="field"><label>دسته‌بندی <span class="req">*</span></label>
+          <select id="fCat"><option value="">انتخاب کن...</option><option>موبایل و تبلت</option><option>کامپیوتر و لپ‌تاپ</option><option>لوازم خانگی</option><option>پوشاک و کفش</option><option>کتاب و تحصیل</option><option>خودرو و موتور</option><option>ورزش و سرگرمی</option><option>وسایل کودک</option><option>سایر</option></select>
         </div>
-        <div class="field">
-          <label>برند / مدل</label>
-          <input type="text" id="fBrand" placeholder="مثلاً: Apple، Samsung، IKEA">
-        </div>
+        <div class="field"><label>برند / مدل</label><input type="text" id="fBrand" placeholder="Apple، Samsung، IKEA..."></div>
       </div>
-      <div class="field">
-        <label>وضعیت کالا</label>
+      <div class="field"><label>وضعیت کالا</label>
         <div class="cond-grid" id="condGrid">
           <button class="copt on" data-v="نو"><span class="ci2">✨</span>نو — استفاده نشده</button>
           <button class="copt" data-v="در حد نو"><span class="ci2">👌</span>در حد نو</button>
@@ -566,47 +563,20 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
           <button class="copt" data-v="نیاز به تعمیر"><span class="ci2">⚠️</span>نیاز به تعمیر</button>
         </div>
       </div>
-      <div class="field">
-        <label>توضیحات</label>
-        <textarea id="fDesc" maxlength="700" placeholder="ویژگی‌ها، دلیل فروش، نکات مهم که خریدار باید بدونه..."></textarea>
-        <div class="field-hint"><span>توضیح کامل‌تر = اعتماد بیشتر خریدار</span><span><span id="dc">0</span>/700</span></div>
-      </div>
+      <div class="field"><label>توضیحات</label><textarea id="fDesc" maxlength="700" placeholder="ویژگی‌ها، دلیل فروش، نکات مهم..."></textarea><div class="field-hint"><span></span><span id="dc">0</span>/700</div></div>
     </div>
 
-    <!-- قیمت -->
     <div class="step-card">
       <div class="step-hd"><span class="snum">۳</span><div><div class="step-hd-t">قیمت و تماس</div><div class="step-hd-s">این اطلاعات رو خریدار می‌بینه</div></div></div>
       <div class="two">
-        <div class="field">
-          <label>قیمت <span class="req">*</span></label>
-          <div class="price-wrap">
-            <input type="text" id="fPrice" placeholder="۱۲,۵۰۰,۰۰۰">
-            <span class="price-unit">تومان</span>
-          </div>
-        </div>
-        <div class="field">
-          <label>قابل مذاکره؟</label>
-          <select id="fNego">
-            <option value="بله">بله — می‌شه حرف زد</option>
-            <option value="خیر">خیر — قیمت ثابت</option>
-          </select>
-        </div>
+        <div class="field"><label>قیمت <span class="req">*</span></label><div class="price-wrap"><input type="text" id="fPrice" placeholder="۱۲,۵۰۰,۰۰۰"><span class="price-unit">تومان</span></div></div>
+        <div class="field"><label>مذاکره؟</label><select id="fNego"><option value="بله">بله</option><option value="خیر">خیر — قیمت ثابت</option></select></div>
       </div>
       <div class="two">
-        <div class="field">
-          <label>شماره تماس <span class="req">*</span></label>
-          <input type="tel" id="fPhone" maxlength="11" placeholder="09xxxxxxxxx">
-          <div class="field-hint"><span>فقط به خریدار نشان داده می‌شه</span></div>
-        </div>
-        <div class="field">
-          <label>شهر <span class="req">*</span></label>
-          <input type="text" id="fCity" placeholder="مثلاً: تهران، مشهد، اصفهان">
-        </div>
+        <div class="field"><label>شماره تماس <span class="req">*</span></label><input type="tel" id="fPhone" maxlength="11" placeholder="09xxxxxxxxx"><div class="field-hint"><span>فقط به خریدار نشان داده میشه</span></div></div>
+        <div class="field"><label>شهر <span class="req">*</span></label><input type="text" id="fCity" placeholder="تهران، مشهد، اصفهان..."></div>
       </div>
-      <div class="field">
-        <label>نام فروشنده</label>
-        <input type="text" id="fName" placeholder="نام یا نام مستعار (اختیاری)">
-      </div>
+      <div class="field"><label>نام فروشنده</label><input type="text" id="fName" placeholder="نام یا نام مستعار (اختیاری)"></div>
       <div class="submit-row">
         <button class="btn-submit" id="submitBtn"><i class="ti ti-check" style="font-size:17px"></i>ثبت آگهی</button>
         <button class="btn-cancel" onclick="goHome()">انصراف</button>
@@ -614,35 +584,32 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
     </div>
   </div>
 
-  <!-- SUCCESS -->
   <div class="success-pg" id="successArea" style="display:none">
     <div class="sring">🎉</div>
     <h2>آگهی‌ات ثبت شد!</h2>
-    <p>الان توی بازارنو منتشره — همه می‌تونن ببیننش و باهات تماس بگیرن.</p>
+    <p>الان توی بازارنو منتشره — همه می‌تونن ببیننش.</p>
     <div class="sic" id="sicCard"></div>
     <button class="btn-back" onclick="goHome()">مشاهده آگهی‌ها</button>
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- ════ MODAL آگهی ════ -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <div class="modal-top">
-      <div class="modal-cat-pill" id="mCat"></div>
-      <button class="modal-x" id="mClose"><i class="ti ti-x"></i></button>
-    </div>
+    <div class="modal-top"><div class="modal-cat-pill" id="mCat"></div><button class="modal-x" id="mClose"><i class="ti ti-x"></i></button></div>
     <div class="modal-body">
       <div class="m-gallery"><img id="mImg" style="display:none"><div id="mEmoji" class="m-emoji"></div></div>
       <div id="mThumbs" class="m-thumbs"></div>
+      <div id="mAdBanner" style="display:none" class="modal-ad-banner"><i class="ti ti-star-filled" style="font-size:14px"></i> آگهی ویژه — تبلیغ شده</div>
       <div class="modal-title" id="mTitle"></div>
-      <div class="modal-price-row"><div class="modal-price" id="mPrice"></div></div>
+      <div class="modal-price" id="mPrice"></div>
       <div id="mNego"></div>
       <div class="seller-card" id="mSeller"></div>
       <div class="detail-chips" id="mDetails"></div>
       <div class="desc-block" id="mDesc"></div>
       <div class="modal-actions">
         <button class="btn-call" id="mCallBtn"><i class="ti ti-phone"></i>نمایش شماره</button>
-        <button class="btn-save" id="mSaveBtn"><i class="ti ti-heart"></i>ذخیره آگهی</button>
+        <button class="btn-save-m" id="mSaveBtn"><i class="ti ti-heart"></i>نشان کن</button>
       </div>
       <div class="phone-reveal" id="phoneReveal"></div>
       <div class="views-row" id="mViews"></div>
@@ -650,29 +617,108 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
   </div>
 </div>
 
+<!-- ════ MODAL تبلیغ ════ -->
+<div class="ad-modal-bg" id="adModalBg">
+  <div class="ad-modal">
+    <div class="ad-modal-head">
+      <h3>📣 سفارش تبلیغ ویژه</h3>
+      <button class="modal-x" onclick="closeAdModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ad-modal-body">
+      <p style="font-size:13px;color:var(--t3);margin-bottom:1.25rem;line-height:1.7">با تبلیغ ویژه، آگهی‌ات بالای همه آگهی‌ها نمایش داده میشه و یه ستاره طلایی داره که توجه بیشتری جلب می‌کنه.</p>
+      <div class="ad-packages">
+        <div class="pkg-card on" data-pkg="هفتگی" onclick="selectPkg(this)">
+          <div class="pk-head"><span class="pk-name">📦 پکیج هفتگی</span><span class="pk-price">۵۰,۰۰۰ تومان</span></div>
+          <div class="pk-desc">۷ روز نمایش ویژه · ستاره طلایی · بالای لیست</div>
+        </div>
+        <div class="pkg-card" data-pkg="ماهانه" onclick="selectPkg(this)">
+          <div class="pk-head"><span class="pk-name">⭐ پکیج ماهانه <span class="pk-badge">پرفروش</span></span><span class="pk-price">۱۵۰,۰۰۰ تومان</span></div>
+          <div class="pk-desc">۳۰ روز نمایش ویژه · اولویت در جستجو · آمار بازدید</div>
+        </div>
+        <div class="pkg-card" data-pkg="سه‌ماهه" onclick="selectPkg(this)">
+          <div class="pk-head"><span class="pk-name">🏆 پکیج سه‌ماهه</span><span class="pk-price">۳۵۰,۰۰۰ تومان</span></div>
+          <div class="pk-desc">۹۰ روز · بالاترین اولویت · پشتیبانی اختصاصی</div>
+        </div>
+      </div>
+      <div class="ad-contact-info">
+        <h4>برای سفارش با ما در تماس باش:</h4>
+        <a class="contact-link" href="tel:09212302379"><i class="ti ti-phone"></i><div><div style="font-weight:700">09212302379</div><div class="cl-tag">تماس مستقیم</div></div></a>
+        <a class="contact-link" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i><div><div style="font-weight:700">@ma_shahripour</div><div class="cl-tag">پیام در بله</div></div></a>
+        <a class="contact-link" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i><div><div style="font-weight:700">@bazar_no</div><div class="cl-tag">کانال بله بازارنو</div></div></a>
+      </div>
+      <button class="btn-contact-ad" onclick="window.open('https://ble.ir/ma_shahripour','_blank')">
+        <i class="ti ti-brand-telegram" style="font-size:17px"></i>
+        ارسال پیام در بله
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SUPPORT FLOAT ════ -->
+<div class="support-float">
+  <div class="support-menu" id="supportMenu">
+    <a class="support-item" href="tel:09212302379">
+      <i class="ti ti-phone"></i>
+      <div><div class="si-title">09212302379</div><div class="si-sub">تماس مستقیم با پشتیبانی</div></div>
+    </a>
+    <a class="support-item" href="https://ble.ir/ma_shahripour" target="_blank">
+      <i class="ti ti-brand-telegram"></i>
+      <div><div class="si-title">@ma_shahripour</div><div class="si-sub">پیام در بله</div></div>
+    </a>
+    <a class="support-item" href="https://ble.ir/bazar_no" target="_blank">
+      <i class="ti ti-speakerphone"></i>
+      <div><div class="si-title">@bazar_no</div><div class="si-sub">کانال بله بازارنو</div></div>
+    </a>
+    <div class="support-item" style="cursor:pointer" onclick="openAdModal();closeSupportMenu()">
+      <i class="ti ti-star"></i>
+      <div><div class="si-title">سفارش تبلیغ</div><div class="si-sub">آگهی‌ات رو دیده‌تر کن</div></div>
+    </div>
+  </div>
+  <button class="support-btn" id="supportToggle" onclick="toggleSupport()">
+    <i class="ti ti-headset"></i>
+    پشتیبانی
+  </button>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<!-- FOOTER -->
 <footer>
   <div class="ft-inner">
     <div class="ft-top">
       <div class="ft-brand">
         <div class="ft-logo">🛍 بازار<em>نو</em></div>
-        <p>بزرگ‌ترین بازارچه آنلاین ایران برای خرید و فروش مستقیم بین مردم — بدون واسطه، رایگان.</p>
+        <p>بزرگ‌ترین بازارچه آنلاین ایران — خرید و فروش مستقیم بین مردم، بدون واسطه و رایگان.</p>
         <div class="social-row">
-          <a class="soc-btn" href="#"><i class="ti ti-brand-instagram"></i></a>
-          <a class="soc-btn" href="#"><i class="ti ti-brand-telegram"></i></a>
-          <a class="soc-btn" href="#"><i class="ti ti-brand-twitter"></i></a>
+          <a class="soc-btn" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i></a>
+          <a class="soc-btn" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i></a>
+          <a class="soc-btn" href="tel:09212302379"><i class="ti ti-phone"></i></a>
         </div>
       </div>
-      <div class="ft-col"><h4>بازارنو</h4><a href="#">درباره ما</a><a href="#">تماس با ما</a><a href="#">مشاغل</a><a href="#">وبلاگ</a></div>
-      <div class="ft-col"><h4>راهنما</h4><a href="#">نحوه ثبت آگهی</a><a href="#">قوانین</a><a href="#">ایمنی در معاملات</a><a href="#">سوالات متداول</a></div>
-      <div class="ft-col"><h4>پشتیبانی</h4><a href="#">چت آنلاین</a><a href="#">021-12345</a><a href="#">info@bazarno.ir</a><a href="#">۷ روز هفته</a></div>
+      <div class="ft-col">
+        <h4>بازارنو</h4>
+        <a href="#">درباره ما</a>
+        <a href="#" onclick="goSell();return false">ثبت آگهی رایگان</a>
+        <a href="#" onclick="openAdModal();return false">تبلیغ ویژه</a>
+        <a href="#">قوانین و مقررات</a>
+      </div>
+      <div class="ft-col">
+        <h4>راهنما</h4>
+        <a href="#">نحوه ثبت آگهی</a>
+        <a href="#">ایمنی در معاملات</a>
+        <a href="#">سوالات متداول</a>
+        <a href="#">راهنمای تبلیغات</a>
+      </div>
+      <div class="ft-support">
+        <h4>پشتیبانی ۲۴/۷</h4>
+        <a class="ft-contact-link" href="tel:09212302379"><i class="ti ti-phone"></i>09212302379</a>
+        <a class="ft-contact-link" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i>@ma_shahripour در بله</a>
+        <a class="ft-contact-link" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i>@bazar_no کانال بله</a>
+      </div>
     </div>
     <div class="ft-bottom">
       <span>© ۱۴۰۴ بازارنو — تمامی حقوق محفوظ است</span>
       <div class="trust-row">
-        <span class="tbadge"><i class="ti ti-shield-check"></i>پرداخت امن</span>
+        <span class="tbadge"><i class="ti ti-shield-check"></i>امن</span>
         <span class="tbadge"><i class="ti ti-certificate"></i>نماد اعتماد</span>
         <span class="tbadge"><i class="ti ti-lock"></i>SSL</span>
       </div>
@@ -683,10 +729,10 @@ footer { background:var(--ink); color:rgba(255,255,255,.65); padding:3.5rem 1.75
 <script>
 /* ══ INIT ══ */
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const EMOJIS = {'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠','پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗','ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'};
-let ST={cat:'',sort:'newest',q:''}, cond='نو', pickedFiles=[], activeAd=null, currentData=[];
+const EMOJIS={'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠','پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗','ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'};
+let ST={cat:'',sort:'newest',q:''};
+let cond='نو', pickedFiles=[], activeAd=null, currentData=[], isAdPost=false, phoneShown=false;
 let saved=new Set(JSON.parse(localStorage.getItem('bz_saved')||'[]'));
-let phoneShown=false;
 
 /* ── utils ── */
 function toast(msg,type=''){const e=document.getElementById('toast');e.innerHTML=msg;e.className='toast on '+type;clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2800)}
@@ -694,117 +740,157 @@ function fmtFA(n){return n?parseInt(String(n).replace(/\D/g,'')).toLocaleString(
 function fmtEN(n){const s=String(n).replace(/[^0-9]/g,'');return s?parseInt(s).toLocaleString('en'):''}
 function relTime(ts){const d=Date.now()-new Date(ts).getTime();if(d<60000)return'همین الان';if(d<3600000)return Math.floor(d/60000)+' دقیقه پیش';if(d<86400000)return Math.floor(d/3600000)+' ساعت پیش';if(d<604800000)return Math.floor(d/86400000)+' روز پیش';return new Date(ts).toLocaleDateString('fa-IR')}
 function isNew(ts){return Date.now()-new Date(ts).getTime()<3600000*6}
+function updateSavedBadge(){const n=saved.size;const b=document.getElementById('savedBadge');b.textContent=n;b.style.display=n>0?'flex':'none'}
+updateSavedBadge();
 
 /* ══ RENDER ══ */
 async function render(){
   const grid=document.getElementById('adsGrid');
   grid.innerHTML=Array(8).fill(`<div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>`).join('');
-
   let q=SB.from('listings').select('*');
   if(ST.cat) q=q.eq('cat',ST.cat);
-  if(ST.q)   q=q.or(`title.ilike.%${ST.q}%,desc.ilike.%${ST.q}%,city.ilike.%${ST.q}%,brand.ilike.%${ST.q}%`);
+  if(ST.q) q=q.or(`title.ilike.%${ST.q}%,desc.ilike.%${ST.q}%,city.ilike.%${ST.q}%,brand.ilike.%${ST.q}%`);
   if(ST.sort==='cheapest') q=q.order('price',{ascending:true});
   else if(ST.sort==='expensive') q=q.order('price',{ascending:false});
   else q=q.order('created_at',{ascending:false});
-
   const {data,error}=await q.limit(60);
-  if(error){toast('❌ خطا در بارگذاری آگهی‌ها','err');grid.innerHTML='';return}
-
+  if(error){toast('❌ خطا در بارگذاری','err');grid.innerHTML='';return}
   currentData=data||[];
   document.getElementById('resCnt').textContent=currentData.length+' آگهی';
   document.getElementById('hTotal').textContent=fmtFA(currentData.length)||'۰';
-
   if(!currentData.length){
-    grid.innerHTML=`<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای ثبت نشده'}</h3><p>${ST.q?'برای «'+ST.q+'» چیزی پیدا نشد. کلمات دیگری امتحان کن.':'اولین نفر باش و آگهی رایگان ثبت کن!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()"><i class="ti ti-plus" style="font-size:14px"></i>ثبت اولین آگهی</button>':''}</div>`;
+    grid.innerHTML=`<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای نیست'}</h3><p>${ST.q?'برای «'+ST.q+'» چیزی پیدا نشد.':'اولین نفر باش!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()"><i class="ti ti-plus" style="font-size:14px"></i>ثبت اولین آگهی</button>':''}</div>`;
     return;
   }
-
-  grid.innerHTML=currentData.map(ad=>{
-    const em=EMOJIS[ad.cat]||'📦';
-    const img0=ad.images&&ad.images[0];
-    const isSaved=saved.has(ad.id);
-    const fresh=isNew(ad.created_at);
-    let ctC='',ctT='';
-    if(ad.cond==='نو'){ctC='ct-new';ctT='نو';}
-    else if(ad.cond==='در حد نو'){ctC='ct-good';ctT='در حد نو';}
-    else if(ad.cond==='کارکرده سالم'){ctC='ct-used';ctT='کارکرده';}
-    else if(ad.cond==='نیاز به تعمیر'){ctC='ct-fix';ctT='نیاز تعمیر';}
-    return `<div class="adcard" data-id="${ad.id}">
-      <div class="adcard-img">
-        ${img0?`<img src="${img0}" loading="lazy">`:`<div class="adcard-emoji">${em}</div>`}
-        ${ctT?`<span class="cond-tag ${ctC}">${ctT}</span>`:''}
-        ${fresh?'<span class="new-badge">جدید</span>':''}
-        <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();toggleSave('${ad.id}',this)"><i class="ti ti-heart"></i></button>
-      </div>
-      <div class="adcard-body">
-        <div class="adcard-cat">${ad.cat||'سایر'}</div>
-        <div class="adcard-title">${ad.title}</div>
-        <div class="adcard-loc"><i class="ti ti-map-pin"></i>${ad.city} · ${relTime(ad.created_at)}</div>
-        <div class="adcard-foot">
-          <div class="adcard-price ${ad.nego==='بله'?'neg':''}">${fmtFA(ad.price)} <small>تومان</small></div>
-          <div class="arrow-chip"><i class="ti ti-eye" style="font-size:12px"></i>مشاهده</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  // جدا کردن آگهی‌های ویژه
+  const ads=currentData.filter(a=>a.is_ad);
+  const normal=currentData.filter(a=>!a.is_ad);
+  let html='';
+  if(ads.length){
+    html+=`<div class="sponsored-row"><div class="sponsored-label"><i class="ti ti-star-filled" style="font-size:12px"></i>آگهی‌های ویژه</div><div class="sponsored-line"></div></div>`;
+    html+=ads.map(ad=>cardHtml(ad)).join('');
+    if(normal.length) html+=`<div class="sponsored-row" style="margin-top:6px"><div class="sponsored-label" style="color:var(--t3)">سایر آگهی‌ها</div><div class="sponsored-line" style="background:rgba(0,0,0,.08)"></div></div>`;
+  }
+  html+=normal.map(ad=>cardHtml(ad)).join('');
+  grid.innerHTML=html;
   grid.querySelectorAll('.adcard').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
+}
+
+function cardHtml(ad){
+  const em=EMOJIS[ad.cat]||'📦';
+  const img0=ad.images&&ad.images[0];
+  const isSaved=saved.has(ad.id);
+  const fresh=isNew(ad.created_at);
+  let ctC='',ctT='';
+  if(ad.cond==='نو'){ctC='ct-new';ctT='نو';}
+  else if(ad.cond==='در حد نو'){ctC='ct-good';ctT='در حد نو';}
+  else if(ad.cond==='کارکرده سالم'){ctC='ct-used';ctT='کارکرده';}
+  else if(ad.cond==='نیاز به تعمیر'){ctC='ct-fix';ctT='نیاز تعمیر';}
+  return `<div class="adcard${ad.is_ad?' is-ad':''}" data-id="${ad.id}">
+    <div class="adcard-img">
+      ${img0?`<img src="${img0}" loading="lazy">`:`<div class="adcard-emoji">${em}</div>`}
+      ${ctT?`<span class="cond-tag ${ctC}">${ctT}</span>`:''}
+      ${ad.is_ad?'<span class="ad-star-badge"><i class="ti ti-star-filled" style="font-size:9px"></i>ویژه</span>':fresh?'<span class="new-badge">جدید</span>':''}
+      <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();toggleSave('${ad.id}',this)"><i class="ti ti-heart"></i></button>
+    </div>
+    <div class="adcard-body">
+      <div class="adcard-cat">${ad.cat||'سایر'}</div>
+      <div class="adcard-title">${ad.title}</div>
+      <div class="adcard-loc"><i class="ti ti-map-pin"></i>${ad.city} · ${relTime(ad.created_at)}</div>
+      <div class="adcard-foot">
+        <div class="adcard-price ${ad.nego==='بله'?'neg':''}">${fmtFA(ad.price)} <small>تومان</small></div>
+        <div class="arrow-chip"><i class="ti ti-eye" style="font-size:12px"></i>مشاهده</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 /* ══ MODAL ══ */
 function openModal(id){
   const ad=currentData.find(a=>a.id===id);if(!ad)return;
-  activeAd=ad; phoneShown=false;
+  activeAd=ad;phoneShown=false;
   SB.from('listings').update({views:(ad.views||0)+1}).eq('id',id);
   const imgs=ad.images||[];
   const mImg=document.getElementById('mImg'),mEmoji=document.getElementById('mEmoji');
   if(imgs.length){mImg.src=imgs[0];mImg.style.display='block';mEmoji.style.display='none';}
   else{mImg.style.display='none';mEmoji.style.display='block';mEmoji.textContent=EMOJIS[ad.cat]||'📦';}
   document.getElementById('mThumbs').innerHTML=imgs.length>1?imgs.map((s,i)=>`<div class="m-thumb ${i===0?'on':''}" onclick="switchImg('${s}',this)"><img src="${s}" loading="lazy"></div>`).join(''):'';
-  document.getElementById('mCat').innerHTML=`<i class="ti ti-tag" style="font-size:13px"></i>${ad.cat||'آگهی'}`;
+  document.getElementById('mCat').innerHTML=`<i class="ti ti-tag" style="font-size:12px"></i>${ad.cat||'آگهی'}`;
+  document.getElementById('mAdBanner').style.display=ad.is_ad?'flex':'none';
   document.getElementById('mTitle').textContent=ad.title;
   document.getElementById('mPrice').innerHTML=fmtFA(ad.price)+' <small>تومان</small>';
   document.getElementById('mNego').innerHTML=ad.nego==='بله'?'<span class="nego-chip"><i class="ti ti-repeat" style="font-size:11px"></i>قابل مذاکره</span>':'';
   document.getElementById('mSeller').innerHTML=`<div class="seller-av">${(ad.name||'ن').charAt(0)}</div><div><div class="seller-nm">${ad.name||'ناشناس'}</div><div class="seller-mt"><i class="ti ti-map-pin" style="font-size:11px"></i>${ad.city} · فروشنده</div></div>`;
-  const chips=[{l:'وضعیت',v:ad.cond},{l:'دسته',v:ad.cat},{l:'شهر',v:ad.city},{l:'تاریخ',v:relTime(ad.created_at)},...(ad.brand?[{l:'برند',v:ad.brand}]:[])];
-  document.getElementById('mDetails').innerHTML=chips.map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
+  document.getElementById('mDetails').innerHTML=[{l:'وضعیت',v:ad.cond},{l:'دسته',v:ad.cat},{l:'شهر',v:ad.city},{l:'ثبت',v:relTime(ad.created_at)},...(ad.brand?[{l:'برند',v:ad.brand}]:[])].map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
   document.getElementById('mDesc').textContent=ad.desc||'توضیحاتی وارد نشده.';
   document.getElementById('phoneReveal').style.display='none';
-  document.getElementById('phoneReveal').textContent='';
+  document.getElementById('mCallBtn').innerHTML='<i class="ti ti-phone"></i>نمایش شماره';
   const on=saved.has(ad.id);
-  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'ذخیره شده':'ذخیره آگهی'}`;
+  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
   document.getElementById('mViews').innerHTML=`<span><i class="ti ti-eye"></i>${(ad.views||0)+1} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
   document.getElementById('modalBg').classList.add('on');
-  document.getElementById('mCallBtn').innerHTML='<i class="ti ti-phone"></i>نمایش شماره';
 }
 function switchImg(s,el){document.getElementById('mImg').src=s;document.querySelectorAll('.m-thumb').forEach(t=>t.classList.remove('on'));el.classList.add('on')}
 document.getElementById('mClose').onclick=()=>document.getElementById('modalBg').classList.remove('on');
 document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on')});
 document.getElementById('mCallBtn').onclick=()=>{
   if(!activeAd)return;
-  if(!phoneShown){
-    phoneShown=true;
-    const pr=document.getElementById('phoneReveal');
-    pr.textContent='📞 '+activeAd.phone;
-    pr.style.display='block';
-    document.getElementById('mCallBtn').innerHTML='<i class="ti ti-copy"></i>کپی شماره';
-    toast('شماره نمایش داده شد','ok');
-  } else {
-    navigator.clipboard.writeText(activeAd.phone).then(()=>toast('📋 شماره کپی شد','ok')).catch(()=>{});
-  }
+  if(!phoneShown){phoneShown=true;const pr=document.getElementById('phoneReveal');pr.textContent='📞 '+activeAd.phone;pr.style.display='block';document.getElementById('mCallBtn').innerHTML='<i class="ti ti-copy"></i>کپی شماره';toast('شماره نمایش داده شد','ok');}
+  else{navigator.clipboard.writeText(activeAd.phone).then(()=>toast('📋 شماره کپی شد','ok')).catch(()=>{});}
 };
 document.getElementById('mSaveBtn').onclick=()=>{
   if(!activeAd)return;
   toggleSave(activeAd.id,null);
   const on=saved.has(activeAd.id);
-  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'ذخیره شده':'ذخیره آگهی'}`;
+  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
 };
-function toggleSave(id,btn){if(saved.has(id)){saved.delete(id);toast('آگهی از ذخیره‌ها حذف شد');}else{saved.add(id);toast('❤️ آگهی ذخیره شد','ok');}localStorage.setItem('bz_saved',JSON.stringify([...saved]));if(btn)btn.classList.toggle('on',saved.has(id))}
+
+/* ══ SAVE / BOOKMARK ══ */
+function toggleSave(id,btn){
+  if(saved.has(id)){saved.delete(id);toast('آگهی از نشان‌ها حذف شد');}
+  else{saved.add(id);toast('🔖 آگهی نشان شد','ok');}
+  localStorage.setItem('bz_saved',JSON.stringify([...saved]));
+  if(btn)btn.classList.toggle('on',saved.has(id));
+  updateSavedBadge();
+}
+function clearAllSaved(){saved.clear();localStorage.setItem('bz_saved','[]');updateSavedBadge();renderSaved();toast('همه نشان‌ها حذف شد')}
+
+function renderSaved(){
+  const grid=document.getElementById('savedGrid');
+  if(!saved.size){grid.innerHTML='<div class="saved-empty"><span class="se-icon">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>';return}
+  // بارگذاری از Supabase
+  SB.from('listings').select('*').in('id',[...saved]).then(({data})=>{
+    if(!data||!data.length){grid.innerHTML='<div class="saved-empty"><span class="se-icon">🔖</span><h3>آگهی‌ها حذف شده‌اند</h3><p>آگهی‌های نشان‌شده دیگر موجود نیستند</p></div>';return}
+    // اضافه کردن به currentData برای modal
+    data.forEach(d=>{if(!currentData.find(c=>c.id===d.id))currentData.push(d)});
+    grid.innerHTML=data.map(ad=>cardHtml(ad)).join('');
+    grid.querySelectorAll('.adcard').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
+  });
+}
+
+/* ══ AD MODAL ══ */
+function openAdModal(){document.getElementById('adModalBg').classList.add('on')}
+function closeAdModal(){document.getElementById('adModalBg').classList.remove('on')}
+document.getElementById('adModalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAdModal()});
+function selectPkg(el){document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
+function setAdMode(v){isAdPost=v;document.getElementById('toggleNoAd').classList.toggle('on',!v);document.getElementById('toggleIsAd').classList.toggle('on',v)}
+
+/* ══ SUPPORT FLOAT ══ */
+let supportOpen=false;
+function toggleSupport(){supportOpen=!supportOpen;document.getElementById('supportMenu').classList.toggle('on',supportOpen);document.getElementById('supportToggle').innerHTML=supportOpen?'<i class="ti ti-x"></i>بستن':'<i class="ti ti-headset"></i>پشتیبانی'}
+function closeSupportMenu(){supportOpen=false;document.getElementById('supportMenu').classList.remove('on');document.getElementById('supportToggle').innerHTML='<i class="ti ti-headset"></i>پشتیبانی'}
+document.addEventListener('click',e=>{if(supportOpen&&!e.target.closest('.support-float'))closeSupportMenu()});
 
 /* ══ NAV ══ */
-function switchPage(p){document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='page-'+p));document.querySelectorAll('.nav-link').forEach(b=>b.classList.toggle('on',b.dataset.to===p))}
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='page-'+p));
+  document.querySelectorAll('.nav-link,.nav-saved-btn').forEach(b=>b.classList.toggle('on',b.dataset.to===p));
+  if(p==='saved')renderSaved();
+}
 function goHome(){switchPage('home')}
 function goSell(){resetForm();switchPage('sell')}
-document.querySelectorAll('.nav-link').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.to==='sell')resetForm();switchPage(b.dataset.to)}));
+document.querySelectorAll('.nav-link,.nav-saved-btn').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.to==='sell')resetForm();switchPage(b.dataset.to)}));
+document.getElementById('savedNavBtn').addEventListener('click',()=>switchPage('saved'));
 document.getElementById('btnNewAd').onclick=()=>{resetForm();switchPage('sell')};
 
 /* ══ SEARCH ══ */
@@ -819,28 +905,16 @@ const uz=document.getElementById('uploadZone');
 uz.addEventListener('click',()=>document.getElementById('fileInput').click());
 uz.addEventListener('dragover',e=>{e.preventDefault();uz.style.borderColor='var(--mint)'});
 uz.addEventListener('dragleave',()=>uz.style.borderColor='');
-uz.addEventListener('drop',e=>{
-  e.preventDefault();uz.style.borderColor='';
-  const dt=new DataTransfer();
-  [...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')).forEach(f=>dt.items.add(f));
-  document.getElementById('fileInput').files=dt.files;
-  document.getElementById('fileInput').dispatchEvent(new Event('change'));
-});
+uz.addEventListener('drop',e=>{e.preventDefault();uz.style.borderColor='';const dt=new DataTransfer();[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')).forEach(f=>dt.items.add(f));document.getElementById('fileInput').files=dt.files;document.getElementById('fileInput').dispatchEvent(new Event('change'))});
 document.getElementById('fileInput').addEventListener('change',function(){
   [...this.files].forEach(f=>{
-    if(pickedFiles.length>=8){toast('حداکثر ۸ عکس مجاز است','err');return}
-    if(!f.type.startsWith('image/')){toast('فقط فایل عکس قابل قبوله','err');return}
-    if(f.size>5*1024*1024){toast('حجم عکس باید کمتر از ۵MB باشه','err');return}
+    if(pickedFiles.length>=8){toast('حداکثر ۸ عکس','err');return}
+    if(!f.type.startsWith('image/')){toast('فقط عکس','err');return}
+    if(f.size>5*1024*1024){toast('حداکثر ۵MB','err');return}
     pickedFiles.push(f);
     const r=new FileReader();
-    r.onload=ev=>{
-      const d=document.createElement('div');d.className='thumb';
-      const img=document.createElement('img');img.src=ev.target.result;
-      const del=document.createElement('button');del.className='tdel';del.innerHTML='×';
-      del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove()};
-      d.appendChild(img);d.appendChild(del);
-      document.getElementById('thumbRow').appendChild(d);
-    };r.readAsDataURL(f);
+    r.onload=ev=>{const d=document.createElement('div');d.className='thumb';const img=document.createElement('img');img.src=ev.target.result;const del=document.createElement('button');del.className='tdel';del.innerHTML='×';del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove()};d.appendChild(img);d.appendChild(del);document.getElementById('thumbRow').appendChild(d)};
+    r.readAsDataURL(f);
   });this.value='';
 });
 
@@ -861,36 +935,25 @@ document.getElementById('submitBtn').addEventListener('click',async()=>{
   const nego=document.getElementById('fNego').value;
   const name=document.getElementById('fName').value.trim();
   const brand=document.getElementById('fBrand').value.trim();
-
-  if(!title){toast('⚠️ عنوان آگهی رو بنویس','err');return}
-  if(!cat){toast('⚠️ دسته‌بندی رو انتخاب کن','err');return}
-  if(!price){toast('⚠️ قیمت رو وارد کن','err');return}
-  if(!phone||phone.replace(/\D/g,'').length<10){toast('⚠️ شماره تماس معتبر وارد کن','err');return}
+  if(!title){toast('⚠️ عنوان رو بنویس','err');return}
+  if(!cat){toast('⚠️ دسته‌بندی انتخاب کن','err');return}
+  if(!price){toast('⚠️ قیمت وارد کن','err');return}
+  if(!phone||phone.replace(/\D/g,'').length<10){toast('⚠️ شماره معتبر وارد کن','err');return}
   if(!city){toast('⚠️ شهر رو بنویس','err');return}
-
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.innerHTML='⏳ در حال ثبت آگهی...';
-
-  /* آپلود عکس به Supabase Storage */
+  btn.disabled=true;btn.innerHTML='⏳ در حال ثبت...';
   let imageUrls=[];
   for(const file of pickedFiles){
     const ext=file.name.split('.').pop()||'jpg';
-    const fpath=`listings/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const {error:upErr}=await SB.storage.from('images').upload(fpath,file);
-    if(!upErr){
-      const {data:{publicUrl}}=SB.storage.from('images').getPublicUrl(fpath);
-      imageUrls.push(publicUrl);
-    }
+    const fp=`listings/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const {error:upErr}=await SB.storage.from('images').upload(fp,file);
+    if(!upErr){const {data:{publicUrl}}=SB.storage.from('images').getPublicUrl(fp);imageUrls.push(publicUrl);}
   }
-
-  const {error}=await SB.from('listings').insert([{title,cat,cond,desc,brand,price,nego,phone,city,name:name||'ناشناس',images:imageUrls}]);
-
+  const {error}=await SB.from('listings').insert([{title,cat,cond,desc,brand,price,nego,phone,city,name:name||'ناشناس',images:imageUrls,is_ad:isAdPost}]);
   btn.disabled=false;btn.innerHTML='<i class="ti ti-check" style="font-size:17px"></i>ثبت آگهی';
-
-  if(error){toast('❌ خطا در ثبت: '+error.message,'err');return}
-
+  if(error){toast('❌ خطا: '+error.message,'err');return}
   document.getElementById('formArea').style.display='none';
-  document.getElementById('sicCard').innerHTML=[{l:'عنوان',v:title},{l:'قیمت',v:fmtFA(price)+' تومان'},{l:'شهر',v:city},{l:'تماس',v:phone}].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
+  document.getElementById('sicCard').innerHTML=[{l:'عنوان',v:title},{l:'قیمت',v:fmtFA(price)+' تومان'},{l:'شهر',v:city},{l:'تماس',v:phone},{l:'نوع',v:isAdPost?'⭐ ویژه (تبلیغ)':'معمولی'}].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
   document.getElementById('successArea').style.display='';
   render();
 });
@@ -899,15 +962,15 @@ function resetForm(){
   document.getElementById('formArea').style.display='';
   document.getElementById('successArea').style.display='none';
   ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fName','fBrand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
-  document.getElementById('tc').textContent='0';
-  document.getElementById('dc').textContent='0';
-  document.getElementById('thumbRow').innerHTML='';
-  pickedFiles=[];cond='نو';
+  document.getElementById('tc').textContent='0';document.getElementById('dc').textContent='0';
+  document.getElementById('thumbRow').innerHTML='';pickedFiles=[];cond='نو';isAdPost=false;
   document.querySelectorAll('.copt').forEach((b,i)=>b.classList.toggle('on',i===0));
+  setAdMode(false);
 }
 
-/* ══ START ══ */
 render();
 </script>
 </body>
 </html>
+HTMLEOF
+echo "done: $(wc -c < /mnt/user-data/outputs/bazarno-v3.html) bytes"
