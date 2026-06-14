@@ -891,7 +891,19 @@ function clearAllSaved(){saved.clear();localStorage.setItem('bz_saved','[]');upd
 function renderSaved(){
   const grid=document.getElementById('savedGrid');
   if(!saved.size){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>';return}
-  SB.from('listings').select('*').in('id',[...saved]).then(({data})=>{
+  SB.from('listings').insert([{
+  title,
+  cat,
+  cond,
+  desc,
+  brand,
+  price,
+  phone,
+  city,
+  name: name || 'ناشناس',
+  images: imageUrls,
+  status: 'pending'
+}]);
     if(!data||!data.length){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>آگهی‌ها حذف شده‌اند</h3></div>';return}
     data.forEach(d=>{if(!currentData.find(c=>c.id===d.id))currentData.push(d)});
     grid.innerHTML=data.map(cardHtml).join('');
