@@ -1005,6 +1005,80 @@ function resetForm(){
 }
 
 render();
+function adminLogin(){
+  const pass = document.getElementById("adminPass").value;
+
+  if(pass === "12345678"){
+    document.getElementById("adminLogin").style.display="none";
+    document.getElementById("adminPanel").style.display="block";
+    loadPending();
+  }else{
+    alert("رمز اشتباهه");
+  }
+}
+async function loadPending(){
+
+  const { data } = await SB
+    .from('listings')
+    .select('*')
+    .eq('status','pending');
+
+  document.getElementById("panel").innerHTML =
+    data.map(ad => `
+      <div style="border:1px solid #ccc;margin:10px;padding:10px">
+        <h4>${ad.title}</h4>
+        <p>${ad.price}</p>
+
+        <button onclick="approve('${ad.id}')">تایید</button>
+        <button onclick="reject('${ad.id}')">رد</button>
+        <button onclick="removeAd('${ad.id}')">حذف</button>
+      </div>
+    `).join('');
+}
+async function approve(id){
+  await SB.from('listings')
+    .update({status:'approved'})
+    .eq('id',id);
+
+  loadPending();
+  render();
+}
+async function reject(id){
+  await SB.from('listings')
+    .update({status:'rejected'})
+    .eq('id',id);
+
+  loadPending();
+}
+async function removeAd(id){
+  await SB.from('listings')
+    .delete()
+    .eq('id',id);
+
+  loadPending();
+  render();
+}
+async function deleteAll(){
+  if(!confirm("همه حذف شوند؟")) return;
+
+  await SB.from('listings').delete().neq('id',0);
+
+  loadPending();
+  render();
+}
 </script>
+<div id="adminLogin">
+  <input id="adminPass" placeholder="رمز ادمین">
+  <button onclick="adminLogin()">ورود</button>
+</div>
+
+<div id="adminPanel" style="display:none">
+  <h2>پنل ادمین</h2>
+
+  <button onclick="loadPending()">آگهی‌های در انتظار</button>
+  <button onclick="deleteAll()">حذف همه</button>
+
+  <div id="panel"></div>
+</div>
 </body>
 </html>
