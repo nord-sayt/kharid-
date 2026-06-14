@@ -936,7 +936,7 @@ document.getElementById('fileInput').addEventListener('change',function(){
   [...this.files].forEach(f=>{
     if(pickedFiles.length>=8){toast('حداکثر ۸ عکس','err');return}
     if(!f.type.startsWith('image/')){toast('فقط عکس','err');return}
-    if(f.size>5*1024*1024){toast('حداکثر ۵MB','err');return}
+    if(f.size>5*1024*1024){toast('حداکثر 10MB','err');return}
     pickedFiles.push(f);
     const r=new FileReader();
     r.onload=ev=>{const d=document.createElement('div');d.className='thumb';const img=document.createElement('img');img.src=ev.target.result;const del=document.createElement('button');del.className='tdel';del.innerHTML='×';del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove()};d.appendChild(img);d.appendChild(del);document.getElementById('thumbRow').appendChild(d)};
