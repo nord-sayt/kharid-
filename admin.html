@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل ادمین — بازارنو</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--ink:#0E1A14;--forest:#14542E;--green:#1A7A47;--mint:#25B067;--lime:#7ED957;--cream:#F5F0E8;--sand:#EBE4D5;--paper:#FDFBF7;--red:#D94F3D;--amber:#E8A020;--card:#fff;--bd:rgba(14,26,20,.09);--bd2:rgba(14,26,20,.16);--t1:#0E1A14;--t2:#3D5045;--t3:#7A9080;--r:14px;--rsm:9px;--pill:999px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Vazirmatn',sans-serif;direction:rtl;background:#f0f2f5;color:var(--t1);min-height:100vh}
+.admin-layout{display:flex;min-height:100vh}
+/* sidebar */
+.sidebar{width:240px;background:var(--ink);color:#fff;padding:1.5rem 1rem;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-logo{font-size:18px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo em{color:var(--lime);font-style:normal}
+.sb-badge{background:var(--red);color:#fff;border-radius:var(--pill);font-size:10px;padding:2px 7px;font-weight:800;margin-right:auto}
+.sb-link{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rsm);color:rgba(255,255,255,.65);font-size:13px;font-weight:500;cursor:pointer;transition:.15s;margin-bottom:2px;text-decoration:none}
+.sb-link:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-link.on{background:rgba(126,217,87,.12);color:var(--lime)}
+.sb-link i{font-size:18px;flex-shrink:0}
+.sb-sep{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+.sb-logout{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rsm);color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;transition:.15s;margin-top:auto;border:none;background:none;font-family:'Vazirmatn',sans-serif;width:100%}
+.sb-logout:hover{color:var(--red)}
+/* main */
+.main{flex:1;overflow:auto}
+.topbar{background:var(--card);border-bottom:1px solid var(--bd);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:16px;font-weight:800;color:var(--ink)}
+.admin-info{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3)}
+.content{padding:1.5rem}
+/* tabs */
+.tab-wrap{display:flex;gap:6px;margin-bottom:1.5rem;background:var(--card);padding:5px;border-radius:var(--r);border:1px solid var(--bd);width:fit-content}
+.atab{padding:7px 16px;border:none;background:none;font-family:'Vazirmatn',sans-serif;font-size:12px;font-weight:600;color:var(--t3);cursor:pointer;border-radius:var(--rsm);transition:.15s;display:flex;align-items:center;gap:5px}
+.atab:hover{background:var(--sand);color:var(--t2)}
+.atab.on{background:var(--forest);color:var(--lime)}
+.atab .cnt{background:rgba(255,255,255,.25);border-radius:var(--pill);padding:1px 6px;font-size:10px}
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border-radius:var(--r);padding:1rem 1.25rem;border:1px solid var(--bd)}
+.stat-card .sv{font-size:26px;font-weight:800;color:var(--ink)}
+.stat-card .sl{font-size:11px;color:var(--t3);margin-top:3px}
+.stat-card.pending .sv{color:var(--amber)}
+.stat-card.approved .sv{color:var(--green)}
+.stat-card.rejected .sv{color:var(--red)}
+/* listing table */
+.listing-table{width:100%;border-collapse:collapse}
+.listing-table th{text-align:right;padding:8px 12px;font-size:11px;font-weight:700;color:var(--t3);border-bottom:1px solid var(--bd);background:var(--paper)}
+.listing-table td{padding:10px 12px;font-size:12px;color:var(--t2);border-bottom:1px solid var(--bd);vertical-align:middle}
+.listing-table tr:hover td{background:var(--sand)}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--pill);font-size:10px;font-weight:700}
+.st-pending{background:#FEF6E4;color:#7a4f00}
+.st-approved{background:#E8F8EF;color:var(--green)}
+.st-rejected{background:#FDE8E6;color:var(--red)}
+.thumb-mini{width:44px;height:44px;border-radius:var(--rsm);object-fit:cover;background:var(--sand);display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--bd);flex-shrink:0}
+.thumb-mini img{width:100%;height:100%;object-fit:cover;border-radius:calc(var(--rsm) - 2px)}
+.action-btns{display:flex;gap:5px;flex-wrap:wrap}
+.btn-approve{background:#E8F8EF;color:var(--green);border:none;padding:5px 10px;border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:3px}
+.btn-approve:hover{background:var(--mint);color:#fff}
+.btn-reject{background:#FDE8E6;color:var(--red);border:none;padding:5px 10px;border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:3px}
+.btn-reject:hover{background:var(--red);color:#fff}
+.btn-delete{background:var(--sand);color:var(--t3);border:none;padding:5px 8px;border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:11px;cursor:pointer;transition:.15s}
+.btn-delete:hover{background:var(--red);color:#fff}
+.btn-view{background:var(--sand);color:var(--t2);border:1px solid var(--bd);padding:5px 10px;border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:11px;cursor:pointer;transition:.15s}
+.btn-view:hover{border-color:var(--mint);color:var(--forest)}
+/* user section */
+.user-card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:10px;cursor:pointer;transition:.2s}
+.user-card:hover{border-color:var(--mint);box-shadow:0 4px 18px rgba(26,122,71,.12)}
+.user-card.open{border-color:var(--mint)}
+.user-hd{display:flex;align-items:center;gap:12px}
+.user-av{width:42px;height:42px;border-radius:50%;background:var(--forest);color:var(--lime);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.user-nm{font-size:14px;font-weight:700;color:var(--ink)}
+.user-info{font-size:11px;color:var(--t3);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap}
+.user-info span{display:flex;align-items:center;gap:3px}
+.user-listings{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--bd);display:none}
+.user-card.open .user-listings{display:block}
+.user-listing-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--rsm);background:var(--paper);margin-bottom:6px;border:1px solid var(--bd)}
+.ulr-thumb{width:38px;height:38px;border-radius:var(--rsm);background:var(--sand);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden}
+.ulr-thumb img{width:100%;height:100%;object-fit:cover}
+.ulr-title{font-size:12px;font-weight:600;color:var(--ink);flex:1}
+.ulr-meta{font-size:10px;color:var(--t3);display:flex;gap:8px;margin-top:2px}
+/* ad activate */
+.ad-pkg-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ad-pkg-btn{border:1px solid var(--bd2);border-radius:var(--rsm);padding:5px 10px;font-size:10px;font-weight:700;background:var(--paper);color:var(--t2);cursor:pointer;transition:.15s;font-family:'Vazirmatn',sans-serif}
+.ad-pkg-btn:hover{border-color:var(--amber);color:var(--amber)}
+.ad-pkg-btn.on{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+/* modal */
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(14,26,20,.6);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:1rem}
+.overlay.on{display:flex}
+.modal-box{background:var(--paper);border-radius:18px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+.modal-hd{padding:.9rem 1.1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--paper);border-radius:18px 18px 0 0}
+.modal-hd h3{font-size:15px;font-weight:800}
+.modal-close{width:28px;height:28px;border-radius:50%;background:var(--sand);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t2)}
+.modal-bd{padding:1.1rem}
+.detail-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r);background:var(--sand);margin-bottom:.9rem}
+.detail-img-placeholder{width:100%;aspect-ratio:4/3;background:var(--sand);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:.9rem}
+.img-thumb-row{display:flex;gap:6px;margin-bottom:.9rem;overflow-x:auto}
+.img-thumb-row img{width:56px;height:56px;object-fit:cover;border-radius:var(--rsm);cursor:pointer;border:2px solid transparent;transition:.15s}
+.img-thumb-row img:hover,.img-thumb-row img.on{border-color:var(--mint)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.9rem}
+.dg-item{background:var(--sand);border-radius:var(--rsm);padding:8px 11px;border:1px solid var(--bd)}
+.dg-item .dl{font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.dg-item .dv{font-size:12px;font-weight:700;color:var(--ink)}
+.reject-box textarea{width:100%;padding:10px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:12px;resize:vertical;min-height:70px;background:var(--paper);color:var(--t1)}
+.reject-box textarea:focus{outline:none;border-color:var(--red)}
+.modal-actions{display:flex;gap:8px;padding:1rem 1.1rem;border-top:1px solid var(--bd)}
+/* toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:var(--pill);font-size:13px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.26);transition:transform .3s cubic-bezier(.34,1.4,.64,1);pointer-events:none;z-index:999}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--forest)}
+.toast.err{background:#8B2A22}
+.empty-state{text-align:center;padding:3rem;color:var(--t3)}
+.empty-state i{font-size:48px;display:block;margin-bottom:12px;color:var(--bd2)}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.filter-input{height:36px;padding:0 12px;border:1px solid var(--bd2);border-radius:var(--pill);font-size:12px;font-family:'Vazirmatn',sans-serif;background:var(--card);color:var(--t1)}
+.filter-input:focus{outline:none;border-color:var(--mint)}
+.table-wrap{background:var(--card);border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;overflow-x:auto}
+.load-more{display:block;text-align:center;padding:12px;font-size:12px;font-weight:600;color:var(--t3);cursor:pointer;transition:.15s;background:none;border:none;font-family:'Vazirmatn',sans-serif;width:100%}
+.load-more:hover{color:var(--forest)}
+.phone-bold{font-size:13px;font-weight:800;color:var(--forest);display:flex;align-items:center;gap:4px}
+</style>
+</head>
+<body>
+<div id="loginGate" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--cream)">
+  <div style="background:var(--card);border-radius:20px;padding:2rem;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.12)">
+    <div style="font-size:22px;font-weight:800;color:var(--forest);margin-bottom:1rem">🛍 ادمین بازارنو</div>
+    <input type="email" id="admEmail" placeholder="ایمیل ادمین" style="width:100%;height:44px;padding:0 13px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:13px;background:var(--paper);color:var(--t1);margin-bottom:10px">
+    <input type="password" id="admPass" placeholder="رمز عبور" style="width:100%;height:44px;padding:0 13px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-family:'Vazirmatn',sans-serif;font-size:13px;background:var(--paper);color:var(--t1);margin-bottom:14px">
+    <button onclick="adminLogin()" style="width:100%;height:46px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:800;cursor:pointer">ورود</button>
+    <p id="admErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">ایمیل یا رمز اشتباهه</p>
+  </div>
+</div>
+
+<div class="admin-layout" id="adminPanel" style="display:none">
+  <aside class="sidebar">
+    <div class="sb-logo">🛍 بازار<em>نو</em><br><small style="font-size:10px;opacity:.4;font-weight:400">پنل مدیریت</small></div>
+    <a class="sb-link on" onclick="showSection('pending')"><i class="ti ti-clock"></i>آگهی‌های انتظار <span class="sb-badge" id="pendBadge">0</span></a>
+    <a class="sb-link" onclick="showSection('approved')"><i class="ti ti-check"></i>تایید شده</a>
+    <a class="sb-link" onclick="showSection('rejected')"><i class="ti ti-x"></i>رد شده</a>
+    <div class="sb-sep"></div>
+    <a class="sb-link" onclick="showSection('users')"><i class="ti ti-users"></i>کاربران</a>
+    <a class="sb-link" onclick="showSection('ads')"><i class="ti ti-star"></i>تبلیغات</a>
+    <div class="sb-sep"></div>
+    <a class="sb-link" href="index.html" target="_blank"><i class="ti ti-external-link"></i>مشاهده سایت</a>
+    <button class="sb-logout" onclick="adminLogout()"><i class="ti ti-logout" style="font-size:17px"></i>خروج</button>
+  </aside>
+  <div class="main">
+    <div class="topbar"><h1 id="sectionTitle">آگهی‌های در انتظار تایید</h1><div class="admin-info"><i class="ti ti-user-circle" style="font-size:18px"></i><span id="adminEmail">—</span></div></div>
+    <div class="content">
+      <div class="stats-row">
+        <div class="stat-card pending"><div class="sv" id="s-pending">—</div><div class="sl">در انتظار تایید</div></div>
+        <div class="stat-card approved"><div class="sv" id="s-approved">—</div><div class="sl">تایید شده</div></div>
+        <div class="stat-card rejected"><div class="sv" id="s-rejected">—</div><div class="sl">رد شده</div></div>
+        <div class="stat-card"><div class="sv" id="s-total">—</div><div class="sl">کل آگهی‌ها</div></div>
+      </div>
+
+      <!-- LISTINGS SECTION -->
+      <div id="sec-listings">
+        <div class="filter-bar">
+          <input class="filter-input" id="searchQ" placeholder="جستجو..." oninput="filterListings()">
+          <input class="filter-input" id="filterCat" placeholder="دسته‌بندی..." oninput="filterListings()" style="width:140px">
+          <input class="filter-input" id="filterCity" placeholder="شهر..." oninput="filterListings()" style="width:100px">
+        </div>
+        <div class="table-wrap">
+          <table class="listing-table">
+            <thead><tr><th>عکس</th><th>عنوان</th><th>فروشنده</th><th>شهر</th><th>قیمت</th><th>وضعیت</th><th>تاریخ</th><th>عملیات</th></tr></thead>
+            <tbody id="listingsTbody"></tbody>
+          </table>
+          <button class="load-more" id="loadMoreBtn" onclick="loadMore()">بارگذاری بیشتر...</button>
+        </div>
+      </div>
+
+      <!-- USERS SECTION -->
+      <div id="sec-users" style="display:none">
+        <div class="filter-bar">
+          <input class="filter-input" id="userSearch" placeholder="جستجوی کاربر..." oninput="filterUsers()" style="width:200px">
+        </div>
+        <div id="usersContainer"></div>
+      </div>
+
+      <!-- ADS SECTION -->
+      <div id="sec-ads" style="display:none">
+        <div class="table-wrap">
+          <table class="listing-table">
+            <thead><tr><th>آگهی</th><th>کاربر</th><th>شماره</th><th>بسته</th><th>تاریخ درخواست</th><th>وضعیت</th><th>فعال‌سازی</th></tr></thead>
+            <tbody id="adsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal-box">
+    <div class="modal-hd"><h3 id="dTitle">جزئیات آگهی</h3><button class="modal-close" onclick="closeDetail()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-bd" id="modalBd"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL="https://ffpzdohwrhdrdgtczzjc.supabase.co";
+const SUPABASE_KEY="sb_publishable_J8zWi6EO4xP3LxmsS2gXig_HY3aHycL";
+const ADMIN_EMAIL="admin@bazarno.ir"; // ایمیلت رو اینجا بذار
+const SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const EMOJIS={'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠','پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗','ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'};
+
+let allListings=[],filteredListings=[],allUsers=[],allAds=[];
+let currentSection='pending',pageSize=20,currentPage=0;
+let currentDetail=null;
+
+function toast(msg,type=''){const e=document.getElementById('toast');e.textContent=msg;e.className='toast on '+(type||'');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2800)}
+function fmtFA(n){return n?parseInt(String(n).replace(/\D/g,'')).toLocaleString('fa-IR'):'-'}
+function relTime(ts){const d=Date.now()-new Date(ts).getTime();if(d<60000)return'همین الان';if(d<3600000)return Math.floor(d/60000)+' دقیقه پیش';if(d<86400000)return Math.floor(d/3600000)+' ساعت پیش';if(d<604800000)return Math.floor(d/86400000)+' روز پیش';return new Date(ts).toLocaleDateString('fa-IR')}
+
+async function adminLogin(){
+  const email=document.getElementById('admEmail').value.trim();
+  const pass=document.getElementById('admPass').value;
+  const {error}=await SB.auth.signInWithPassword({email,password:pass});
+  if(error||email!==ADMIN_EMAIL){document.getElementById('admErr').style.display='block';SB.auth.signOut();return}
+  init();
+}
+
+async function checkAuth(){
+  const {data:{user}}=await SB.auth.getUser();
+  if(user&&user.email===ADMIN_EMAIL){init();}
+  else{document.getElementById('loginGate').style.display='flex';}
+}
+
+async function adminLogout(){await SB.auth.signOut();location.reload()}
+
+async function init(){
+  document.getElementById('loginGate').style.display='none';
+  document.getElementById('adminPanel').style.display='flex';
+  const {data:{user}}=await SB.auth.getUser();
+  document.getElementById('adminEmail').textContent=user?.email||'';
+  await loadAll();
+}
+
+async function loadAll(){
+  const [{data:listings},{data:users},{data:ads}]=await Promise.all([
+    SB.from('listings').select('*').order('created_at',{ascending:false}),
+    SB.from('listings').select('user_id,name,phone').not('user_id','is',null),
+    SB.from('ad_subscriptions').select('*').order('created_at',{ascending:false})
+  ]);
+  allListings=listings||[];
+  allAds=ads||[];
+
+  // dedupe users
+  const seen=new Set();
+  allUsers=(listings||[]).filter(l=>{if(!l.user_id||seen.has(l.user_id))return false;seen.add(l.user_id);return true}).map(l=>({id:l.user_id,name:l.name,phone:l.phone}));
+
+  updateStats();
+  showSection(currentSection);
+}
+
+function updateStats(){
+  const p=allListings.filter(l=>l.status==='pending').length;
+  const a=allListings.filter(l=>l.status==='approved').length;
+  const r=allListings.filter(l=>l.status==='rejected').length;
+  document.getElementById('s-pending').textContent=p;
+  document.getElementById('s-approved').textContent=a;
+  document.getElementById('s-rejected').textContent=r;
+  document.getElementById('s-total').textContent=allListings.length;
+  document.getElementById('pendBadge').textContent=p;
+  document.getElementById('pendBadge').style.display=p?'':'none';
+}
+
+function showSection(sec){
+  currentSection=sec;currentPage=0;
+  const titles={'pending':'آگهی‌های در انتظار تایید','approved':'آگهی‌های تایید شده','rejected':'آگهی‌های رد شده','users':'مدیریت کاربران','ads':'مدیریت تبلیغات'};
+  document.getElementById('sectionTitle').textContent=titles[sec]||sec;
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('on'));
+  event?.currentTarget?.classList.add('on');
+  document.getElementById('sec-listings').style.display=(['pending','approved','rejected'].includes(sec))?'':'none';
+  document.getElementById('sec-users').style.display=sec==='users'?'':'none';
+  document.getElementById('sec-ads').style.display=sec==='ads'?'':'none';
+  if(['pending','approved','rejected'].includes(sec)){filterListings();}
+  else if(sec==='users'){renderUsers();}
+  else if(sec==='ads'){renderAds();}
+}
+
+function filterListings(){
+  const q=(document.getElementById('searchQ')?.value||'').toLowerCase();
+  const cat=(document.getElementById('filterCat')?.value||'').toLowerCase();
+  const city=(document.getElementById('filterCity')?.value||'').toLowerCase();
+  filteredListings=allListings.filter(l=>{
+    if(l.status!==currentSection)return false;
+    if(q&&!((l.title||'').toLowerCase().includes(q)||(l.phone||'').includes(q)||(l.name||'').toLowerCase().includes(q)))return false;
+    if(cat&&!(l.cat||'').toLowerCase().includes(cat))return false;
+    if(city&&!(l.city||'').toLowerCase().includes(city))return false;
+    return true;
+  });
+  currentPage=0;
+  renderListings();
+}
+
+function renderListings(){
+  const tbody=document.getElementById('listingsTbody');
+  const slice=filteredListings.slice(0,pageSize*(currentPage+1));
+  if(!slice.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--t3)"><i class="ti ti-inbox" style="font-size:36px;display:block;margin-bottom:8px"></i>آگهی‌ای وجود نداره</td></tr>`;document.getElementById('loadMoreBtn').style.display='none';return}
+  tbody.innerHTML=slice.map(l=>{
+    const img=l.images&&l.images[0];
+    const em=EMOJIS[l.cat]||'📦';
+    let stClass='st-pending',stTxt='انتظار';
+    if(l.status==='approved'){stClass='st-approved';stTxt='تایید';}
+    if(l.status==='rejected'){stClass='st-rejected';stTxt='رد';}
+    return `<tr>
+      <td><div class="thumb-mini">${img?`<img src="${img}" loading="lazy">`:`<span>${em}</span>`}</div></td>
+      <td style="max-width:180px"><div style="font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">${l.cat||''}</div></td>
+      <td><div style="font-size:12px;font-weight:600">${l.name||'ناشناس'}</div><div class="phone-bold" style="font-size:11px"><i class="ti ti-phone" style="font-size:11px"></i>${l.phone||'-'}</div></td>
+      <td style="font-size:11px">${l.city||'-'}</td>
+      <td style="font-size:12px;font-weight:700;color:var(--forest)">${fmtFA(l.price)}</td>
+      <td><span class="status-pill ${stClass}">${stTxt}</span></td>
+      <td style="font-size:10px;color:var(--t3);white-space:nowrap">${relTime(l.created_at)}</td>
+      <td><div class="action-btns">
+        <button class="btn-view" onclick="openDetail('${l.id}')"><i class="ti ti-eye" style="font-size:11px"></i>جزئیات</button>
+        ${l.status!=='approved'?`<button class="btn-approve" onclick="changeStatus('${l.id}','approved')"><i class="ti ti-check" style="font-size:11px"></i>تایید</button>`:''}
+        ${l.status!=='rejected'?`<button class="btn-reject" onclick="rejectDialog('${l.id}')"><i class="ti ti-x" style="font-size:11px"></i>رد</button>`:''}
+        <button class="btn-delete" onclick="deleteListing('${l.id}')"><i class="ti ti-trash" style="font-size:11px"></i></button>
+      </div></td>
+    </tr>`}).join('');
+  document.getElementById('loadMoreBtn').style.display=filteredListings.length>slice.length?'block':'none';
+}
+
+function loadMore(){currentPage++;renderListings()}
+
+async function changeStatus(id,status,reason=''){
+  const update={status};if(reason)update.reject_reason=reason;
+  const {error}=await SB.from('listings').update(update).eq('id',id);
+  if(error){toast('❌ خطا','err');return}
+  allListings=allListings.map(l=>l.id===id?{...l,...update}:l);
+  updateStats();filterListings();
+  toast(status==='approved'?'✅ تایید شد':'❌ رد شد',status==='approved'?'ok':'err');
+  closeDetail();
+}
+
+async function deleteListing(id){
+  if(!confirm('مطمئنی؟ این آگهی پاک میشه'))return;
+  await SB.from('listings').delete().eq('id',id);
+  allListings=allListings.filter(l=>l.id!==id);
+  updateStats();filterListings();toast('آگهی حذف شد');
+}
+
+function rejectDialog(id){
+  const reason=prompt('دلیل رد (اختیاری):');
+  if(reason===null)return;
+  changeStatus(id,'rejected',reason);
+}
+
+function openDetail(id){
+  const l=allListings.find(a=>a.id===id);if(!l)return;
+  currentDetail=l;
+  document.getElementById('dTitle').textContent=l.title;
+  const imgs=l.images||[];
+  const mainImg=imgs.length?`<img id="mainImg" class="detail-img" src="${imgs[0]}">`:`<div class="detail-img-placeholder">${EMOJIS[l.cat]||'📦'}</div>`;
+  const thumbs=imgs.length>1?`<div class="img-thumb-row">${imgs.map((s,i)=>`<img src="${s}" class="${i===0?'on':''}" onclick="switchDetailImg(this,'${s}')">`).join('')}</div>`:'';
+  document.getElementById('modalBd').innerHTML=`
+    ${mainImg}${thumbs}
+    <div class="detail-grid">
+      <div class="dg-item"><div class="dl">فروشنده</div><div class="dv">${l.name||'ناشناس'}</div></div>
+      <div class="dg-item"><div class="dl">شماره</div><div class="dv" style="color:var(--forest);direction:ltr">${l.phone||'-'}</div></div>
+      <div class="dg-item"><div class="dl">دسته</div><div class="dv">${l.cat||'-'}</div></div>
+      <div class="dg-item"><div class="dl">وضعیت کالا</div><div class="dv">${l.cond||'-'}</div></div>
+      <div class="dg-item"><div class="dl">قیمت</div><div class="dv" style="color:var(--forest)">${fmtFA(l.price)} تومان</div></div>
+      <div class="dg-item"><div class="dl">شهر</div><div class="dv">${l.city||'-'}</div></div>
+      <div class="dg-item"><div class="dl">برند</div><div class="dv">${l.brand||'-'}</div></div>
+      <div class="dg-item"><div class="dl">مذاکره</div><div class="dv">${l.nego||'-'}</div></div>
+    </div>
+    ${l.description?`<div style="background:var(--sand);border-radius:var(--rsm);padding:12px;font-size:12px;line-height:1.8;color:var(--t2);border:1px solid var(--bd)">${l.description}</div>`:''}
+    ${l.status==='rejected'&&l.reject_reason?`<div style="background:#FDE8E6;border-radius:var(--rsm);padding:10px;font-size:12px;color:var(--red);margin-top:8px">دلیل رد: ${l.reject_reason}</div>`:''}
+    <div style="padding-top:1rem;margin-top:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px">فعال‌سازی تبلیغ ویژه:</div>
+      <div class="ad-pkg-row">
+        <button class="ad-pkg-btn" onclick="activateAd('${l.id}',7,'هفتگی')">هفتگی (۷ روز)</button>
+        <button class="ad-pkg-btn" onclick="activateAd('${l.id}',30,'ماهانه')">ماهانه (۳۰ روز)</button>
+        <button class="ad-pkg-btn" onclick="activateAd('${l.id}',90,'سه‌ماهه')">سه‌ماهه (۹۰ روز)</button>
+        ${l.is_ad?`<span style="background:#E8F8EF;color:var(--green);border-radius:var(--rsm);padding:5px 10px;font-size:10px;font-weight:700">✅ در حال تبلیغ</span>`:''}
+      </div>
+    </div>`;
+  const actions=document.getElementById('modalActions');
+  actions.innerHTML=`
+    <button class="btn-reject" style="flex:1;justify-content:center;padding:11px" onclick="rejectDialog('${l.id}')"><i class="ti ti-x"></i>رد آگهی</button>
+    <button class="btn-approve" style="flex:1;justify-content:center;padding:11px;font-size:13px" onclick="changeStatus('${l.id}','approved')"><i class="ti ti-check"></i>تایید و انتشار</button>`;
+  document.getElementById('detailOverlay').classList.add('on');
+}
+function switchDetailImg(el,src){document.getElementById('mainImg').src=src;document.querySelectorAll('.img-thumb-row img').forEach(i=>i.classList.remove('on'));el.classList.add('on')}
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('on')}
+document.getElementById('detailOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDetail()});
+
+async function activateAd(id,days,pkg){
+  const expires=new Date(Date.now()+days*86400000).toISOString();
+  await Promise.all([
+    SB.from('listings').update({is_ad:true,ad_expires_at:expires,status:'approved'}).eq('id',id),
+    SB.from('ad_subscriptions').update({is_active:true,expires_at:expires}).eq('listing_id',id)
+  ]);
+  allListings=allListings.map(l=>l.id===id?{...l,is_ad:true,ad_expires_at:expires,status:'approved'}:l);
+  updateStats();filterListings();toast(`✅ تبلیغ ${pkg} فعال شد`,'ok');closeDetail();
+}
+
+function renderUsers(){
+  const q=(document.getElementById('userSearch')?.value||'').toLowerCase();
+  const users=allUsers.filter(u=>!q||(u.name||'').toLowerCase().includes(q)||(u.phone||'').includes(q));
+  const container=document.getElementById('usersContainer');
+  if(!users.length){container.innerHTML='<div class="empty-state"><i class="ti ti-users"></i><p>کاربری پیدا نشد</p></div>';return}
+  container.innerHTML=users.map(u=>{
+    const userListings=allListings.filter(l=>l.user_id===u.id);
+    const approved=userListings.filter(l=>l.status==='approved').length;
+    const pending=userListings.filter(l=>l.status==='pending').length;
+    return `<div class="user-card" onclick="this.classList.toggle('open')">
+      <div class="user-hd">
+        <div class="user-av">${(u.name||'?').charAt(0)}</div>
+        <div style="flex:1">
+          <div class="user-nm">${u.name||'ناشناس'}</div>
+          <div class="user-info">
+            <span><i class="ti ti-phone" style="font-size:11px"></i>${u.phone||'-'}</span>
+            <span><i class="ti ti-list" style="font-size:11px"></i>${userListings.length} آگهی</span>
+            <span style="color:var(--green)"><i class="ti ti-check" style="font-size:11px"></i>${approved} تایید</span>
+            ${pending?`<span style="color:var(--amber)"><i class="ti ti-clock" style="font-size:11px"></i>${pending} انتظار</span>`:''}
+          </div>
+        </div>
+        <i class="ti ti-chevron-down" style="font-size:16px;color:var(--t3);transition:.2s"></i>
+      </div>
+      <div class="user-listings">
+        ${userListings.map(l=>{
+          const img=l.images&&l.images[0];
+          const em=EMOJIS[l.cat]||'📦';
+          let stClass='st-pending',stTxt='انتظار';
+          if(l.status==='approved'){stClass='st-approved';stTxt='تایید';}
+          if(l.status==='rejected'){stClass='st-rejected';stTxt='رد';}
+          return `<div class="user-listing-row">
+            <div class="ulr-thumb">${img?`<img src="${img}">`:`<span>${em}</span>`}</div>
+            <div style="flex:1">
+              <div class="ulr-title">${l.title}</div>
+              <div class="ulr-meta">
+                <span>${fmtFA(l.price)} تومان</span>
+                <span>${l.city||'-'}</span>
+                <span class="status-pill ${stClass}" style="font-size:9px;padding:2px 6px">${stTxt}</span>
+              </div>
+            </div>
+            <button class="btn-view" onclick="event.stopPropagation();openDetail('${l.id}')"><i class="ti ti-eye" style="font-size:11px"></i>بررسی</button>
+          </div>`}).join('')}
+      </div>
+    </div>`}).join('');
+}
+
+function filterUsers(){renderUsers()}
+
+function renderAds(){
+  const tbody=document.getElementById('adsTbody');
+  const adsWithListing=allAds.map(a=>({...a,listing:allListings.find(l=>l.id===a.listing_id)}));
+  if(!adsWithListing.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--t3)">درخواست تبلیغی وجود نداره</td></tr>`;return}
+  tbody.innerHTML=adsWithListing.map(a=>{
+    const l=a.listing;
+    return `<tr>
+      <td>${l?`<div style="font-size:12px;font-weight:600">${l.title}</div><div style="font-size:10px;color:var(--t3)">${l.cat||''}</div>`:'حذف شده'}</td>
+      <td>${l?.name||a.user_id?.slice(0,8)||'-'}</td>
+      <td class="phone-bold" style="direction:ltr">${l?.phone||a.phone||'-'}</td>
+      <td><span style="background:${a.package==='ماهانه'?'var(--amber-l)':'var(--sand)'};padding:3px 8px;border-radius:var(--pill);font-size:10px;font-weight:700">${a.package||'-'}</span></td>
+      <td style="font-size:10px;color:var(--t3)">${relTime(a.created_at)}</td>
+      <td>${a.is_active?`<span class="status-pill st-approved">فعال<br><small style="font-size:9px">${a.expires_at?new Date(a.expires_at).toLocaleDateString('fa-IR'):''}</small></span>`:'<span class="status-pill st-pending">انتظار</span>'}</td>
+      <td><div class="action-btns">
+        ${!a.is_active?`<button class="btn-approve" onclick="activateAdDirect('${a.id}','${a.listing_id}',${a.package==='سه‌ماهه'?90:a.package==='ماهانه'?30:7})"><i class="ti ti-star" style="font-size:11px"></i>فعال‌سازی</button>`:''}
+        ${l?`<button class="btn-view" onclick="openDetail('${l.id}')"><i class="ti ti-eye" style="font-size:11px"></i>آگهی</button>`:''}
+      </div></td>
+    </tr>`}).join('');
+}
+
+async function activateAdDirect(adId,listingId,days){
+  const expires=new Date(Date.now()+days*86400000).toISOString();
+  await Promise.all([
+    SB.from('ad_subscriptions').update({is_active:true,expires_at:expires}).eq('id',adId),
+    SB.from('listings').update({is_ad:true,ad_expires_at:expires,status:'approved'}).eq('id',listingId)
+  ]);
+  toast('✅ تبلیغ فعال شد','ok');loadAll();
+}
+
+checkAuth();
+</script>
+</body>
+</html>
