@@ -2,569 +2,568 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>بازارنو — بازارچه آنلاین ایران</title>
-<meta name="description" content="بازارنو — خرید و فروش آنلاین رایگان ">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>بازارچه — خرید و فروش هوشمند</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-/* ══════════════════════════════════════
-   ⚙️  فقط اینجا رو عوض کن
-══════════════════════════════════════ */
-const SUPABASE_URL = "https://ffpzdohwrhdrdgtczzjc.supabase.co";
-const SUPABASE_KEY = "sb_publishable_J8zWi6EO4xP3LxmsS2gXig_HY3aHycL";
-/*
-  SQL که باید توی Supabase → SQL Editor اجرا کنی:
-
-  create table listings (
-    id uuid default gen_random_uuid() primary key,
-    title text, cat text, cond text, desc text, brand text,
-    price text, nego text, phone text, city text, name text,
-    images text[], views int default 0,
-    is_ad boolean default false,
-    created_at timestamptz default now()
-  );
-  alter table listings enable row level security;
-  create policy "all" on listings for all using (true) with check (true);
-
-  Storage: یه bucket با اسم "images" بساز و Public بذار
-*/
+/* ══ فقط اینجا رو عوض کن ══ */
+const SB_URL  = "https://XXXXXXXXXX.supabase.co";   // Project URL
+const SB_KEY  = "eyJhbGci...";                        // anon/public key
+const ADMIN_PASS = "admin1234";
+const BALE_CHANNEL = "https://ble.ir/bazar_no";
+const BALE_SUPPORT = "https://ble.ir/ma_shahripour";
+const SUPPORT_PHONE = "09212302379";
 </script>
-
 <style>
-:root {
-  --ink:#0E1A14; --forest:#14542E; --green:#1A7A47; --mint:#25B067; --lime:#7ED957;
-  --cream:#F5F0E8; --sand:#EBE4D5; --paper:#FDFBF7;
-  --red:#D94F3D; --amber:#E8A020; --amber-l:#FEF6E4;
-  --card:#fff; --bd:rgba(14,26,20,.09); --bd2:rgba(14,26,20,.16);
-  --t1:#0E1A14; --t2:#3D5045; --t3:#7A9080;
-  --r:14px; --rsm:9px; --pill:999px;
-  --shg:0 6px 28px rgba(26,122,71,.32); --shh:0 14px 44px rgba(14,26,20,.13);
+:root{
+  --p:#5B4FCF;--p2:#7C6FE0;--p3:#EEF0FF;--p4:#F8F7FF;
+  --g:#16A34A;--g2:#22C55E;--g3:#DCFCE7;
+  --red:#EF4444;--amber:#F59E0B;
+  --ink:#0F172A;--ink2:#334155;--ink3:#64748B;--ink4:#94A3B8;
+  --bg:#F1F5F9;--card:#FFFFFF;--card2:#F8FAFC;--sand:#F1F5F9;
+  --bd:rgba(15,23,42,.07);--bd2:rgba(15,23,42,.13);
+  --r:14px;--rsm:9px;--rpill:999px;
+  --sh:0 1px 6px rgba(0,0,0,.06);--shm:0 8px 28px rgba(0,0,0,.1);--shh:0 20px 60px rgba(0,0,0,.14);
+  --shp:0 6px 24px rgba(91,79,207,.3);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'Vazirmatn',sans-serif;direction:rtl;background:var(--cream);color:var(--t1);font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;font-size:14px}
+body{font-family:'Vazirmatn',sans-serif;direction:rtl;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
 button{font-family:'Vazirmatn',sans-serif;cursor:pointer;border:none;background:none}
 input,select,textarea{font-family:'Vazirmatn',sans-serif}
 a{text-decoration:none;color:inherit}
 ::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:#b8c8be;border-radius:4px}
-
-/* ══ NAV ══ */
-.nav{position:sticky;top:0;z-index:90;height:58px;padding:0 1rem;display:flex;align-items:center;gap:10px;background:rgba(253,251,247,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)}
-.logo{font-size:19px;font-weight:800;color:var(--forest);letter-spacing:-1px;display:flex;align-items:center;gap:3px;flex-shrink:0}
-.logo em{color:var(--mint);font-style:normal}
-.nav-q{flex:1;max-width:420px;position:relative}
-.nav-q input{width:100%;height:38px;padding:0 40px 0 13px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:13px;background:var(--sand);color:var(--t1);transition:.2s}
-.nav-q input:focus{outline:none;border-color:var(--mint);background:var(--paper);box-shadow:0 0 0 3px rgba(37,176,103,.1)}
-.nav-q .qi{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:16px;pointer-events:none}
-.sp{flex:1}
-.nav-lnk{padding:6px 11px;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;font-weight:500}
-.nav-lnk:hover{background:var(--sand);color:var(--forest)}
-.nav-lnk.on{color:var(--forest);font-weight:700}
-.nav-saved{position:relative;padding:6px 11px;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;display:flex;align-items:center;gap:5px;font-weight:500}
-.nav-saved:hover{background:var(--sand);color:var(--forest)}
-.nav-saved.on{color:var(--forest);font-weight:700}
-.sv-badge{background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:none;align-items:center;justify-content:center;font-weight:800}
-.btn-new{height:36px;padding:0 16px;background:var(--forest);color:var(--lime);border-radius:var(--pill);font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:var(--shg);transition:.2s;white-space:nowrap}
-.btn-new:hover{background:var(--green);transform:translateY(-1px)}
-/* mobile nav */
-.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:80;background:rgba(253,251,247,.97);backdrop-filter:blur(16px);border-top:1px solid var(--bd);height:60px;padding:0 8px;align-items:center;justify-content:space-around}
-.mtab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;border-radius:var(--rsm);color:var(--t3);font-size:10px;font-weight:600;transition:.15s;position:relative}
-.mtab i{font-size:20px}
-.mtab.on{color:var(--forest)}
-.mtab-badge{position:absolute;top:4px;right:8px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;display:none;align-items:center;justify-content:center;font-weight:800}
-
-/* ══ PAGES ══ */
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
 .page{display:none}.page.on{display:block}
-
-/* ══ HERO ══ */
-.hero{background:var(--ink);padding:52px 1rem 0;overflow:hidden;position:relative}
-.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(126,217,87,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(126,217,87,.05) 1px,transparent 1px);background-size:36px 36px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 100%)}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50%;background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(26,122,71,.18) 0%,transparent 80%);pointer-events:none}
-.hero-inner{position:relative;z-index:1;text-align:center;color:#fff}
-.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(126,217,87,.1);border:1px solid rgba(126,217,87,.22);border-radius:var(--pill);padding:5px 16px;font-size:11px;font-weight:600;color:var(--lime);letter-spacing:.4px;margin-bottom:1.25rem}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);animation:lp 1.8s infinite;flex-shrink:0}
-@keyframes lp{0%,100%{box-shadow:0 0 0 0 rgba(126,217,87,.6)}50%{box-shadow:0 0 0 5px rgba(126,217,87,0)}}
-.hero h1{font-size:clamp(26px,6vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:12px}
-.hero h1 .acc{color:var(--lime)}
-.hero-sub{font-size:14px;opacity:.6;margin-bottom:2rem}
-.hero-sb{max-width:540px;margin:0 auto;display:flex;background:var(--paper);border-radius:var(--r);overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.32)}
-.hero-sb input{flex:1;padding:0 18px;height:52px;border:none;outline:none;font-size:14px;color:var(--t1);background:transparent;min-width:0}
-.hero-sb select{border:none;border-right:1px solid var(--bd);outline:none;padding:0 10px;font-size:12px;color:var(--t2);background:var(--sand);width:100px;flex-shrink:0}
-.hero-sb button{background:var(--mint);color:#fff;border:none;padding:0 22px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;transition:.2s;flex-shrink:0}
-.hero-sb button:hover{background:var(--green)}
-.hero-wave-wrap{height:68px;position:relative;margin-top:2.5rem}
-.hero-wave{position:absolute;bottom:0;left:0;right:0}
-.stats-bar{background:var(--forest);padding:14px 1rem;display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap}
-.sbar-item{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.75)}
-.sbar-item i{color:var(--lime);font-size:17px}
-.sbar-num{font-size:18px;font-weight:800;color:#fff}
-.sbar-lbl{font-size:11px;margin-top:1px}
-.sbar-sep{width:1px;height:30px;background:rgba(255,255,255,.12)}
-
-/* ══ PROMO BANNER ══ */
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem}
+.modal-bg.on{display:flex;animation:mfade .18s}
+@keyframes mfade{from{opacity:0}}
+.modal{background:var(--card);border-radius:18px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shh);animation:mup .22s cubic-bezier(.34,1.4,.64,1)}
+@keyframes mup{from{transform:translateY(36px);opacity:0}}
+.modal-top{position:sticky;top:0;background:var(--card);padding:.9rem 1.1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;z-index:1}
+.modal-top h3{font-size:15px;font-weight:700}
+.modal-x{width:28px;height:28px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink3);cursor:pointer;transition:.15s}
+.modal-x:hover{background:var(--bd2)}
+.modal-body{padding:1.1rem}
+/* NAV */
+.nav{position:sticky;top:0;z-index:90;height:58px;padding:0 1rem;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);box-shadow:var(--sh)}
+.logo{font-size:20px;font-weight:800;color:var(--p);letter-spacing:-1px;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.logo em{color:var(--ink);font-style:normal;font-weight:400}
+.nav-q{flex:1;max-width:400px;position:relative}
+.nav-q input{width:100%;height:38px;padding:0 40px 0 12px;border:1.5px solid var(--bd2);border-radius:var(--rpill);font-size:13px;background:var(--sand);transition:.2s}
+.nav-q input:focus{outline:none;border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(91,79,207,.1)}
+.nav-q i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink4);font-size:16px;pointer-events:none}
+.sp{flex:1}
+.nav-btn{padding:6px 11px;color:var(--ink2);font-size:12px;border-radius:var(--rsm);transition:.15s;font-weight:500;display:flex;align-items:center;gap:4px}
+.nav-btn:hover{background:var(--sand);color:var(--p)}
+.nav-btn.on{color:var(--p);font-weight:700}
+.notif-dot{position:absolute;top:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid #fff;display:none}
+.btn-cta{height:36px;padding:0 14px;background:var(--p);color:#fff;border-radius:var(--rpill);font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:var(--shp);transition:.2s}
+.btn-cta:hover{background:var(--p2);transform:translateY(-1px)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--p3);color:var(--p);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--p);cursor:pointer}
+.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:80;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-top:1px solid var(--bd);height:58px;padding:0 4px;align-items:center;justify-content:space-around}
+.mtab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 12px;border-radius:var(--rsm);color:var(--ink4);font-size:9px;font-weight:600;transition:.15s;position:relative;cursor:pointer}
+.mtab i{font-size:19px}
+.mtab.on{color:var(--p)}
+.mtab-dot{position:absolute;top:3px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid #fff;display:none}
+/* profile dropdown */
+.profile-menu{position:absolute;top:56px;left:12px;background:#fff;border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--shm);min-width:200px;overflow:hidden;display:none;z-index:100}
+.profile-menu.on{display:block;animation:mfade .15s}
+.pm-header{padding:12px 14px;border-bottom:1px solid var(--bd);background:var(--p3)}
+.pm-name{font-size:13px;font-weight:700;color:var(--p)}
+.pm-email{font-size:11px;color:var(--ink3);margin-top:1px}
+.pm-item{display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:500;color:var(--ink2);transition:.15s;cursor:pointer}
+.pm-item:last-child{border:none}
+.pm-item:hover{background:var(--p3);color:var(--p)}
+.pm-item i{font-size:16px;color:var(--p);flex-shrink:0}
+.pm-item.danger{color:var(--red)}
+.pm-item.danger i{color:var(--red)}
+.pm-item.danger:hover{background:#FEE2E2}
+/* HERO */
+.hero{background:linear-gradient(135deg,#1E1B4B 0%,#312E81 40%,#4338CA 70%,#6366F1 100%);padding:56px 1rem 0;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(255,255,255,.06) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(99,102,241,.3) 0%,transparent 50%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;text-align:center;color:#fff;max-width:640px;margin:0 auto}
+.hero-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--rpill);padding:5px 14px;font-size:11px;font-weight:600;margin-bottom:1.25rem;color:rgba(255,255,255,.9)}
+.chip-dot{width:5px;height:5px;border-radius:50%;background:#A5F3FC;animation:lp 2s infinite}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 rgba(165,243,252,.6)}50%{box-shadow:0 0 0 5px rgba(165,243,252,0)}}
+.hero h1{font-size:clamp(24px,5vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:10px}
+.hero h1 .hl{background:linear-gradient(135deg,#A5F3FC,#6EE7B7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:14px;opacity:.65;margin-bottom:2rem}
+.hero-search{display:flex;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:520px;margin:0 auto}
+.hero-search input{flex:1;padding:0 18px;height:52px;border:none;outline:none;font-size:14px;color:var(--ink);min-width:0}
+.hero-search select{border:none;border-right:1px solid var(--bd);outline:none;padding:0 10px;font-size:11px;color:var(--ink2);background:var(--sand);width:90px;flex-shrink:0}
+.hero-search button{background:var(--p);color:#fff;border:none;padding:0 20px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;transition:.2s;cursor:pointer;flex-shrink:0}
+.hero-search button:hover{background:var(--p2)}
+.hero-wave{display:block;margin-top:3rem}
+.stats-row{background:#312E81;padding:14px 1rem;display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap}
+.sr-item{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.7)}
+.sr-item i{color:#A5F3FC;font-size:16px}
+.sr-num{font-size:17px;font-weight:800;color:#fff}
+.sr-lbl{font-size:10px;margin-top:1px}
+.sr-sep{width:1px;height:28px;background:rgba(255,255,255,.12)}
+/* PROMO */
 .promo-wrap{padding:1.25rem 1rem;max-width:1140px;margin:0 auto}
-.promo-banner{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);padding:1.1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.promo-left{display:flex;align-items:center;gap:11px}
-.promo-icon{width:46px;height:46px;border-radius:var(--r);background:linear-gradient(135deg,var(--amber),#f59e0b);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.promo-text strong{display:block;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}
-.promo-text span{font-size:11px;color:rgba(255,255,255,.5)}
-.promo-pkgs{display:flex;gap:7px;flex-wrap:wrap}
-.ppkg{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:var(--rsm);padding:7px 13px;color:rgba(255,255,255,.8);font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;transition:.2s}
-.ppkg:hover{background:rgba(255,255,255,.14);border-color:var(--amber)}
-.ppkg .ptag{background:var(--amber);color:var(--ink);border-radius:var(--pill);padding:2px 7px;font-size:9px;font-weight:800}
-.btn-ad{background:var(--amber);color:var(--ink);border:none;border-radius:var(--pill);padding:9px 18px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:5px;transition:.2s;white-space:nowrap;cursor:pointer}
-.btn-ad:hover{background:#f59e0b}
-
-/* ══ CATS ══ */
-.cats-wrap{padding:1.25rem 1rem 0;max-width:1140px;margin:0 auto}
-.sec-t{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:.9rem;display:block}
-.cats-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px}
-.cats-row::-webkit-scrollbar{display:none}
-.cat-chip{display:flex;align-items:center;gap:7px;background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--pill);padding:8px 14px;font-size:12px;font-weight:500;color:var(--t2);white-space:nowrap;flex-shrink:0;transition:.2s;cursor:pointer}
-.cat-chip:hover{border-color:var(--mint);color:var(--forest)}
-.cat-chip.on{background:var(--forest);border-color:var(--forest);color:var(--lime);font-weight:700}
-.cat-chip .ci{font-size:16px}
-
-/* ══ TOOLBAR ══ */
-.toolbar{padding:.75rem 1rem;max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.res-lbl{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
-.res-cnt{background:var(--sand);color:var(--t2);border-radius:var(--pill);padding:2px 10px;font-size:11px;font-weight:600;margin-right:7px}
+.promo{background:linear-gradient(135deg,#1E1B4B,#312E81);border-radius:var(--r);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.promo-left{display:flex;align-items:center;gap:10px}
+.promo-icon{width:44px;height:44px;border-radius:var(--r);background:linear-gradient(135deg,var(--amber),#F97316);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.promo-txt strong{display:block;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}
+.promo-txt span{font-size:11px;color:rgba(255,255,255,.5)}
+.bale-btn{background:linear-gradient(135deg,#009EDC,#0077B6);color:#fff;border:none;border-radius:var(--rpill);padding:9px 16px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;transition:.2s;cursor:pointer;white-space:nowrap}
+.bale-btn:hover{opacity:.9;transform:translateY(-1px)}
+.btn-ad-order{background:var(--amber);color:var(--ink);border:none;border-radius:var(--rpill);padding:9px 16px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:5px;transition:.2s;cursor:pointer;white-space:nowrap}
+/* CATS */
+.cats-s{padding:1.1rem 1rem 0;max-width:1140px;margin:0 auto}
+.sec-t{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:.8rem;display:block}
+.cats-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cat-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--bd);border-radius:var(--rpill);padding:7px 13px;font-size:12px;font-weight:500;color:var(--ink2);white-space:nowrap;flex-shrink:0;transition:.2s;cursor:pointer}
+.cat-chip:hover{border-color:var(--p);color:var(--p)}
+.cat-chip.on{background:var(--p);border-color:var(--p);color:#fff;font-weight:700}
+/* TOOLBAR */
+.toolbar{padding:.65rem 1rem;max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px}
+.res-lbl{font-size:13px;font-weight:800;color:var(--ink)}
+.res-cnt{background:var(--p3);color:var(--p);border-radius:var(--rpill);padding:2px 9px;font-size:11px;font-weight:700;margin-right:6px}
 .sorts{display:flex;gap:4px}
-.sort-b{border:1.5px solid var(--bd2);border-radius:var(--pill);padding:6px 12px;font-size:11px;font-weight:500;background:var(--paper);color:var(--t2);transition:.15s;cursor:pointer}
-.sort-b:hover{border-color:var(--mint);color:var(--forest)}
-.sort-b.on{border-color:var(--forest);background:var(--forest);color:var(--lime);font-weight:700}
-
-/* ══ GRID ══ */
+.sort-b{border:1.5px solid var(--bd2);border-radius:var(--rpill);padding:5px 11px;font-size:11px;font-weight:500;background:var(--card);color:var(--ink2);transition:.15s;cursor:pointer}
+.sort-b:hover{border-color:var(--p);color:var(--p)}
+.sort-b.on{border-color:var(--p);background:var(--p);color:#fff;font-weight:700}
+/* GRID */
 .grid-wrap{padding:0 1rem 5rem;max-width:1140px;margin:0 auto}
-.ads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-.sponsored-row{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:2px}
-.sponsored-lbl{font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px;white-space:nowrap}
-.sponsored-line{flex:1;height:1px;background:rgba(232,160,32,.25)}
-
-/* ── CARD ── */
-.adcard{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;display:flex;flex-direction:column}
-.adcard:hover{border-color:var(--mint);box-shadow:var(--shh);transform:translateY(-4px)}
-.adcard.is-ad{border-color:rgba(232,160,32,.35)}
+.ads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:11px}
+.sp-row{grid-column:1/-1;display:flex;align-items:center;gap:7px;margin-bottom:2px}
+.sp-lbl{font-size:9px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.sp-line{flex:1;height:1px;background:rgba(245,158,11,.2)}
+.adcard{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;position:relative}
+.adcard:hover{border-color:var(--p2);box-shadow:var(--shm);transform:translateY(-3px)}
+.adcard.featured{border-color:rgba(245,158,11,.4)}
 .adcard-img{aspect-ratio:1;background:var(--sand);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .adcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
 .adcard:hover .adcard-img img{transform:scale(1.06)}
-.adcard-emoji{font-size:50px;transition:transform .25s}
-.adcard:hover .adcard-emoji{transform:scale(1.08)}
-.cond-tag{position:absolute;bottom:7px;right:7px;font-size:9px;padding:3px 8px;border-radius:var(--pill);font-weight:700}
-.ct-new{background:var(--mint);color:#fff}
-.ct-good{background:#FFF3CC;color:#7A5800}
-.ct-used{background:#E8EDF0;color:#3A4A55}
-.ct-fix{background:#FDE8E6;color:var(--red)}
-.fav-btn{position:absolute;top:7px;left:7px;width:28px;height:28px;border-radius:50%;background:rgba(253,251,247,.88);border:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t3);backdrop-filter:blur(4px);transition:.15s;z-index:1;cursor:pointer}
-.fav-btn:hover,.fav-btn.on{color:var(--red);transform:scale(1.1)}
-.ad-star{position:absolute;top:7px;right:7px;background:var(--amber);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px}
-.new-badge{position:absolute;top:7px;right:7px;background:var(--lime);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill)}
-.adcard-body{padding:11px;flex:1;display:flex;flex-direction:column}
-.adcard-cat{font-size:9px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.adcard-title{font-size:12px;font-weight:600;line-height:1.5;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;color:var(--t1)}
-.adcard-loc{font-size:10px;color:var(--t3);display:flex;align-items:center;gap:3px;margin-bottom:8px}
-.adcard-foot{display:flex;align-items:center;justify-content:space-between;gap:5px;padding-top:8px;border-top:1px solid var(--bd)}
-.adcard-price{font-size:14px;font-weight:800;color:var(--forest);letter-spacing:-.3px}
-.adcard-price small{display:block;font-size:9px;font-weight:400;color:var(--t3);margin-top:1px}
-.adcard-price.neg small::after{content:' · توافقی';color:var(--mint)}
-.see-btn{background:var(--sand);border:none;border-radius:var(--pill);padding:4px 9px;font-size:10px;font-weight:600;color:var(--t2);display:flex;align-items:center;gap:3px;transition:.15s;cursor:pointer;white-space:nowrap}
-.adcard:hover .see-btn{background:var(--forest);color:var(--lime)}
-
-/* skeleton */
+.adcard-emoji{font-size:48px}
+.ct{position:absolute;bottom:6px;right:6px;font-size:9px;padding:2px 8px;border-radius:var(--rpill);font-weight:700}
+.ct-new{background:var(--g2);color:#fff}
+.ct-good{background:#FEF9C3;color:#854D0E}
+.ct-used{background:#E2E8F0;color:#475569}
+.ct-fix{background:#FEE2E2;color:var(--red)}
+.fav-btn{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.9);border:none;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink4);cursor:pointer;backdrop-filter:blur(4px);transition:.15s;z-index:1}
+.fav-btn:hover,.fav-btn.on{color:var(--red)}
+.feat-badge{position:absolute;top:6px;right:6px;background:var(--amber);color:var(--ink);font-size:8px;font-weight:800;padding:2px 7px;border-radius:var(--rpill);display:flex;align-items:center;gap:2px}
+.new-badge{position:absolute;top:6px;right:6px;background:var(--g2);color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:var(--rpill)}
+.adcard-body{padding:10px;flex:1;display:flex;flex-direction:column}
+.adcard-cat{font-size:9px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.adcard-title{font-size:12px;font-weight:600;line-height:1.5;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;color:var(--ink)}
+.adcard-loc{font-size:10px;color:var(--ink4);display:flex;align-items:center;gap:3px;margin-bottom:7px}
+.adcard-foot{display:flex;align-items:center;justify-content:space-between;gap:5px;padding-top:7px;border-top:1px solid var(--bd)}
+.adcard-price{font-size:13px;font-weight:800;color:var(--g);letter-spacing:-.3px}
+.adcard-price small{display:block;font-size:9px;font-weight:400;color:var(--ink4);margin-top:1px}
+.see-btn{background:var(--p3);border:none;border-radius:var(--rpill);padding:3px 8px;font-size:10px;font-weight:600;color:var(--p);cursor:pointer;transition:.15s;white-space:nowrap}
+.adcard:hover .see-btn{background:var(--p);color:#fff}
 .skel{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
-.skel-img{aspect-ratio:1;background:linear-gradient(90deg,var(--sand) 25%,var(--cream) 50%,var(--sand) 75%);background-size:200%;animation:shim 1.5s infinite}
+.skel-img{aspect-ratio:1;background:linear-gradient(90deg,var(--sand) 25%,var(--bg) 50%,var(--sand) 75%);background-size:200%;animation:shim 1.5s infinite}
 @keyframes shim{to{background-position:-200% 0}}
-.skel-line{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--sand) 25%,var(--cream) 50%,var(--sand) 75%);background-size:200%;animation:shim 1.5s infinite;margin:10px 11px 4px}
-.skel-line.s{width:55%;margin-top:3px}.skel-line.p{width:42%;height:14px;margin-top:7px}
-.empty{grid-column:1/-1;text-align:center;padding:4rem 1rem}
-.empty .ei{font-size:52px;display:block;margin-bottom:12px}
-.empty h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px}
-.empty p{font-size:13px;color:var(--t3);line-height:1.7}
-.btn-first{margin-top:1.25rem;display:inline-flex;align-items:center;gap:6px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer}
-
-/* ══ SAVED PAGE ══ */
-.saved-pg{max-width:1140px;margin:0 auto;padding:1.5rem 1rem 5rem}
-.saved-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
-.saved-hd h2{font-size:20px;font-weight:800;letter-spacing:-.5px}
-.btn-clr{background:none;border:1.5px solid var(--bd2);border-radius:var(--pill);padding:7px 14px;font-size:12px;font-weight:600;color:var(--red);transition:.15s;cursor:pointer}
-.btn-clr:hover{background:var(--red);color:#fff;border-color:var(--red)}
-.saved-empty{text-align:center;padding:4rem 1rem;color:var(--t3)}
-.saved-empty .se-i{font-size:48px;display:block;margin-bottom:12px}
-.saved-empty h3{font-size:16px;font-weight:700;color:var(--t2);margin-bottom:6px}
-
-/* ══ SELL FORM ══ */
-.sell-pg{max-width:660px;margin:0 auto;padding:1.5rem 1rem 5rem}
-.sell-hd{margin-bottom:1.5rem}
-.sell-hd h2{font-size:21px;font-weight:800;letter-spacing:-.5px}
-.sell-hd p{font-size:13px;color:var(--t3);margin-top:5px}
-.ad-toggle{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);padding:1.1rem 1.25rem;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
-.at-left{display:flex;align-items:center;gap:10px}
-.at-icon{font-size:24px}
-.at-text strong{display:block;font-size:13px;font-weight:800;color:#fff;margin-bottom:2px}
-.at-text span{font-size:11px;color:rgba(255,255,255,.45)}
-.at-btns{display:flex;gap:6px}
-.atbtn{border-radius:var(--pill);padding:7px 14px;font-size:11px;font-weight:700;transition:.2s;cursor:pointer}
-.atbtn.off{background:rgba(255,255,255,.07);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.1)}
-.atbtn.on{background:var(--amber);color:var(--ink);border:1px solid transparent}
-.step-card{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.25rem;margin-bottom:12px}
-.step-hd{display:flex;align-items:center;gap:10px;margin-bottom:1.1rem;padding-bottom:.85rem;border-bottom:1px solid var(--bd)}
-.snum{width:28px;height:28px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.step-hd-t{font-size:14px;font-weight:800;color:var(--ink)}
-.step-hd-s{font-size:11px;color:var(--t3);margin-top:2px}
-.field{margin-bottom:1rem}
-.field:last-child{margin-bottom:0}
-.field>label{display:block;font-size:13px;font-weight:700;color:var(--t2);margin-bottom:5px}
+.skel-line{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--sand) 25%,var(--bg) 50%,var(--sand) 75%);background-size:200%;animation:shim 1.5s infinite;margin:10px 10px 4px}
+.skel-line.s{width:55%;margin-top:3px}.skel-line.p{width:40%;height:14px;margin-top:7px}
+.empty{grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--ink4)}
+.empty .ei{font-size:48px;display:block;margin-bottom:12px}
+.empty h3{font-size:16px;font-weight:800;color:var(--ink2);margin-bottom:6px}
+.empty p{font-size:13px;line-height:1.7}
+.btn-first{margin-top:1.1rem;display:inline-flex;align-items:center;gap:5px;background:var(--p);color:#fff;border:none;border-radius:var(--rpill);padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer}
+/* AUTH */
+.auth-tabs{display:flex;gap:0;margin-bottom:1.1rem;background:var(--sand);border-radius:var(--r);padding:4px}
+.auth-tab{flex:1;padding:8px;border-radius:var(--rsm);font-size:13px;font-weight:600;color:var(--ink3);transition:.15s;cursor:pointer;text-align:center}
+.auth-tab.on{background:#fff;color:var(--p);box-shadow:var(--sh)}
+.auth-form{display:none}.auth-form.on{display:block}
+.field{margin-bottom:.85rem}
+.field>label{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:4px}
 .req{color:var(--red)}
-.field input,.field textarea,.field select{width:100%;height:44px;padding:0 13px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-size:13px;background:var(--paper);color:var(--t1);transition:.2s}
-.field textarea{height:auto;padding:11px 13px;resize:vertical;min-height:90px;line-height:1.7}
-.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--mint);box-shadow:0 0 0 3px rgba(37,176,103,.1)}
-.field-hint{font-size:10px;color:var(--t3);margin-top:4px;display:flex;justify-content:space-between}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field input,.field textarea,.field select{width:100%;height:42px;padding:0 12px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-size:13px;background:#fff;color:var(--ink);transition:.2s}
+.field textarea{height:auto;padding:10px 12px;resize:vertical;min-height:80px;line-height:1.7}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(91,79,207,.1)}
+.field-hint{font-size:10px;color:var(--ink4);margin-top:3px;display:flex;justify-content:space-between}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn-primary{width:100%;height:44px;background:var(--p);color:#fff;border:none;border-radius:var(--rpill);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:.25rem}
+.btn-primary:hover{background:var(--p2);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-ghost{width:100%;height:42px;background:none;border:1.5px solid var(--bd2);border-radius:var(--rpill);font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.15s;margin-top:8px}
+.btn-ghost:hover{border-color:var(--p);color:var(--p)}
+.alert{border-radius:var(--rsm);padding:9px 13px;font-size:12px;font-weight:500;margin-bottom:.75rem;display:flex;align-items:center;gap:7px}
+.alert.err{background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5}
+.alert.ok{background:var(--g3);color:#166534;border:1px solid #86EFAC}
+/* SELL */
+.sell-pg{max-width:640px;margin:0 auto;padding:1.5rem 1rem 5rem}
+.sell-hd{margin-bottom:1.5rem}
+.sell-hd h2{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.sell-hd p{font-size:13px;color:var(--ink3);margin-top:5px}
+.feat-toggle{background:linear-gradient(135deg,#1E1B4B,#312E81);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.ft-left{display:flex;align-items:center;gap:9px}
+.ft-icon{font-size:22px}
+.ft-txt strong{display:block;font-size:13px;font-weight:800;color:#fff;margin-bottom:2px}
+.ft-txt span{font-size:11px;color:rgba(255,255,255,.45)}
+.ft-btns{display:flex;gap:5px}
+.ftb{border-radius:var(--rpill);padding:6px 13px;font-size:11px;font-weight:700;transition:.2s;cursor:pointer}
+.ftb.off{background:rgba(255,255,255,.07);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.1)}
+.ftb.on{background:var(--amber);color:var(--ink);border:1px solid transparent}
+.step-card{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.25rem;margin-bottom:11px;box-shadow:var(--sh)}
+.step-hd{display:flex;align-items:center;gap:9px;margin-bottom:1.1rem;padding-bottom:.85rem;border-bottom:1px solid var(--bd)}
+.snum{width:26px;height:26px;border-radius:50%;background:var(--p);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-hd-t{font-size:14px;font-weight:800;color:var(--ink)}
+.step-hd-s{font-size:11px;color:var(--ink3);margin-top:2px}
 .cond-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.copt{border:1.5px solid var(--bd2);border-radius:var(--rsm);padding:10px 12px;background:var(--paper);color:var(--t2);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;transition:.15s;cursor:pointer}
-.copt .ci2{font-size:17px}
-.copt:hover{border-color:var(--mint)}
-.copt.on{border-color:var(--forest);background:#E8F4EE;color:var(--forest);font-weight:700}
-.upload-zone{border:2px dashed var(--bd2);border-radius:var(--r);padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:.2s;color:var(--t3)}
-.upload-zone:hover{border-color:var(--mint);background:#F0FCF6;color:var(--forest)}
-.upload-zone i{font-size:30px;display:block;margin-bottom:8px}
-.upload-zone .ut{font-size:13px;font-weight:700;color:var(--t2);margin-bottom:3px}
+.copt{border:1.5px solid var(--bd2);border-radius:var(--rsm);padding:9px 11px;background:#fff;color:var(--ink2);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;transition:.15s;cursor:pointer}
+.copt:hover{border-color:var(--p)}
+.copt.on{border-color:var(--p);background:var(--p3);color:var(--p);font-weight:700}
+.upload-zone{border:2px dashed var(--bd2);border-radius:var(--r);padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:.2s;color:var(--ink4)}
+.upload-zone:hover{border-color:var(--p);background:var(--p4);color:var(--p)}
+.upload-zone i{font-size:28px;display:block;margin-bottom:7px}
+.upload-zone .ut{font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:3px}
 .upload-zone .us{font-size:11px}
-.thumb-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.thumb{width:68px;height:68px;border-radius:var(--rsm);background:var(--sand);border:1.5px solid var(--bd);overflow:hidden;position:relative;flex-shrink:0}
+.thumb-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.thumb{width:64px;height:64px;border-radius:var(--rsm);background:var(--sand);border:1.5px solid var(--bd);overflow:hidden;position:relative;flex-shrink:0}
 .thumb img{width:100%;height:100%;object-fit:cover}
-.tdel{position:absolute;top:-7px;left:-7px;width:19px;height:19px;border-radius:50%;background:var(--red);color:#fff;border:2px solid var(--paper);font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.tdel:hover{background:#a32d2d}
+.tdel{position:absolute;top:-6px;left:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .price-wrap{position:relative}
-.price-wrap input{padding-left:55px}
-.price-unit{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;padding:0 12px;font-size:11px;font-weight:700;color:var(--t3);border-right:1px solid var(--bd2);pointer-events:none}
-.submit-row{display:flex;gap:9px}
-.btn-submit{flex:1;height:50px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shg);transition:.2s;cursor:pointer}
-.btn-submit:hover{background:var(--green);transform:translateY(-1px)}
+.price-wrap input{padding-left:52px}
+.price-unit{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;padding:0 11px;font-size:11px;font-weight:700;color:var(--ink4);border-right:1px solid var(--bd2);pointer-events:none}
+.submit-row{display:flex;gap:8px}
+.btn-submit{flex:1;height:48px;background:var(--p);color:#fff;border:none;border-radius:var(--rpill);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:var(--shp);transition:.2s;cursor:pointer}
+.btn-submit:hover{background:var(--p2);transform:translateY(-1px)}
 .btn-submit:disabled{opacity:.55;cursor:not-allowed;transform:none}
-.btn-cancel{height:50px;padding:0 18px;background:none;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:13px;font-weight:600;color:var(--t2);transition:.15s;cursor:pointer}
-.btn-cancel:hover{border-color:var(--t2)}
-.success-pg{max-width:400px;margin:4rem auto;text-align:center;padding:1.5rem}
-.sring{width:84px;height:84px;border-radius:50%;background:#E8F8EF;border:3px solid var(--lime);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 1.25rem}
-.success-pg h2{font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px}
-.success-pg p{font-size:13px;color:var(--t3);line-height:1.7;margin-bottom:1.25rem}
-.sic{background:var(--sand);border-radius:var(--r);padding:1rem;margin-bottom:1.25rem;text-align:right;border:1px solid var(--bd)}
-.sic-r{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--bd)}
+.btn-cancel{height:48px;padding:0 16px;background:none;border:1.5px solid var(--bd2);border-radius:var(--rpill);font-size:13px;font-weight:600;color:var(--ink2);transition:.15s;cursor:pointer}
+.success-pg{max-width:380px;margin:4rem auto;text-align:center;padding:1.25rem}
+.sring{width:80px;height:80px;border-radius:50%;background:var(--g3);border:3px solid var(--g2);display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 1.1rem}
+.success-pg h2{font-size:20px;font-weight:800;margin-bottom:7px}
+.success-pg p{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:1.1rem}
+.sic{background:var(--g3);border-radius:var(--r);padding:.85rem;margin-bottom:1.1rem;text-align:right}
+.sic-r{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(34,197,94,.2)}
 .sic-r:last-child{border:none}
-.sic-r .sl{color:var(--forest);font-weight:700}
-.btn-back{background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:11px 28px;font-size:14px;font-weight:800;box-shadow:var(--shg);cursor:pointer}
-.btn-back:hover{background:var(--green)}
-
-/* ══ RULES PAGE ══ */
-.rules-pg{max-width:660px;margin:0 auto;padding:1.5rem 1rem 5rem}
-.rules-hd{font-size:21px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
-.rules-sub{font-size:13px;color:var(--t3);margin-bottom:1.5rem}
-.rule-card{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.25rem;margin-bottom:10px}
-.rule-card h3{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:.6rem;display:flex;align-items:center;gap:8px}
-.rule-card h3 i{color:var(--mint);font-size:18px}
-.rule-card p{font-size:13px;color:var(--t2);line-height:1.8}
-.rule-card ul{font-size:13px;color:var(--t2);line-height:1.8;padding-right:1.25rem}
-.rule-card ul li{margin-bottom:4px}
-.rule-card ul li::marker{color:var(--mint)}
-.rules-note{background:var(--amber-l);border:1px solid rgba(232,160,32,.3);border-radius:var(--r);padding:1rem 1.25rem;font-size:13px;color:#7a4f00;line-height:1.7;display:flex;gap:10px;align-items:flex-start}
-
-/* ══ MODAL ══ */
-.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(14,26,20,.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem}
-.modal-bg.on{display:flex;animation:mfade .18s}
-@keyframes mfade{from{opacity:0}}
-.modal{background:var(--paper);border-radius:18px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.3);animation:mup .22s cubic-bezier(.34,1.4,.64,1)}
-@keyframes mup{from{transform:translateY(36px);opacity:0}}
-.modal-top{position:sticky;top:0;background:var(--paper);padding:.85rem 1.1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;z-index:1}
-.modal-cat-pill{display:flex;align-items:center;gap:5px;background:var(--sand);border-radius:var(--pill);padding:4px 11px;font-size:11px;font-weight:700;color:var(--t2)}
-.modal-x{width:28px;height:28px;border-radius:50%;background:var(--sand);border:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t2);cursor:pointer;transition:.15s}
-.modal-x:hover{background:var(--bd2)}
-.modal-body{padding:1.1rem}
+.sic-r .sl{color:var(--g);font-weight:700}
+.btn-back{background:var(--p);color:#fff;border:none;border-radius:var(--rpill);padding:10px 26px;font-size:14px;font-weight:800;box-shadow:var(--shp);cursor:pointer}
+/* PROFILE */
+.profile-pg{max-width:640px;margin:0 auto;padding:1.5rem 1rem 5rem}
+.profile-header{background:var(--card);border-radius:var(--r);padding:1.5rem;margin-bottom:12px;box-shadow:var(--sh);display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.ph-avatar{width:64px;height:64px;border-radius:50%;background:var(--p3);color:var(--p);font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:3px solid var(--p)}
+.ph-name{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.ph-meta{font-size:12px;color:var(--ink3);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ph-badge{display:inline-flex;align-items:center;gap:4px;background:var(--p3);color:var(--p);border-radius:var(--rpill);padding:3px 9px;font-size:11px;font-weight:700}
+.ph-badge.gold{background:#FEF9C3;color:#B45309}
+.profile-sec{background:var(--card);border-radius:var(--r);padding:1.1rem;margin-bottom:10px;box-shadow:var(--sh)}
+.profile-sec h3{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:.9rem;display:flex;align-items:center;gap:6px}
+.profile-sec h3 i{color:var(--p);font-size:16px}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.notif-item:last-child{border:none;padding-bottom:0}
+.notif-item.unread{background:var(--p4);border-radius:var(--rsm);padding:9px;margin:-4px}
+.ni-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ni-icon.ok{background:var(--g3);color:var(--g)}
+.ni-icon.err{background:#FEE2E2;color:var(--red)}
+.ni-icon.info{background:var(--p3);color:var(--p)}
+.ni-title{font-size:12px;font-weight:700;color:var(--ink)}
+.ni-body{font-size:12px;color:var(--ink3);margin-top:2px;line-height:1.5}
+.ni-time{font-size:10px;color:var(--ink4);margin-top:3px}
+.empty-sec{text-align:center;padding:1.5rem;color:var(--ink4);font-size:13px}
+/* TICKET */
+.ticket-list{display:flex;flex-direction:column;gap:8px}
+.ticket-item{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);padding:12px;cursor:pointer;transition:.2s}
+.ticket-item:hover{border-color:var(--p);box-shadow:var(--sh)}
+.ti-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.ti-subject{font-size:13px;font-weight:700;color:var(--ink)}
+.ti-status{font-size:10px;font-weight:700;border-radius:var(--rpill);padding:2px 9px}
+.ti-status.open{background:var(--p3);color:var(--p)}
+.ti-status.answered{background:var(--g3);color:var(--g)}
+.ti-status.closed{background:var(--sand);color:var(--ink3)}
+.ti-meta{font-size:11px;color:var(--ink4)}
+.ticket-detail{border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.ticket-msgs{max-height:300px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--sand)}
+.msg-bubble{max-width:80%;padding:9px 12px;border-radius:var(--r);font-size:13px;line-height:1.6}
+.msg-bubble.user{background:#fff;border:1.5px solid var(--bd);align-self:flex-end}
+.msg-bubble.admin{background:var(--p);color:#fff;align-self:flex-start}
+.msg-meta{font-size:10px;margin-top:4px;opacity:.65}
+.ticket-reply{padding:10px;border-top:1px solid var(--bd);background:var(--card);display:flex;gap:8px}
+.ticket-reply textarea{flex:1;height:38px;padding:9px 12px;border:1.5px solid var(--bd2);border-radius:var(--rsm);font-size:13px;resize:none;min-height:38px}
+.ticket-reply textarea:focus{outline:none;border-color:var(--p)}
+.btn-send{height:38px;padding:0 14px;background:var(--p);color:#fff;border:none;border-radius:var(--rsm);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn-send:hover{background:var(--p2)}
+/* ADMIN */
+.admin-pg{max-width:1000px;margin:0 auto;padding:1.5rem 1rem 5rem}
+.admin-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.admin-hd h2{font-size:20px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:8px}
+.admin-tabs{display:flex;gap:0;background:var(--sand);border-radius:var(--r);padding:3px;margin-bottom:1.1rem;overflow-x:auto}
+.admin-tabs::-webkit-scrollbar{display:none}
+.atab{padding:8px 14px;border-radius:var(--rsm);font-size:12px;font-weight:600;color:var(--ink3);transition:.15s;cursor:pointer;white-space:nowrap}
+.atab.on{background:#fff;color:var(--p);box-shadow:var(--sh)}
+.admin-section{display:none}.admin-section.on{display:block}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:1.1rem}
+.stat-card{background:var(--card);border-radius:var(--r);padding:1rem;border:1.5px solid var(--bd);box-shadow:var(--sh)}
+.stat-card .sc-val{font-size:24px;font-weight:800;color:var(--p);letter-spacing:-.5px}
+.stat-card .sc-lbl{font-size:11px;color:var(--ink3);margin-top:3px}
+.stat-card.g .sc-val{color:var(--g)}
+.stat-card.r .sc-val{color:var(--red)}
+.stat-card.a .sc-val{color:var(--amber)}
+.pending-list{display:flex;flex-direction:column;gap:9px}
+.pending-card{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);padding:1rem;box-shadow:var(--sh)}
+.pending-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.6rem;flex-wrap:wrap}
+.pending-title{font-size:14px;font-weight:700;color:var(--ink)}
+.pending-meta{font-size:11px;color:var(--ink3);margin-top:3px;line-height:1.6}
+.pending-actions{display:flex;gap:7px;flex-shrink:0}
+.btn-approve{background:var(--g3);color:var(--g);border:1.5px solid var(--g2);border-radius:var(--rpill);padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:4px}
+.btn-approve:hover{background:var(--g2);color:#fff}
+.btn-reject{background:#FEE2E2;color:var(--red);border:1.5px solid #FCA5A5;border-radius:var(--rpill);padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:4px}
+.btn-reject:hover{background:var(--red);color:#fff}
+.user-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);border:1.5px solid var(--bd)}
+.user-table th{background:var(--p3);color:var(--p);font-size:11px;font-weight:800;padding:9px 11px;text-align:right;white-space:nowrap}
+.user-table td{font-size:12px;color:var(--ink2);padding:9px 11px;border-top:1px solid var(--bd);vertical-align:middle}
+.user-table tr:hover td{background:var(--p4)}
+.user-actions{display:flex;gap:5px;flex-wrap:wrap}
+.ua-btn{border-radius:var(--rpill);padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;border:none;transition:.15s;display:flex;align-items:center;gap:3px}
+.ua-ban{background:#FEE2E2;color:var(--red)}.ua-ban:hover{background:var(--red);color:#fff}
+.ua-unban{background:var(--g3);color:var(--g)}.ua-unban:hover{background:var(--g2);color:#fff}
+.ua-del{background:#FEE2E2;color:#7F1D1D}.ua-del:hover{background:#7F1D1D;color:#fff}
+.ua-pkg{background:var(--p3);color:var(--p)}.ua-pkg:hover{background:var(--p);color:#fff}
+.role-badge{font-size:10px;font-weight:700;border-radius:var(--rpill);padding:2px 8px}
+.rb-admin{background:var(--p3);color:var(--p)}
+.rb-user{background:var(--g3);color:var(--g)}
+.rb-banned{background:#FEE2E2;color:var(--red)}
+.pkg-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.pkg-opt{border:2px solid var(--bd2);border-radius:var(--r);padding:.85rem 1rem;cursor:pointer;transition:.2s}
+.pkg-opt:hover{border-color:var(--p)}
+.pkg-opt.on{border-color:var(--p);background:var(--p3)}
+.pkg-opt .po-name{font-size:14px;font-weight:800;color:var(--ink)}
+.pkg-opt .po-desc{font-size:11px;color:var(--ink3);margin-top:3px}
+.admin-ticket-item{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);padding:1rem;margin-bottom:9px;cursor:pointer;transition:.2s}
+.admin-ticket-item:hover{border-color:var(--p);box-shadow:var(--sh)}
+.admin-ticket-item.unread{border-color:var(--p);background:var(--p4)}
+/* AD MODAL */
+.ad-pkg-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.ad-pkg{border:2px solid var(--bd2);border-radius:var(--r);padding:.85rem 1rem;cursor:pointer;transition:.2s;position:relative}
+.ad-pkg:hover{border-color:var(--amber)}
+.ad-pkg.on{border-color:var(--amber);background:#FFFBEB}
+.ap-name{font-size:13px;font-weight:800;color:var(--ink)}
+.ap-price{font-size:14px;font-weight:800;color:var(--amber);float:left}
+.ap-desc{font-size:11px;color:var(--ink3);margin-top:3px;clear:both}
+.contact-links{background:var(--sand);border-radius:var(--r);padding:1rem;border:1px solid var(--bd);margin-bottom:.85rem}
+.contact-links h4{font-size:11px;font-weight:800;color:var(--ink);margin-bottom:.7rem}
+.cl{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;font-weight:500;color:var(--ink);text-decoration:none;transition:.15s}
+.cl:last-child{border:none;padding-bottom:0}
+.cl i{color:var(--p);font-size:16px;flex-shrink:0}
+/* AD DETAIL MODAL */
 .m-gallery{border-radius:var(--r);overflow:hidden;aspect-ratio:4/3;background:var(--sand);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
 .m-gallery img{width:100%;height:100%;object-fit:cover}
-.m-emoji{font-size:80px}
-.m-thumbs{display:flex;gap:6px;margin-bottom:1.1rem;overflow-x:auto}
-.m-thumb{width:54px;height:54px;border-radius:var(--rsm);overflow:hidden;flex-shrink:0;cursor:pointer;border:2.5px solid transparent;transition:.15s}
-.m-thumb.on{border-color:var(--mint)}
+.m-emoji{font-size:76px}
+.m-thumbs{display:flex;gap:6px;margin-bottom:1rem;overflow-x:auto}
+.m-thumb{width:52px;height:52px;border-radius:var(--rsm);overflow:hidden;flex-shrink:0;cursor:pointer;border:2px solid transparent;transition:.15s}
+.m-thumb.on{border-color:var(--p)}
 .m-thumb img{width:100%;height:100%;object-fit:cover}
-.m-ad-banner{background:var(--amber-l);border:1px solid rgba(232,160,32,.3);border-radius:var(--rsm);padding:9px 12px;margin-bottom:.9rem;display:flex;align-items:center;gap:7px;font-size:11px;color:#7a4f00;font-weight:600;display:none}
-.modal-title{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:5px;letter-spacing:-.4px;line-height:1.3}
-.modal-price{font-size:23px;font-weight:800;color:var(--forest);letter-spacing:-.4px;margin-bottom:4px}
-.modal-price small{font-size:12px;font-weight:400;color:var(--t3)}
-.nego-chip{display:inline-flex;align-items:center;gap:4px;background:#E8F8EF;color:var(--green);border-radius:var(--pill);padding:3px 11px;font-size:11px;font-weight:700;margin-bottom:.9rem}
-.seller-card{display:flex;align-items:center;gap:11px;background:var(--sand);border-radius:var(--rsm);padding:12px;margin-bottom:.9rem;border:1px solid var(--bd)}
-.seller-av{width:40px;height:40px;border-radius:50%;background:var(--forest);color:var(--lime);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.modal-title{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:5px}
+.modal-price{font-size:22px;font-weight:800;color:var(--g);margin-bottom:4px}
+.modal-price small{font-size:12px;font-weight:400;color:var(--ink4)}
+.nego-chip{display:inline-flex;align-items:center;gap:4px;background:var(--g3);color:var(--g);border-radius:var(--rpill);padding:3px 11px;font-size:11px;font-weight:700;margin-bottom:.9rem}
+.seller-card{display:flex;align-items:center;gap:10px;background:var(--sand);border-radius:var(--rsm);padding:11px;margin-bottom:.9rem;border:1px solid var(--bd)}
+.seller-av{width:38px;height:38px;border-radius:50%;background:var(--p3);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
 .seller-nm{font-size:13px;font-weight:700;color:var(--ink)}
-.seller-mt{font-size:11px;color:var(--t3);margin-top:2px}
+.seller-mt{font-size:11px;color:var(--ink4);margin-top:1px}
 .detail-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.9rem}
-.dchip{background:var(--sand);border-radius:var(--rsm);padding:7px 11px;border:1px solid var(--bd)}
-.dchip .dl{font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.dchip{background:var(--sand);border-radius:var(--rsm);padding:7px 10px;border:1px solid var(--bd)}
+.dchip .dl{font-size:9px;color:var(--ink4);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
 .dchip .dv{font-size:12px;font-weight:700;color:var(--ink)}
-.desc-block{background:var(--sand);border-radius:var(--rsm);padding:12px;font-size:13px;line-height:1.8;color:var(--t2);margin-bottom:1.1rem;border:1px solid var(--bd)}
+.desc-block{background:var(--sand);border-radius:var(--rsm);padding:11px;font-size:13px;line-height:1.8;color:var(--ink2);margin-bottom:1rem;border:1px solid var(--bd)}
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.btn-call{background:var(--forest);color:var(--lime);border:none;border-radius:var(--rsm);padding:12px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s;cursor:pointer}
-.btn-call:hover{background:var(--green)}
-.btn-save-m{background:var(--paper);border:1.5px solid var(--bd2);color:var(--t2);border-radius:var(--rsm);padding:12px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s;cursor:pointer}
-.btn-save-m:hover{border-color:var(--mint);color:var(--forest)}
-.phone-reveal{background:#E8F8EF;border:1.5px solid var(--mint);border-radius:var(--rsm);padding:12px;text-align:center;font-size:17px;font-weight:800;color:var(--forest);letter-spacing:1.5px;display:none;margin-bottom:7px}
-.views-row{display:flex;align-items:center;justify-content:center;gap:14px;font-size:10px;color:var(--t3);margin-top:7px}
+.btn-call{background:var(--p);color:#fff;border:none;border-radius:var(--rsm);padding:11px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:.2s}
+.btn-call:hover{background:var(--p2)}
+.btn-save-m{background:var(--card);border:1.5px solid var(--bd2);color:var(--ink2);border-radius:var(--rsm);padding:11px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:.2s}
+.btn-save-m:hover{border-color:var(--p);color:var(--p)}
+.phone-reveal{background:var(--g3);border:1.5px solid var(--g2);border-radius:var(--rsm);padding:12px;text-align:center;font-size:16px;font-weight:800;color:var(--g);letter-spacing:1.5px;display:none;margin-bottom:7px}
+.views-row{display:flex;align-items:center;justify-content:center;gap:12px;font-size:10px;color:var(--ink4);margin-top:6px}
 .views-row span{display:flex;align-items:center;gap:3px}
-
-/* ══ AD MODAL ══ */
-.ad-modal-bg{display:none;position:fixed;inset:0;z-index:300;background:rgba(14,26,20,.7);backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:1rem}
-.ad-modal-bg.on{display:flex;animation:mfade .18s}
-.ad-modal{background:var(--paper);border-radius:18px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:mup .22s cubic-bezier(.34,1.4,.64,1)}
-.ad-modal-head{padding:1rem 1.1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
-.ad-modal-head h3{font-size:16px;font-weight:800;letter-spacing:-.3px}
-.ad-body{padding:1.1rem}
-.pkg-cards{display:flex;flex-direction:column;gap:9px;margin-bottom:1.1rem}
-.pkg-card{border:2px solid var(--bd2);border-radius:var(--r);padding:.9rem 1.1rem;cursor:pointer;transition:.2s;position:relative;background:var(--paper)}
-.pkg-card:hover{border-color:var(--amber)}
-.pkg-card.on{border-color:var(--amber);background:var(--amber-l)}
-.pkg-card .pk-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.pkg-card .pk-nm{font-size:14px;font-weight:800;color:var(--ink)}
-.pkg-card .pk-pr{font-size:15px;font-weight:800;color:var(--amber)}
-.pkg-card .pk-ds{font-size:11px;color:var(--t3);line-height:1.6}
-.pkg-card .pk-bg{background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:var(--pill);padding:2px 7px}
-.pkg-card.on::after{content:'✓';position:absolute;top:8px;left:12px;width:20px;height:20px;border-radius:50%;background:var(--amber);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
-.ad-contact{background:var(--sand);border-radius:var(--r);padding:1rem;border:1px solid var(--bd);margin-bottom:.9rem}
-.ad-contact h4{font-size:12px;font-weight:800;margin-bottom:.75rem;color:var(--ink)}
-.contact-lnk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px;font-weight:500;color:var(--t1);text-decoration:none;transition:.15s}
-.contact-lnk:last-child{border:none;padding-bottom:0}
-.contact-lnk:hover{color:var(--forest)}
-.contact-lnk i{font-size:17px;color:var(--mint);flex-shrink:0}
-.contact-lnk .cl-tag{margin-right:auto;font-size:10px;color:var(--t3)}
-.btn-send{width:100%;background:var(--amber);color:var(--ink);border:none;border-radius:var(--pill);padding:12px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s;cursor:pointer}
-.btn-send:hover{background:#f59e0b;transform:translateY(-1px)}
-
-/* ══ SUPPORT FLOAT ══ */
-.support-float{position:fixed;bottom:80px;left:20px;z-index:80;display:flex;flex-direction:column;gap:7px;align-items:flex-start}
-.support-menu{background:var(--paper);border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--shh);overflow:hidden;display:none;min-width:210px}
-.support-menu.on{display:block;animation:mfade .16s}
-.support-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bd);transition:.15s;text-decoration:none;color:var(--t1);cursor:pointer}
-.support-item:last-child{border:none}
-.support-item:hover{background:var(--sand)}
-.support-item i{font-size:17px;color:var(--mint);flex-shrink:0}
-.si-title{font-size:13px;font-weight:700;color:var(--ink)}
-.si-sub{font-size:10px;color:var(--t3);margin-top:1px}
-.support-btn{background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:9px 16px 9px 13px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;box-shadow:0 5px 18px rgba(20,84,46,.38);transition:.2s;cursor:pointer;white-space:nowrap}
-.support-btn:hover{background:var(--green);transform:translateY(-1px)}
-
-/* toast */
-.toast{position:fixed;bottom:80px;left:50%;z-index:999;transform:translateX(-50%) translateY(90px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:var(--pill);font-size:13px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.26);transition:transform .3s cubic-bezier(.34,1.4,.64,1);pointer-events:none;display:flex;align-items:center;gap:6px;max-width:320px;text-align:center}
+/* SUPPORT */
+.sup-float{position:fixed;bottom:72px;left:14px;z-index:80;display:flex;flex-direction:column;gap:7px;align-items:flex-start}
+.sup-menu{background:#fff;border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--shm);overflow:hidden;display:none;min-width:200px}
+.sup-menu.on{display:block;animation:mfade .15s}
+.sup-item{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--bd);font-size:12px;font-weight:500;color:var(--ink2);transition:.15s;text-decoration:none;cursor:pointer}
+.sup-item:last-child{border:none}
+.sup-item:hover{background:var(--p3);color:var(--p)}
+.sup-item i{font-size:16px;color:var(--p);flex-shrink:0}
+.si-t{font-size:12px;font-weight:700;color:var(--ink)}
+.si-s{font-size:10px;color:var(--ink4);margin-top:1px}
+.sup-btn{background:var(--p);color:#fff;border:none;border-radius:var(--rpill);padding:8px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:var(--shp);transition:.2s;cursor:pointer}
+.sup-btn:hover{background:var(--p2);transform:translateY(-1px)}
+/* RULES */
+.rules-pg{max-width:640px;margin:0 auto;padding:1.5rem 1rem 5rem}
+.rules-pg h2{font-size:20px;font-weight:800;margin-bottom:5px}
+.rules-pg .sub{font-size:12px;color:var(--ink3);margin-bottom:1.25rem}
+.rule-card{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.1rem;margin-bottom:9px;box-shadow:var(--sh)}
+.rule-card h3{font-size:13px;font-weight:800;margin-bottom:.6rem;display:flex;align-items:center;gap:6px;color:var(--ink)}
+.rule-card h3 i{color:var(--p);font-size:16px}
+.rule-card p,.rule-card ul{font-size:12px;color:var(--ink2);line-height:1.85}
+.rule-card ul{padding-right:1.1rem}
+.rule-card ul li{margin-bottom:3px}
+.rules-note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--r);padding:.9rem 1.1rem;font-size:12px;color:#92400E;line-height:1.7;display:flex;gap:9px;align-items:flex-start;margin-bottom:1rem}
+/* TOAST */
+.toast{position:fixed;bottom:72px;left:50%;z-index:999;transform:translateX(-50%) translateY(90px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:var(--rpill);font-size:12px;font-weight:600;box-shadow:var(--shm);transition:transform .3s cubic-bezier(.34,1.4,.64,1);pointer-events:none;display:flex;align-items:center;gap:6px;max-width:300px;text-align:center}
 .toast.on{transform:translateX(-50%) translateY(0)}
-.toast.ok{background:var(--forest)}
-.toast.err{background:#8B2A22}
-
-/* footer */
-footer{background:var(--ink);color:rgba(255,255,255,.7);padding:2.5rem 1rem 1.5rem;margin-top:4rem}
+.toast.ok{background:#166534}
+.toast.err{background:#991B1B}
+/* FOOTER */
+footer{background:#1E1B4B;color:rgba(255,255,255,.7);padding:2.5rem 1rem 1.5rem;margin-top:4rem}
 .ft-inner{max-width:1140px;margin:0 auto}
 .ft-top{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2rem}
-.ft-brand .ft-logo{font-size:20px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:8px}
-.ft-brand .ft-logo em{color:var(--lime);font-style:normal}
-.ft-brand p{font-size:11px;opacity:.5;line-height:1.8;margin-bottom:.75rem}
+.ft-logo{font-size:20px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+.ft-logo em{color:#A5B4FC;font-style:normal}
+.ft-desc{font-size:11px;opacity:.5;line-height:1.8;margin-bottom:.75rem}
 .social-row{display:flex;gap:7px}
 .soc-btn{width:30px;height:30px;border-radius:var(--rsm);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:14px;transition:.15s;text-decoration:none}
-.soc-btn:hover{background:rgba(126,217,87,.15);color:var(--lime)}
+.soc-btn:hover{background:rgba(165,180,252,.15);color:#A5B4FC}
 .ft-col h4{font-size:10px;font-weight:800;color:#fff;margin-bottom:11px;text-transform:uppercase;letter-spacing:.6px}
-.ft-col a{display:block;font-size:11px;color:rgba(255,255,255,.45);margin-bottom:7px;text-decoration:none;transition:.15s;cursor:pointer}
-.ft-col a:hover{color:var(--lime)}
+.ft-col a{display:block;font-size:11px;color:rgba(255,255,255,.45);margin-bottom:7px;cursor:pointer;transition:.15s}
+.ft-col a:hover{color:#A5B4FC}
 .ft-support{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--r);padding:1rem}
-.ft-support h4{font-size:10px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-bottom:.9rem}
-.ft-contact-lnk{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-size:11px;text-decoration:none;transition:.15s}
-.ft-contact-lnk:last-child{border:none;padding-bottom:0}
-.ft-contact-lnk:hover{color:var(--lime)}
-.ft-contact-lnk i{color:var(--lime);font-size:15px;flex-shrink:0}
+.ft-support h4{font-size:10px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-bottom:.85rem}
+.ftcl{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-size:11px;text-decoration:none;transition:.15s}
+.ftcl:last-child{border:none;padding-bottom:0}
+.ftcl:hover{color:#A5B4FC}
+.ftcl i{color:#A5B4FC;font-size:14px;flex-shrink:0}
 .ft-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:11px;color:rgba(255,255,255,.3)}
 .trust-row{display:flex;gap:7px}
 .tbadge{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:var(--rsm);padding:4px 10px;font-size:10px;color:rgba(255,255,255,.55)}
-.tbadge i{color:var(--lime);font-size:12px}
-
-/* ══ RESPONSIVE ══ */
+.tbadge i{color:#A5B4FC;font-size:12px}
 @media(max-width:680px){
-  .nav-lnk{display:none}
-  .nav-saved{display:none}
+  .nav-btn{display:none}
   .mobile-tabs{display:flex}
-  .support-float{bottom:72px;left:12px}
-  .toast{bottom:72px}
+  .sup-float{bottom:66px;left:10px}
+  .toast{bottom:66px}
   .hero{padding:44px .75rem 0}
-  .hero h1{font-size:26px}
-  .hero-sb{flex-direction:column;border-radius:var(--r)}
-  .hero-sb select{border-right:none;border-top:1px solid var(--bd);width:100%}
-  .hero-sb button{padding:14px;border-radius:0 0 var(--r) var(--r)}
-  .stats-bar{gap:1.25rem}
-  .sbar-sep{display:none}
-  .promo-banner{flex-direction:column;align-items:flex-start;gap:.75rem}
-  .promo-pkgs{display:none}
-  .cats-wrap,.toolbar,.grid-wrap,.sell-pg,.saved-pg,.rules-pg,.promo-wrap{padding-left:.75rem;padding-right:.75rem}
-  .two{grid-template-columns:1fr 1fr}
-  .cond-grid{grid-template-columns:1fr 1fr}
+  .hero h1{font-size:24px}
+  .hero-search{flex-direction:column;border-radius:var(--r)}
+  .hero-search select{border-right:none;border-top:1px solid var(--bd);width:100%}
+  .hero-search button{padding:13px;border-radius:0 0 var(--r) var(--r)}
+  .stats-row{gap:1.25rem}
+  .sr-sep{display:none}
+  .promo{flex-direction:column;align-items:flex-start}
+  .cats-s,.toolbar,.grid-wrap,.sell-pg,.profile-pg,.rules-pg,.admin-pg,.promo-wrap{padding-left:.75rem;padding-right:.75rem}
+  .two,.cond-grid{grid-template-columns:1fr 1fr}
   .ft-top{grid-template-columns:1fr 1fr}
   .modal-actions{grid-template-columns:1fr}
-  .ads-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-}
-@media(max-width:380px){
-  .ads-grid{grid-template-columns:1fr 1fr}
-  .hero-sb{border-radius:var(--rsm)}
+  .ads-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+  .user-table{font-size:11px;display:block;overflow-x:auto}
 }
 </style>
 </head>
 <body>
+<script>const SB = supabase.createClient(SB_URL, SB_KEY);</script>
 
-<!-- NAV -->
 <nav class="nav">
-  <a class="logo" href="#">🛍 بازار<em>نو</em></a>
-  <div class="nav-q">
-    <i class="ti ti-search qi"></i>
-    <input type="text" id="navQ" placeholder="جستجو در آگهی‌ها...">
-  </div>
+  <a class="logo" href="#">🏪 بازارچه<em>.ir</em></a>
+  <div class="nav-q"><i class="ti ti-search"></i><input type="text" id="navQ" placeholder="جستجو..."></div>
   <div class="sp"></div>
-  <button class="nav-lnk on" data-to="home">آگهی‌ها</button>
-  <button class="nav-saved on" data-to="saved" id="navSaved">
-    <i class="ti ti-bookmark"></i>نشان‌ها
-    <span class="sv-badge" id="svBadge">0</span>
+  <button class="nav-btn on" data-to="home">آگهی‌ها</button>
+  <button class="nav-btn" data-to="profile" id="navBell" style="display:none;position:relative">
+    <i class="ti ti-bell"></i><span class="notif-dot" id="notifDot"></span>
   </button>
-  <button class="nav-lnk" data-to="sell">ثبت آگهی</button>
-  <button class="nav-lnk" data-to="rules">قوانین</button>
-  <button class="btn-new" id="btnNew"><i class="ti ti-plus" style="font-size:14px"></i>آگهی رایگان</button>
+  <button class="nav-btn" data-to="sell">ثبت آگهی</button>
+  <button class="nav-btn" data-to="rules">قوانین</button>
+  <button class="btn-cta" id="btnAuth" onclick="openAuth()"><i class="ti ti-user" style="font-size:13px"></i>ورود / ثبت‌نام</button>
+  <div class="avatar" id="navAvatar" style="display:none" onclick="toggleProfile()"></div>
+  <div class="profile-menu" id="profileMenu">
+    <div class="pm-header" id="pmHeader"></div>
+    <div class="pm-item" onclick="goProfile()"><i class="ti ti-user"></i>پروفایل و آگهی‌هام</div>
+    <div class="pm-item" onclick="goTickets()"><i class="ti ti-message-circle"></i>تیکت‌های پشتیبانی</div>
+    <div class="pm-item" onclick="goAdmin()" id="pmAdmin" style="display:none"><i class="ti ti-shield"></i>پنل ادمین</div>
+    <div class="pm-item danger" onclick="logout()"><i class="ti ti-logout"></i>خروج</div>
+  </div>
 </nav>
 
 <!-- HOME -->
 <div class="page on" id="page-home">
   <section class="hero">
     <div class="hero-inner">
-      <div class="hero-badge"><span class="live-dot"></span>بازارچه آنلاین ایران · رایگان و بدون واسطه</div>
-      <h1>وسیله‌ات رو بفروش<br><span class="acc">همین الان</span></h1>
-      <p class="hero-sub">ثبت آگهی در ۲ دقیقه — ارتباط مستقیم با خریدار</p>
-      <div class="hero-sb">
+      <div class="hero-chip"><span class="chip-dot"></span>بزرگ‌ترین بازارچه آنلاین ایران</div>
+      <h1>بفروش، <span class="hl">پیدا کن</span><br>بدون واسطه</h1>
+      <p class="hero-sub">ثبت آگهی رایگان · ارتباط مستقیم · همه جا</p>
+      <div class="hero-search">
         <input type="text" id="heroQ" placeholder="دنبال چی می‌گردی؟">
         <select id="heroCat">
-          <option value="">همه دسته‌ها</option>
+          <option value="">همه</option>
           <option>موبایل و تبلت</option><option>کامپیوتر و لپ‌تاپ</option>
           <option>لوازم خانگی</option><option>پوشاک و کفش</option>
           <option>کتاب و تحصیل</option><option>خودرو و موتور</option>
           <option>ورزش و سرگرمی</option><option>وسایل کودک</option>
         </select>
-        <button onclick="heroSearch()"><i class="ti ti-search" style="font-size:15px"></i>جستجو</button>
+        <button onclick="heroSearch()"><i class="ti ti-search" style="font-size:14px"></i>جستجو</button>
       </div>
     </div>
-    <div class="hero-wave-wrap">
-      <svg class="hero-wave" viewBox="0 0 1440 68" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,68 C240,18 480,0 720,34 C960,68 1200,18 1440,0 L1440,68 L0,68Z" fill="var(--forest)"/>
-      </svg>
-    </div>
+    <svg class="hero-wave" viewBox="0 0 1440 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,56 C360,14 720,0 1080,28 C1260,42 1380,14 1440,0 L1440,56 L0,56Z" fill="#312E81"/>
+    </svg>
   </section>
-
-  <div class="stats-bar">
-    <div class="sbar-item"><i class="ti ti-list-check"></i><div><div class="sbar-num" id="hTotal">—</div><div class="sbar-lbl">آگهی فعال</div></div></div>
-    <div class="sbar-sep"></div>
-    <div class="sbar-item"><i class="ti ti-tag"></i><div><div class="sbar-num">رایگان</div><div class="sbar-lbl">ثبت آگهی</div></div></div>
-    <div class="sbar-sep"></div>
-    <div class="sbar-item"><i class="ti ti-shield-check"></i><div><div class="sbar-num">امن</div><div class="sbar-lbl">ارتباط مستقیم</div></div></div>
-    <div class="sbar-sep"></div>
-    <div class="sbar-item"><i class="ti ti-speakerphone"></i><div><div class="sbar-num" onclick="openAdModal()" style="cursor:pointer;text-decoration:underline dotted">تبلیغ</div><div class="sbar-lbl">دیده بشو</div></div></div>
+  <div class="stats-row">
+    <div class="sr-item"><i class="ti ti-list-check"></i><div><div class="sr-num" id="hTotal">—</div><div class="sr-lbl">آگهی فعال</div></div></div>
+    <div class="sr-sep"></div>
+    <div class="sr-item"><i class="ti ti-tag"></i><div><div class="sr-num">رایگان</div><div class="sr-lbl">ثبت آگهی</div></div></div>
+    <div class="sr-sep"></div>
+    <div class="sr-item"><i class="ti ti-shield-check"></i><div><div class="sr-num">امن</div><div class="sr-lbl">ارتباط مستقیم</div></div></div>
+    <div class="sr-sep"></div>
+    <div class="sr-item" onclick="window.open(BALE_CHANNEL,'_blank')" style="cursor:pointer">
+      <i class="ti ti-speakerphone"></i><div><div class="sr-num" style="font-size:14px">@bazar_no</div><div class="sr-lbl">کانال بله</div></div>
+    </div>
   </div>
-
   <div class="promo-wrap">
-    <div class="promo-banner">
-      <div class="promo-left">
-        <div class="promo-icon">📣</div>
-        <div class="promo-text">
-          <strong>آگهی‌ات رو تبلیغ کن — بیشتر دیده بشو</strong>
-          <span>با تبلیغ ویژه، آگهی‌ات بالای همه نشون داده میشه</span>
-        </div>
-      </div>
-      <div class="promo-pkgs">
-        <button class="ppkg" onclick="openAdModal()"><span class="ptag">ویژه</span>هفتگی — ۵۰ هزار</button>
-        <button class="ppkg" onclick="openAdModal()"><span class="ptag">طلایی</span>ماهانه — ۱۵۰ هزار</button>
-      </div>
-      <button class="btn-ad" onclick="openAdModal()"><i class="ti ti-star" style="font-size:14px"></i>سفارش تبلیغ</button>
+    <div class="promo">
+      <div class="promo-left"><div class="promo-icon">📣</div><div class="promo-txt"><strong>آگهی‌ات رو تبلیغ کن</strong><span>بالای لیست · بیشتر دیده بشو</span></div></div>
+      <button class="bale-btn" onclick="window.open(BALE_CHANNEL,'_blank')"><i class="ti ti-speakerphone" style="font-size:15px"></i>کانال بله</button>
+      <button class="btn-ad-order" onclick="openAdModal()"><i class="ti ti-star" style="font-size:13px"></i>سفارش تبلیغ</button>
     </div>
   </div>
-
-  <div class="cats-wrap">
+  <div class="cats-s">
     <span class="sec-t">دسته‌بندی‌ها</span>
-    <div class="cats-row" id="catsRow">
-      <button class="cat-chip on" data-cat=""><span class="ci">🛍️</span>همه</button>
-      <button class="cat-chip" data-cat="موبایل و تبلت"><span class="ci">📱</span>موبایل</button>
-      <button class="cat-chip" data-cat="کامپیوتر و لپ‌تاپ"><span class="ci">💻</span>کامپیوتر</button>
-      <button class="cat-chip" data-cat="لوازم خانگی"><span class="ci">🏠</span>خانگی</button>
-      <button class="cat-chip" data-cat="پوشاک و کفش"><span class="ci">👗</span>پوشاک</button>
-      <button class="cat-chip" data-cat="کتاب و تحصیل"><span class="ci">📚</span>کتاب</button>
-      <button class="cat-chip" data-cat="خودرو و موتور"><span class="ci">🚗</span>خودرو</button>
-      <button class="cat-chip" data-cat="ورزش و سرگرمی"><span class="ci">⚽</span>ورزش</button>
-      <button class="cat-chip" data-cat="وسایل کودک"><span class="ci">🧸</span>کودک</button>
+    <div class="cats-scroll" id="catsRow">
+      <button class="cat-chip on" data-cat="">🛍️ همه</button>
+      <button class="cat-chip" data-cat="موبایل و تبلت">📱 موبایل</button>
+      <button class="cat-chip" data-cat="کامپیوتر و لپ‌تاپ">💻 کامپیوتر</button>
+      <button class="cat-chip" data-cat="لوازم خانگی">🏠 خانگی</button>
+      <button class="cat-chip" data-cat="پوشاک و کفش">👗 پوشاک</button>
+      <button class="cat-chip" data-cat="کتاب و تحصیل">📚 کتاب</button>
+      <button class="cat-chip" data-cat="خودرو و موتور">🚗 خودرو</button>
+      <button class="cat-chip" data-cat="ورزش و سرگرمی">⚽ ورزش</button>
+      <button class="cat-chip" data-cat="وسایل کودک">🧸 کودک</button>
     </div>
   </div>
-
   <div class="toolbar">
-    <div style="display:flex;align-items:center">
-      <span class="res-lbl" id="resLbl">جدیدترین آگهی‌ها</span>
-      <span class="res-cnt" id="resCnt">…</span>
-    </div>
+    <div style="display:flex;align-items:center"><span class="res-lbl" id="resLbl">جدیدترین آگهی‌ها</span><span class="res-cnt" id="resCnt">…</span></div>
     <div class="sorts">
       <button class="sort-b on" data-sort="newest">جدیدترین</button>
       <button class="sort-b" data-sort="cheapest">ارزان‌ترین</button>
       <button class="sort-b" data-sort="expensive">گران‌ترین</button>
     </div>
   </div>
-
-  <div class="grid-wrap">
-    <div class="ads-grid" id="adsGrid">
-      <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
-      <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
-      <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
-      <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- SAVED -->
-<div class="page" id="page-saved">
-  <div class="saved-pg">
-    <div class="saved-hd">
-      <h2>🔖 نشان‌های من</h2>
-      <button class="btn-clr" onclick="clearAllSaved()"><i class="ti ti-trash" style="font-size:13px"></i>حذف همه</button>
-    </div>
-    <div class="ads-grid" id="savedGrid">
-      <div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>
-    </div>
-  </div>
+  <div class="grid-wrap"><div class="ads-grid" id="adsGrid">
+    <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
+  </div></div>
 </div>
 
 <!-- SELL -->
 <div class="page" id="page-sell">
   <div class="sell-pg" id="formArea">
     <div class="sell-hd"><h2>ثبت آگهی رایگان</h2><p>چند دقیقه وقت بذار — مستقیم با خریدار ارتباط بگیر</p></div>
-
-    <div class="ad-toggle">
-      <div class="at-left">
-        <div class="at-icon">⭐</div>
-        <div class="at-text">
-          <strong>آگهی ویژه (تبلیغ پولی)</strong>
-          <span>بالای لیست — بیشتر دیده میشه</span>
-        </div>
-      </div>
-      <div class="at-btns">
-        <button class="atbtn off on" id="tnAd" onclick="setAd(false)">معمولی</button>
-        <button class="atbtn off" id="tyAd" onclick="openAdModal()">ویژه ⭐</button>
+    <div class="feat-toggle">
+      <div class="ft-left"><div class="ft-icon">⭐</div><div class="ft-txt"><strong>آگهی ویژه (تبلیغ)</strong><span>بالای لیست نمایش داده می‌شه</span></div></div>
+      <div class="ft-btns">
+        <button class="ftb off on" id="fbNo" onclick="setFeat(false)">معمولی</button>
+        <button class="ftb off" id="fbYes" onclick="openAdModal()">ویژه ⭐</button>
       </div>
     </div>
-
     <div class="step-card">
-      <div class="step-hd"><span class="snum">۱</span><div><div class="step-hd-t">عکس محصول</div><div class="step-hd-s">تا ۸ عکس — عکس بیشتر = فروش سریع‌تر</div></div></div>
+      <div class="step-hd"><span class="snum">۱</span><div><div class="step-hd-t">عکس محصول</div><div class="step-hd-s">تا ۸ عکس · عکس بیشتر = فروش سریع‌تر</div></div></div>
       <div class="upload-zone" id="uploadZone"><i class="ti ti-photo-plus"></i><div class="ut">کلیک کن یا بکش بنداز</div><div class="us">JPG · PNG · WEBP — حداکثر ۵MB</div></div>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
       <div class="thumb-row" id="thumbRow"></div>
     </div>
-
     <div class="step-card">
       <div class="step-hd"><span class="snum">۲</span><div><div class="step-hd-t">اطلاعات آگهی</div><div class="step-hd-s">هر چه دقیق‌تر، سریع‌تر می‌فروشی</div></div></div>
-      <div class="field"><label>عنوان <span class="req">*</span></label><input type="text" id="fTitle" maxlength="80" placeholder="مثلاً: آیفون ۱۴ پرو ۲۵۶ گیگ بنفش"><div class="field-hint"><span></span><span id="tc">0</span>/80</div></div>
+      <div class="field"><label>عنوان <span class="req">*</span></label><input type="text" id="fTitle" maxlength="80" placeholder="مثلاً: آیفون ۱۴ پرو ۲۵۶ گیگ"><div class="field-hint"><span></span><span id="tc">0</span>/80</div></div>
       <div class="two">
         <div class="field"><label>دسته‌بندی <span class="req">*</span></label>
           <select id="fCat"><option value="">انتخاب...</option><option>موبایل و تبلت</option><option>کامپیوتر و لپ‌تاپ</option><option>لوازم خانگی</option><option>پوشاک و کفش</option><option>کتاب و تحصیل</option><option>خودرو و موتور</option><option>ورزش و سرگرمی</option><option>وسایل کودک</option><option>سایر</option></select>
@@ -573,113 +572,168 @@ footer{background:var(--ink);color:rgba(255,255,255,.7);padding:2.5rem 1rem 1.5r
       </div>
       <div class="field"><label>وضعیت کالا</label>
         <div class="cond-grid" id="condGrid">
-          <button class="copt on" data-v="نو"><span class="ci2">✨</span>نو — استفاده نشده</button>
-          <button class="copt" data-v="در حد نو"><span class="ci2">👌</span>در حد نو</button>
-          <button class="copt" data-v="کارکرده سالم"><span class="ci2">🔧</span>کارکرده — سالم</button>
-          <button class="copt" data-v="نیاز به تعمیر"><span class="ci2">⚠️</span>نیاز به تعمیر</button>
+          <button class="copt on" data-v="نو">✨ نو</button>
+          <button class="copt" data-v="در حد نو">👌 در حد نو</button>
+          <button class="copt" data-v="کارکرده سالم">🔧 کارکرده</button>
+          <button class="copt" data-v="نیاز به تعمیر">⚠️ نیاز تعمیر</button>
         </div>
       </div>
-      <div class="field"><label>توضیحات</label><textarea id="fDesc" maxlength="700" placeholder="ویژگی‌ها، دلیل فروش، نکات مهم..."></textarea><div class="field-hint"><span></span><span id="dc">0</span>/700</div></div>
+      <div class="field"><label>توضیحات</label><textarea id="fDesc" maxlength="700" placeholder="ویژگی‌ها، دلیل فروش..."></textarea><div class="field-hint"><span></span><span id="dc">0</span>/700</div></div>
     </div>
-
     <div class="step-card">
       <div class="step-hd"><span class="snum">۳</span><div><div class="step-hd-t">قیمت و تماس</div><div class="step-hd-s">این اطلاعات رو خریدار می‌بینه</div></div></div>
       <div class="two">
-        <div class="field"><label>قیمت <span class="req">*</span></label><div class="price-wrap"><input type="text" id="fPrice" placeholder="۱۲,۵۰۰,۰۰۰"><span class="price-unit">تومان</span></div></div>
+        <div class="field"><label>قیمت <span class="req">*</span></label><div class="price-wrap"><input type="text" id="fPrice" placeholder="۰"><span class="price-unit">تومان</span></div></div>
         <div class="field"><label>مذاکره؟</label><select id="fNego"><option value="بله">بله</option><option value="خیر">قیمت ثابت</option></select></div>
       </div>
       <div class="two">
-        <div class="field"><label>شماره تماس <span class="req">*</span></label><input type="tel" id="fPhone" maxlength="11" placeholder="09xxxxxxxxx"><div class="field-hint"><span>فقط به خریدار نشان داده میشه</span></div></div>
-        <div class="field"><label>شهر <span class="req">*</span></label><input type="text" id="fCity" placeholder="تهران، مشهد..."></div>
+        <div class="field"><label>شماره تماس <span class="req">*</span></label><input type="tel" id="fPhone" maxlength="11" placeholder="09..."><div class="field-hint"><span>فقط به خریدار نشان داده میشه</span></div></div>
+        <div class="field"><label>شهر <span class="req">*</span></label><input type="text" id="fCity" placeholder="تهران..."></div>
       </div>
-      <div class="field"><label>نام فروشنده</label><input type="text" id="fName" placeholder="نام یا نام مستعار (اختیاری)"></div>
       <div class="submit-row">
-        <button class="btn-submit" id="submitBtn"><i class="ti ti-check" style="font-size:16px"></i>ثبت آگهی</button>
+        <button class="btn-submit" id="submitBtn"><i class="ti ti-send" style="font-size:15px"></i>ثبت آگهی</button>
         <button class="btn-cancel" onclick="goHome()">انصراف</button>
       </div>
     </div>
   </div>
   <div class="success-pg" id="successArea" style="display:none">
-    <div class="sring">🎉</div>
-    <h2>آگهی‌ات ثبت شد!</h2>
-    <p>الان توی بازارنو منتشره — همه می‌تونن ببیننش.</p>
+    <div class="sring">✅</div>
+    <h2>آگهی ثبت شد!</h2>
+    <p>پس از تأیید ادمین منتشر می‌شه.</p>
     <div class="sic" id="sicCard"></div>
-    <button class="btn-back" onclick="goHome()">مشاهده آگهی‌ها</button>
+    <button class="btn-back" onclick="goHome()">بازگشت</button>
   </div>
 </div>
 
-<!-- RULES PAGE -->
+<!-- PROFILE -->
+<div class="page" id="page-profile">
+  <div class="profile-pg">
+    <div class="profile-header">
+      <div class="ph-avatar" id="phAvatar"></div>
+      <div style="flex:1">
+        <div class="ph-name" id="phName">—</div>
+        <div class="ph-meta" id="phMeta"></div>
+        <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap">
+          <span class="ph-badge" id="phPkgBadge" style="display:none"></span>
+          <button style="background:var(--p3);color:var(--p);border:none;border-radius:var(--rpill);padding:5px 13px;font-size:11px;font-weight:700;cursor:pointer" onclick="openEditProfile()">✏️ ویرایش</button>
+        </div>
+      </div>
+    </div>
+    <div class="profile-sec">
+      <h3><i class="ti ti-bell"></i>اعلان‌های من</h3>
+      <div id="notifList"><div class="empty-sec">اعلانی ندارید</div></div>
+    </div>
+    <div class="profile-sec">
+      <h3><i class="ti ti-clipboard-list"></i>آگهی‌های من</h3>
+      <div class="ads-grid" id="myAdsGrid"><div class="empty-sec">هنوز آگهی ندارید</div></div>
+    </div>
+    <div class="profile-sec">
+      <h3><i class="ti ti-message-circle"></i>تیکت‌های پشتیبانی
+        <button style="margin-right:auto;background:var(--p);color:#fff;border:none;border-radius:var(--rpill);padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer" onclick="openNewTicket()">+ تیکت جدید</button>
+      </h3>
+      <div class="ticket-list" id="myTicketList"><div class="empty-sec">تیکتی ندارید</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div class="admin-pg">
+    <div class="admin-hd">
+      <h2><i class="ti ti-shield"></i>پنل مدیریت بازارچه</h2>
+      <button onclick="goHome()" style="background:var(--sand);border:1.5px solid var(--bd2);border-radius:var(--rpill);padding:7px 14px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer">خروج</button>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="sc-val" id="st-total">—</div><div class="sc-lbl">کل آگهی‌ها</div></div>
+      <div class="stat-card g"><div class="sc-val" id="st-approved">—</div><div class="sc-lbl">تأیید شده</div></div>
+      <div class="stat-card a"><div class="sc-val" id="st-pending">—</div><div class="sc-lbl">در انتظار</div></div>
+      <div class="stat-card r"><div class="sc-val" id="st-rejected">—</div><div class="sc-lbl">رد شده</div></div>
+      <div class="stat-card"><div class="sc-val" id="st-users">—</div><div class="sc-lbl">کاربران</div></div>
+      <div class="stat-card r"><div class="sc-val" id="st-tickets">—</div><div class="sc-lbl">تیکت باز</div></div>
+    </div>
+    <div class="admin-tabs">
+      <div class="atab on" data-at="pending">📋 در انتظار</div>
+      <div class="atab" data-at="all-ads">🗂 همه آگهی‌ها</div>
+      <div class="atab" data-at="users">👥 کاربران</div>
+      <div class="atab" data-at="tickets">📨 تیکت‌ها</div>
+    </div>
+    <div class="admin-section on" id="as-pending">
+      <div class="pending-list" id="pendingList"><div class="empty-sec">آگهی در انتظاری ندارید 🎉</div></div>
+    </div>
+    <div class="admin-section" id="as-all-ads">
+      <div class="ads-grid" id="adminAdsGrid"></div>
+    </div>
+    <div class="admin-section" id="as-users">
+      <div style="overflow-x:auto">
+        <table class="user-table">
+          <thead><tr><th>نام</th><th>ایمیل</th><th>شهر</th><th>نقش</th><th>پکیج</th><th>تاریخ</th><th>عملیات</th></tr></thead>
+          <tbody id="userTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-section" id="as-tickets">
+      <div id="adminTicketList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RULES -->
 <div class="page" id="page-rules">
   <div class="rules-pg">
-    <div class="rules-hd">📋 قوانین و مقررات بازارنو</div>
-    <div class="rules-sub">آخرین بروزرسانی: خرداد ۱۴۰۴ — لطفاً قبل از استفاده مطالعه کنید</div>
-    <div class="rules-note"><i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><span>استفاده از بازارنو به معنای قبول این قوانین است. در صورت تخلف، آگهی حذف خواهد شد.</span></div>
-
-    <div class="rule-card">
-      <h3><i class="ti ti-circle-check"></i>قوانین کلی آگهی‌دهی</h3>
-      <ul>
-        <li>ثبت آگهی کاملاً رایگان است</li>
-        <li>هر کاربر می‌تواند آگهی واقعی و صادقانه ثبت کند</li>
-        <li>اطلاعات وارد شده باید صحیح و مطابق با واقعیت باشد</li>
-        <li>تصاویر آگهی باید مربوط به همان کالا باشند</li>
-        <li>قیمت‌گذاری منطقی و شفاف الزامی است</li>
-      </ul>
+    <h2>📋 قوانین و مقررات بازارچه</h2>
+    <p class="sub">آخرین بروزرسانی: خرداد ۱۴۰۴</p>
+    <div class="rules-note"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0;margin-top:2px"></i><span>استفاده از بازارچه به معنای قبول این قوانین است.</span></div>
+    <div class="rule-card"><h3><i class="ti ti-circle-check"></i>قوانین کلی</h3><ul><li>ثبت آگهی کاملاً رایگان است</li><li>اطلاعات باید صحیح باشد</li><li>هر آگهی پس از بررسی ادمین منتشر می‌شود</li></ul></div>
+    <div class="rule-card"><h3><i class="ti ti-ban"></i>موارد ممنوع</h3><ul><li>فروش کالاهای غیرقانونی</li><li>اطلاعات دروغ یا گمراه‌کننده</li><li>کلاهبرداری یا تقلب مالی</li><li>اسپم و تکرار آگهی</li></ul></div>
+    <div class="rule-card"><h3><i class="ti ti-headset"></i>پشتیبانی</h3>
+      <a href="tel:09212302379" style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--p);text-decoration:none;margin-top:.5rem"><i class="ti ti-phone"></i>09212302379</a>
+      <a href="https://ble.ir/ma_shahripour" target="_blank" style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--p);text-decoration:none;margin-top:.5rem"><i class="ti ti-brand-telegram"></i>@ma_shahripour در بله</a>
     </div>
+  </div>
+</div>
 
-    <div class="rule-card">
-      <h3><i class="ti ti-ban"></i>موارد ممنوع</h3>
-      <ul>
-        <li>فروش کالاهای غیرقانونی، قاچاق یا تقلبی</li>
-        <li>ثبت آگهی با اطلاعات دروغ یا گمراه‌کننده</li>
-        <li>فروش دارو، سلاح، مواد مخدر یا مشروبات الکلی</li>
-        <li>کلاهبرداری، فیشینگ یا هر نوع تقلب مالی</li>
-        <li>درج شماره تماس جعلی یا اطلاعات غیرواقعی</li>
-        <li>تکرار آگهی یکسان در دسته‌بندی‌های مختلف (اسپم)</li>
-        <li>فروش حیوانات وحشی یا تحت حفاظت</li>
-      </ul>
-    </div>
-
-    <div class="rule-card">
-      <h3><i class="ti ti-shield-check"></i>ایمنی در معاملات</h3>
-      <p>بازارنو صرفاً یک بستر آگهی است و مسئولیتی در قبال معاملات بین خریدار و فروشنده ندارد. توصیه‌های ایمنی:</p>
-      <ul style="margin-top:.5rem">
-        <li>تا حد امکان کالا را حضوری و در مکان عمومی تحویل بگیرید</li>
-        <li>قبل از پرداخت، کالا را به دقت بررسی کنید</li>
-        <li>به پیش‌پرداخت‌های مشکوک توجه کنید</li>
-        <li>در صورت مشاهده تخلف، با پشتیبانی تماس بگیرید</li>
-      </ul>
-    </div>
-
-    <div class="rule-card">
-      <h3><i class="ti ti-speakerphone"></i>قوانین تبلیغات ویژه</h3>
-      <p>برای ثبت آگهی ویژه (تبلیغ پولی) باید با پشتیبانی تماس بگیرید. آگهی‌های ویژه پس از تأیید و پرداخت در بالای لیست نمایش داده می‌شوند. بازارنو حق دارد آگهی‌های مغایر با قوانین را بدون اطلاع حذف کند.</p>
-    </div>
-
-    <div class="rule-card">
-      <h3><i class="ti ti-user-check"></i>حریم خصوصی</h3>
-      <p>شماره تماس شما فقط در پاسخ به کلیک خریدار نمایش داده می‌شود. بازارنو اطلاعات شخصی شما را به هیچ شخص ثالثی نمی‌فروشد. با ثبت آگهی، اجازه نمایش اطلاعات آگهی به بازدیدکنندگان سایت را می‌دهید.</p>
-    </div>
-
-    <div class="rule-card">
-      <h3><i class="ti ti-headset"></i>تماس با پشتیبانی</h3>
-      <p>در صورت بروز مشکل یا مشاهده تخلف:</p>
-      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:8px">
-        <a href="tel:09212302379" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--forest);text-decoration:none"><i class="ti ti-phone" style="color:var(--mint)"></i>09212302379</a>
-        <a href="https://ble.ir/ma_shahripour" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--forest);text-decoration:none"><i class="ti ti-brand-telegram" style="color:var(--mint)"></i>@ma_shahripour در بله</a>
-        <a href="https://ble.ir/bazar_no" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--forest);text-decoration:none"><i class="ti ti-speakerphone" style="color:var(--mint)"></i>کانال بله: @bazar_no</a>
+<!-- MODALS -->
+<div class="modal-bg" id="authModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-top"><h3>ورود / ثبت‌نام</h3><div class="modal-x" onclick="closeAuth()"><i class="ti ti-x"></i></div></div>
+    <div class="modal-body">
+      <div class="auth-tabs">
+        <div class="auth-tab on" onclick="switchAuth('login')">ورود</div>
+        <div class="auth-tab" onclick="switchAuth('register')">ثبت‌نام</div>
+        <div class="auth-tab" onclick="switchAuth('admin')">ادمین</div>
+      </div>
+      <div id="authAlert"></div>
+      <div class="auth-form on" id="af-login">
+        <div class="field"><label>ایمیل</label><input type="email" id="lEmail" placeholder="your@email.com"></div>
+        <div class="field"><label>رمز عبور</label><input type="password" id="lPass" placeholder="••••••••"></div>
+        <button class="btn-primary" id="btnLogin" onclick="doLogin()"><i class="ti ti-login" style="font-size:15px"></i>ورود</button>
+        <button class="btn-ghost" onclick="switchAuth('register')">حساب ندارم — ثبت‌نام</button>
+      </div>
+      <div class="auth-form" id="af-register">
+        <div class="two">
+          <div class="field"><label>نام کامل <span class="req">*</span></label><input type="text" id="rName" placeholder="علی رضایی"></div>
+          <div class="field"><label>نام کاربری <span class="req">*</span></label><input type="text" id="rUser" placeholder="ali123"></div>
+        </div>
+        <div class="field"><label>ایمیل <span class="req">*</span></label><input type="email" id="rEmail" placeholder="your@email.com"></div>
+        <div class="field"><label>شماره تماس</label><input type="tel" id="rPhone" placeholder="09..."></div>
+        <div class="field"><label>شهر</label><input type="text" id="rCity" placeholder="تهران..."></div>
+        <div class="field"><label>رمز عبور <span class="req">*</span></label><input type="password" id="rPass" placeholder="حداقل ۸ کاراکتر"></div>
+        <button class="btn-primary" id="btnRegister" onclick="doRegister()"><i class="ti ti-user-plus" style="font-size:15px"></i>ثبت‌نام</button>
+      </div>
+      <div class="auth-form" id="af-admin">
+        <div class="field"><label>رمز ادمین</label><input type="password" id="adminPass" placeholder="رمز پنل مدیریت"></div>
+        <button class="btn-primary" onclick="doAdminLogin()"><i class="ti ti-shield" style="font-size:15px"></i>ورود به پنل ادمین</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL آگهی -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <div class="modal-top"><div class="modal-cat-pill" id="mCat"></div><button class="modal-x" id="mClose"><i class="ti ti-x"></i></button></div>
+    <div class="modal-top"><div id="mCat" style="font-size:12px;font-weight:700;color:var(--ink3)"></div><div class="modal-x" id="mClose"><i class="ti ti-x"></i></div></div>
     <div class="modal-body">
       <div class="m-gallery"><img id="mImg" style="display:none"><div id="mEmoji" class="m-emoji"></div></div>
       <div id="mThumbs" class="m-thumbs"></div>
-      <div id="mAdBanner" class="m-ad-banner"><i class="ti ti-star" style="font-size:13px"></i>آگهی ویژه — تبلیغ شده</div>
       <div class="modal-title" id="mTitle"></div>
       <div class="modal-price" id="mPrice"></div>
       <div id="mNego"></div>
@@ -696,131 +750,464 @@ footer{background:var(--ink);color:rgba(255,255,255,.7);padding:2.5rem 1rem 1.5r
   </div>
 </div>
 
-<!-- MODAL تبلیغ -->
-<div class="ad-modal-bg" id="adModalBg">
-  <div class="ad-modal">
-    <div class="ad-modal-head"><h3>📣 سفارش تبلیغ ویژه</h3><button class="modal-x" onclick="closeAdModal()"><i class="ti ti-x"></i></button></div>
-    <div class="ad-body">
-      <p style="font-size:13px;color:var(--t3);margin-bottom:1.1rem;line-height:1.7">با تبلیغ ویژه، آگهی‌ات بالای همه آگهی‌ها با ستاره طلایی نمایش داده میشه.</p>
-      <div class="pkg-cards">
-        <div class="pkg-card on" onclick="selPkg(this)"><div class="pk-hd"><span class="pk-nm">📦 هفتگی</span><span class="pk-pr">۵۰,۰۰۰ تومان</span></div><div class="pk-ds">۷ روز · ستاره طلایی · بالای لیست</div></div>
-        <div class="pkg-card" onclick="selPkg(this)"><div class="pk-hd"><span class="pk-nm">⭐ ماهانه <span class="pk-bg">پرفروش</span></span><span class="pk-pr">۱۵۰,۰۰۰ تومان</span></div><div class="pk-ds">۳۰ روز · اولویت جستجو · آمار بازدید</div></div>
-        <div class="pkg-card" onclick="selPkg(this)"><div class="pk-hd"><span class="pk-nm">🏆 سه‌ماهه</span><span class="pk-pr">۳۵۰,۰۰۰ تومان</span></div><div class="pk-ds">۹۰ روز · بالاترین اولویت · پشتیبانی اختصاصی</div></div>
+<div class="modal-bg" id="adModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-top"><h3>📣 سفارش تبلیغ ویژه</h3><div class="modal-x" onclick="closeAdModal()"><i class="ti ti-x"></i></div></div>
+    <div class="modal-body">
+      <div class="ad-pkg-cards">
+        <div class="ad-pkg on" onclick="selPkg(this)"><div><span class="ap-name">📦 هفتگی</span><span class="ap-price">۵۰,۰۰۰ ت</span></div><div class="ap-desc">۷ روز · ستاره طلایی · بالای لیست</div></div>
+        <div class="ad-pkg" onclick="selPkg(this)"><div><span class="ap-name">⭐ ماهانه</span><span class="ap-price">۱۵۰,۰۰۰ ت</span></div><div class="ap-desc">۳۰ روز · اولویت جستجو</div></div>
+        <div class="ad-pkg" onclick="selPkg(this)"><div><span class="ap-name">🏆 سه‌ماهه</span><span class="ap-price">۳۵۰,۰۰۰ ت</span></div><div class="ap-desc">۹۰ روز · بالاترین اولویت</div></div>
       </div>
-      <div class="ad-contact">
-        <h4>برای سفارش با ما در تماس باش:</h4>
-        <a class="contact-lnk" href="tel:09212302379"><i class="ti ti-phone"></i><div><div style="font-weight:700">09212302379</div><div class="cl-tag">تماس مستقیم</div></div></a>
-        <a class="contact-lnk" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i><div><div style="font-weight:700">@ma_shahripour</div><div class="cl-tag">پیام در بله</div></div></a>
-        <a class="contact-lnk" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i><div><div style="font-weight:700">@bazar_no</div><div class="cl-tag">کانال بله بازارنو</div></div></a>
+      <div class="contact-links">
+        <h4>برای سفارش تماس بگیر:</h4>
+        <a class="cl" href="tel:09212302379"><i class="ti ti-phone"></i>09212302379</a>
+        <a class="cl" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i>@ma_shahripour</a>
       </div>
-      <button class="btn-send" onclick="window.open('https://ble.ir/ma_shahripour','_blank')"><i class="ti ti-brand-telegram" style="font-size:16px"></i>پیام در بله</button>
+      <button class="btn-primary" onclick="window.open(BALE_SUPPORT,'_blank')"><i class="ti ti-brand-telegram" style="font-size:15px"></i>پیام در بله</button>
     </div>
   </div>
 </div>
 
-<!-- SUPPORT FLOAT -->
-<div class="support-float">
-  <div class="support-menu" id="supMenu">
-    <a class="support-item" href="tel:09212302379"><i class="ti ti-phone"></i><div><div class="si-title">09212302379</div><div class="si-sub">تماس مستقیم</div></div></a>
-    <a class="support-item" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i><div><div class="si-title">@ma_shahripour</div><div class="si-sub">پیام در بله</div></div></a>
-    <a class="support-item" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i><div><div class="si-title">@bazar_no</div><div class="si-sub">کانال بله بازارنو</div></div></a>
-    <div class="support-item" onclick="openAdModal();closeSupport()"><i class="ti ti-star"></i><div><div class="si-title">سفارش تبلیغ</div><div class="si-sub">آگهی‌ات رو دیده‌تر کن</div></div></div>
+<div class="modal-bg" id="ticketModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-top"><h3 id="ticketModalTitle">تیکت جدید</h3><div class="modal-x" onclick="closeModal('ticketModal')"><i class="ti ti-x"></i></div></div>
+    <div class="modal-body" id="ticketModalBody"></div>
   </div>
-  <button class="support-btn" id="supBtn" onclick="toggleSupport()"><i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی</button>
 </div>
 
-<!-- MOBILE TABS -->
-<nav class="mobile-tabs">
-  <button class="mtab on" data-to="home"><i class="ti ti-home"></i>خانه</button>
-  <button class="mtab" data-to="saved" id="mSavedTab"><i class="ti ti-bookmark"></i>نشان‌ها<span class="mtab-badge" id="mtBadge">0</span></button>
-  <button class="mtab" data-to="sell"><i class="ti ti-plus-circle"></i>آگهی</button>
-  <button class="mtab" data-to="rules"><i class="ti ti-file-text"></i>قوانین</button>
-</nav>
+<div class="modal-bg" id="editProfileModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-top"><h3>ویرایش پروفایل</h3><div class="modal-x" onclick="closeModal('editProfileModal')"><i class="ti ti-x"></i></div></div>
+    <div class="modal-body">
+      <div class="field"><label>نام کامل</label><input type="text" id="epName"></div>
+      <div class="field"><label>شماره تماس</label><input type="tel" id="epPhone" placeholder="09..."></div>
+      <div class="field"><label>شهر</label><input type="text" id="epCity"></div>
+      <button class="btn-primary" onclick="saveProfile()"><i class="ti ti-check" style="font-size:15px"></i>ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="pkgModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-top"><h3>پکیج تبلیغاتی</h3><div class="modal-x" onclick="closeModal('pkgModal')"><i class="ti ti-x"></i></div></div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:1rem">برای کاربر <strong id="pkgUserName"></strong>:</p>
+      <div class="pkg-opts">
+        <div class="pkg-opt on" data-pkg="weekly" onclick="selPkgOpt(this)"><div class="po-name">۷ روزه</div><div class="po-desc">یک هفته نمایش ویژه</div></div>
+        <div class="pkg-opt" data-pkg="monthly" onclick="selPkgOpt(this)"><div class="po-name">۳۰ روزه</div><div class="po-desc">یک ماه نمایش ویژه</div></div>
+        <div class="pkg-opt" data-pkg="quarterly" onclick="selPkgOpt(this)"><div class="po-name">۹۰ روزه</div><div class="po-desc">سه ماه نمایش ویژه</div></div>
+        <div class="pkg-opt" data-pkg="none" onclick="selPkgOpt(this)"><div class="po-name">حذف پکیج</div><div class="po-desc">برگشت به حالت معمولی</div></div>
+      </div>
+      <button class="btn-primary" onclick="applyPkg()"><i class="ti ti-check" style="font-size:15px"></i>اعمال</button>
+    </div>
+  </div>
+</div>
+
+<div class="sup-float">
+  <div class="sup-menu" id="supMenu">
+    <a class="sup-item" href="tel:09212302379"><i class="ti ti-phone"></i><div><div class="si-t">09212302379</div><div class="si-s">تماس مستقیم</div></div></a>
+    <a class="sup-item" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i><div><div class="si-t">@ma_shahripour</div><div class="si-s">پیام در بله</div></div></a>
+    <a class="sup-item" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i><div><div class="si-t">@bazar_no</div><div class="si-s">کانال بله</div></div></a>
+    <div class="sup-item" onclick="openAdModal();closeSupport()"><i class="ti ti-star"></i><div><div class="si-t">سفارش تبلیغ</div><div class="si-s">دیده‌تر بشو</div></div></div>
+  </div>
+  <button class="sup-btn" id="supBtn" onclick="toggleSupport()"><i class="ti ti-headset" style="font-size:16px"></i>پشتیبانی</button>
+</div>
 
 <div class="toast" id="toast"></div>
+
+<nav class="mobile-tabs">
+  <div class="mtab on" data-to="home"><i class="ti ti-home"></i>خانه</div>
+  <div class="mtab" data-to="profile"><i class="ti ti-user"></i>پروفایل<span class="mtab-dot" id="mtDot"></span></div>
+  <div class="mtab" data-to="sell"><i class="ti ti-plus-circle"></i>آگهی</div>
+  <div class="mtab" data-to="rules"><i class="ti ti-file-text"></i>قوانین</div>
+</nav>
 
 <footer>
   <div class="ft-inner">
     <div class="ft-top">
-      <div class="ft-brand">
-        <div class="ft-logo">🛍 بازار<em>نو</em></div>
-        <p>بزرگ‌ترین بازارچه آنلاین ایران — خرید و فروش مستقیم، بدون واسطه، رایگان.</p>
+      <div>
+        <div class="ft-logo">🏪 بازارچه<em>.ir</em></div>
+        <p class="ft-desc">بزرگ‌ترین بازارچه هوشمند آنلاین ایران</p>
         <div class="social-row">
           <a class="soc-btn" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i></a>
           <a class="soc-btn" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i></a>
           <a class="soc-btn" href="tel:09212302379"><i class="ti ti-phone"></i></a>
         </div>
       </div>
-      <div class="ft-col">
-        <h4>بازارنو</h4>
-        <a onclick="goHome()">آگهی‌ها</a>
-        <a onclick="goSell()">ثبت آگهی رایگان</a>
-        <a onclick="openAdModal()">تبلیغ ویژه</a>
-        <a onclick="switchPage('rules')">قوانین و مقررات</a>
-      </div>
-      <div class="ft-col">
-        <h4>راهنما</h4>
-        <a onclick="goSell()">نحوه ثبت آگهی</a>
-        <a onclick="switchPage('rules')">ایمنی در معاملات</a>
-        <a onclick="openAdModal()">راهنمای تبلیغات</a>
-        <a href="tel:09212302379">تماس با ما</a>
-      </div>
-      <div class="ft-support">
-        <h4>پشتیبانی ۲۴/۷</h4>
-        <a class="ft-contact-lnk" href="tel:09212302379"><i class="ti ti-phone"></i>09212302379</a>
-        <a class="ft-contact-lnk" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i>@ma_shahripour در بله</a>
-        <a class="ft-contact-lnk" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i>کانال @bazar_no</a>
+      <div class="ft-col"><h4>بازارچه</h4><a onclick="goHome()">آگهی‌ها</a><a onclick="goSell()">ثبت آگهی</a><a onclick="openAdModal()">تبلیغ ویژه</a><a onclick="switchPage('rules')">قوانین</a></div>
+      <div class="ft-col"><h4>راهنما</h4><a onclick="goSell()">نحوه ثبت آگهی</a><a onclick="switchPage('rules')">ایمنی</a><a href="tel:09212302379">تماس</a></div>
+      <div class="ft-support"><h4>پشتیبانی ۲۴/۷</h4>
+        <a class="ftcl" href="tel:09212302379"><i class="ti ti-phone"></i>09212302379</a>
+        <a class="ftcl" href="https://ble.ir/ma_shahripour" target="_blank"><i class="ti ti-brand-telegram"></i>@ma_shahripour</a>
+        <a class="ftcl" href="https://ble.ir/bazar_no" target="_blank"><i class="ti ti-speakerphone"></i>@bazar_no</a>
       </div>
     </div>
     <div class="ft-bottom">
-      <span>© ۱۴۰۴ بازارنو — تمامی حقوق محفوظ است</span>
-      <div class="trust-row">
-        <span class="tbadge"><i class="ti ti-shield-check"></i>امن</span>
-        <span class="tbadge"><i class="ti ti-certificate"></i>نماد اعتماد</span>
-        <span class="tbadge"><i class="ti ti-lock"></i>SSL</span>
-      </div>
+      <span>© ۱۴۰۴ بازارچه.ir</span>
+      <div class="trust-row"><span class="tbadge"><i class="ti ti-shield-check"></i>امن</span><span class="tbadge"><i class="ti ti-lock"></i>SSL</span></div>
     </div>
   </div>
 </footer>
 
 <script>
-const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ══ CONSTANTS ══ */
 const EMOJIS={'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠','پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗','ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'};
-let ST={cat:'',sort:'newest',q:''}, cond='نو', pickedFiles=[], activeAd=null, currentData=[], isAdPost=false, phoneShown=false, supOpen=false;
-let saved=new Set(JSON.parse(localStorage.getItem('bz_saved')||'[]'));
+const PKG_LABELS={'weekly':'۷ روزه','monthly':'۳۰ روزه','quarterly':'۹۰ روزه'};
 
-function toast(msg,type=''){const e=document.getElementById('toast');e.innerHTML=msg;e.className='toast on '+type;clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2800)}
-function fmtFA(n){return n?parseInt(String(n).replace(/\D/g,'')).toLocaleString('fa-IR'):''}
-function fmtEN(n){const s=String(n).replace(/[^0-9]/g,'');return s?parseInt(s).toLocaleString('en'):''}
-function relTime(ts){const d=Date.now()-new Date(ts).getTime();if(d<60000)return'همین الان';if(d<3600000)return Math.floor(d/60000)+' دقیقه پیش';if(d<86400000)return Math.floor(d/3600000)+' ساعت پیش';if(d<604800000)return Math.floor(d/86400000)+' روز پیش';return new Date(ts).toLocaleDateString('fa-IR')}
-function isNew(ts){return Date.now()-new Date(ts).getTime()<3600000*6}
+/* ══ STATE ══ */
+let ST={cat:'',sort:'newest',q:''};
+let cond='نو', pickedFiles=[], isFeature=false;
+let currentUser=null, currentProfile=null, currentData=[], activeAd=null, phoneShown=false;
+let saved=new Set(JSON.parse(localStorage.getItem('bc_saved')||'[]'));
+let pkgTargetUser=null, pkgSelected='weekly', supOpen=false, adminMode=false;
 
-function updateBadge(){const n=saved.size;document.getElementById('svBadge').textContent=n;document.getElementById('svBadge').style.display=n?'flex':'none';document.getElementById('mtBadge').textContent=n;document.getElementById('mtBadge').style.display=n?'flex':'none'}
-updateBadge();
+/* ══ UTILS ══ */
+const $ = id => document.getElementById(id);
+function toast(msg,type=''){
+  const e=$('toast');e.innerHTML=msg;e.className='toast on '+type;
+  clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2900);
+}
+function fmtFA(n){return n?parseInt(String(n).replace(/\D/g,'')).toLocaleString('fa-IR'):'';}
+function fmtEN(n){const s=String(n).replace(/[^0-9]/g,'');return s?parseInt(s).toLocaleString('en'):'';}
+function relTime(ts){
+  const d=Date.now()-new Date(ts).getTime();
+  if(d<60000)return'همین الان';
+  if(d<3600000)return Math.floor(d/60000)+' دقیقه پیش';
+  if(d<86400000)return Math.floor(d/3600000)+' ساعت پیش';
+  if(d<604800000)return Math.floor(d/86400000)+' روز پیش';
+  return new Date(ts).toLocaleDateString('fa-IR');
+}
+function isNew(ts){return Date.now()-new Date(ts).getTime()<3600000*6;}
+function closeModal(id){$(id).classList.remove('on');}
+function authAlert(msg,type='err'){
+  $('authAlert').innerHTML=`<div class="alert ${type}"><i class="ti ti-${type==='err'?'alert-circle':'circle-check'}" style="font-size:15px;flex-shrink:0"></i>${msg}</div>`;
+}
+function clearAuthAlert(){$('authAlert').innerHTML='';}
 
-async function render(){
-  const grid=document.getElementById('adsGrid');
-  grid.innerHTML=Array(8).fill(`<div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>`).join('');
-  let q=SB.from('listings').select('*');
-  if(ST.cat) q=q.eq('cat',ST.cat);
-  if(ST.q) q=q.or(`title.ilike.%${ST.q}%,desc.ilike.%${ST.q}%,city.ilike.%${ST.q}%,brand.ilike.%${ST.q}%`);
-  if(ST.sort==='cheapest') q=q.order('price',{ascending:true});
-  else if(ST.sort==='expensive') q=q.order('price',{ascending:false});
-  else q=q.order('created_at',{ascending:false});
-  const {data,error}=await q.limit(60);
-  if(error){toast('❌ خطا در بارگذاری — Supabase رو تنظیم کن','err');grid.innerHTML='';return}
-  currentData=data||[];
-  document.getElementById('resCnt').textContent=currentData.length+' آگهی';
-  document.getElementById('hTotal').textContent=fmtFA(currentData.length)||'۰';
-  if(!currentData.length){
-    grid.innerHTML=`<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای نیست'}</h3><p>${ST.q?'برای «'+ST.q+'» چیزی پیدا نشد.':'اولین نفر باش!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()"><i class="ti ti-plus" style="font-size:13px"></i>ثبت اولین آگهی</button>':''}</div>`;
+/* ══ AUTH ══ */
+async function initAuth(){
+  // بررسی session فعلی
+  const {data:{session}}=await SB.auth.getSession();
+  if(session){currentUser=session.user;await loadProfile();}
+  // listener برای تغییرات auth
+  SB.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'){currentUser=session.user;await loadProfile();}
+    if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;updateNavAuth();}
+  });
+  updateNavAuth();
+}
+
+async function loadProfile(){
+  if(!currentUser)return;
+  const{data,error}=await SB.from('profiles').select('*').eq('id',currentUser.id).single();
+  if(error){console.error('loadProfile error:',error);return;}
+  currentProfile=data;
+  updateNavAuth();
+  loadNotifDot();
+}
+
+function updateNavAuth(){
+  const loggedIn=!!currentUser;
+  $('btnAuth').style.display=loggedIn?'none':'flex';
+  $('navAvatar').style.display=loggedIn?'flex':'none';
+  $('navBell').style.display=loggedIn?'flex':'none';
+  if(loggedIn&&currentProfile){
+    const init=(currentProfile.full_name||currentProfile.username||'U').charAt(0).toUpperCase();
+    $('navAvatar').textContent=init;
+    $('pmHeader').innerHTML=`<div class="pm-name">${currentProfile.full_name||currentProfile.username||'کاربر'}</div><div class="pm-email">${currentUser.email}</div>`;
+    $('pmAdmin').style.display=(currentProfile.role==='admin'||adminMode)?'flex':'none';
+  }
+}
+
+async function doLogin(){
+  clearAuthAlert();
+  const email=$('lEmail').value.trim();
+  const pass=$('lPass').value;
+  if(!email||!pass){authAlert('ایمیل و رمز رو وارد کن');return;}
+  const btn=$('btnLogin');btn.disabled=true;btn.textContent='در حال ورود...';
+  const{error}=await SB.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-login" style="font-size:15px"></i>ورود';
+  if(error){
+    const msg=error.message.includes('Invalid login credentials')?'ایمیل یا رمز اشتباه است':
+              error.message.includes('Email not confirmed')?'ابتدا ایمیلت رو تأیید کن':
+              'خطا: '+error.message;
+    authAlert(msg);return;
+  }
+  closeAuth();toast('✅ خوش آمدید!','ok');
+}
+
+async function doRegister(){
+  clearAuthAlert();
+  const name=$('rName').value.trim();
+  const username=$('rUser').value.trim().toLowerCase().replace(/\s/g,'');
+  const email=$('rEmail').value.trim();
+  const phone=$('rPhone').value.trim();
+  const city=$('rCity').value.trim();
+  const pass=$('rPass').value;
+  if(!name||!username||!email||!pass){authAlert('فیلدهای ستاره‌دار اجباری است');return;}
+  if(pass.length<8){authAlert('رمز باید حداقل ۸ کاراکتر باشد');return;}
+  if(!/^[a-z0-9_]+$/.test(username)){authAlert('نام کاربری فقط حروف انگلیسی، عدد و _ مجاز است');return;}
+  // بررسی تکراری نبودن username
+  const{data:existing}=await SB.from('profiles').select('id').eq('username',username);
+  if(existing&&existing.length>0){authAlert('این نام کاربری قبلاً ثبت شده');return;}
+  const btn=$('btnRegister');btn.disabled=true;btn.textContent='در حال ثبت...';
+  const{data,error}=await SB.auth.signUp({
+    email,password:pass,
+    options:{data:{full_name:name,username,phone,city}}
+  });
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus" style="font-size:15px"></i>ثبت‌نام';
+  if(error){
+    if(error.message.includes('already registered'))authAlert('این ایمیل قبلاً ثبت شده');
+    else authAlert('خطا: '+error.message);
     return;
   }
-  const ads=currentData.filter(a=>a.is_ad), normals=currentData.filter(a=>!a.is_ad);
+  // اگر email confirmation غیرفعال باشه، مستقیم لاگین میشه
+  if(data.user&&data.session){
+    closeAuth();toast('✅ ثبت‌نام موفق!','ok');
+  } else {
+    authAlert('✅ ثبت‌نام موفق — ایمیلت رو چک کن و لینک تأیید رو بزن','ok');
+  }
+}
+
+function doAdminLogin(){
+  const pass=$('adminPass').value;
+  if(pass===ADMIN_PASS){
+    closeAuth();adminMode=true;
+    switchPage('admin');loadAdminData();
+    toast('🛡 خوش آمدید ادمین!','ok');
+  } else {
+    toast('رمز اشتباه است','err');
+  }
+}
+
+async function logout(){
+  await SB.auth.signOut();
+  adminMode=false;
+  closeProfileMenu();goHome();
+  toast('خارج شدید');
+}
+
+function openAuth(){$('authModal').classList.add('on');}
+function closeAuth(){$('authModal').classList.remove('on');clearAuthAlert();}
+function switchAuth(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('on',['login','register','admin'][i]===tab));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.toggle('on',f.id==='af-'+tab));
+}
+function toggleProfile(){$('profileMenu').classList.toggle('on');}
+function closeProfileMenu(){$('profileMenu').classList.remove('on');}
+document.addEventListener('click',e=>{if(!e.target.closest('.profile-menu')&&!e.target.closest('.avatar'))closeProfileMenu();});
+
+function goProfile(){closeProfileMenu();if(!currentUser){openAuth();return;}switchPage('profile');loadProfileData();}
+function goTickets(){closeProfileMenu();if(!currentUser){openAuth();return;}switchPage('profile');loadProfileData();}
+function goAdmin(){
+  closeProfileMenu();
+  if(!adminMode&&currentProfile?.role!=='admin'){switchAuth('admin');openAuth();return;}
+  switchPage('admin');loadAdminData();
+}
+
+/* ══ NOTIFICATIONS ══ */
+async function loadNotifDot(){
+  if(!currentUser)return;
+  const{data}=await SB.from('notifications').select('id').eq('user_id',currentUser.id).eq('is_read',false);
+  const has=data&&data.length>0;
+  $('notifDot').style.display=has?'block':'none';
+  $('mtDot').style.display=has?'flex':'none';
+}
+
+async function loadNotifs(){
+  if(!currentUser)return;
+  const{data}=await SB.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(20);
+  const list=$('notifList');
+  if(!data||!data.length){list.innerHTML='<div class="empty-sec">اعلانی ندارید</div>';return;}
+  await SB.from('notifications').update({is_read:true}).eq('user_id',currentUser.id).eq('is_read',false);
+  $('notifDot').style.display='none';$('mtDot').style.display='none';
+  list.innerHTML=data.map(n=>`
+    <div class="notif-item ${!n.is_read?'unread':''}">
+      <div class="ni-icon ${n.type==='ad_approved'?'ok':n.type==='ad_rejected'?'err':'info'}">
+        <i class="ti ti-${n.type==='ad_approved'?'circle-check':n.type==='ad_rejected'?'circle-x':'bell'}"></i>
+      </div>
+      <div><div class="ni-title">${n.title||''}</div><div class="ni-body">${n.body||''}</div><div class="ni-time">${relTime(n.created_at)}</div></div>
+    </div>`).join('');
+}
+
+/* ══ PROFILE DATA ══ */
+async function loadProfileData(){
+  if(!currentUser||!currentProfile)return;
+  const p=currentProfile;
+  $('phAvatar').textContent=(p.full_name||p.username||'U').charAt(0).toUpperCase();
+  $('phName').textContent=p.full_name||p.username||'—';
+  $('phMeta').innerHTML=`
+    <span>@${p.username||''}</span>
+    ${p.city?`<span>📍 ${p.city}</span>`:''}
+    <span>عضو از ${relTime(p.created_at)}</span>`;
+  const pkgBadge=$('phPkgBadge');
+  if(p.ad_package&&p.ad_expires_at&&new Date(p.ad_expires_at)>new Date()){
+    pkgBadge.style.display='flex';pkgBadge.className='ph-badge gold';
+    pkgBadge.textContent='⭐ '+PKG_LABELS[p.ad_package];
+  } else pkgBadge.style.display='none';
+  loadNotifs();loadMyAds();loadMyTickets();
+}
+
+function openEditProfile(){
+  $('epName').value=currentProfile?.full_name||'';
+  $('epPhone').value=currentProfile?.phone||'';
+  $('epCity').value=currentProfile?.city||'';
+  $('editProfileModal').classList.add('on');
+}
+async function saveProfile(){
+  if(!currentUser)return;
+  const upd={
+    full_name:$('epName').value.trim(),
+    phone:$('epPhone').value.trim(),
+    city:$('epCity').value.trim()
+  };
+  const{error}=await SB.from('profiles').update(upd).eq('id',currentUser.id);
+  if(error){toast('خطا در ذخیره','err');return;}
+  Object.assign(currentProfile,upd);
+  closeModal('editProfileModal');
+  toast('پروفایل ذخیره شد ✅','ok');
+  loadProfileData();updateNavAuth();
+}
+
+async function loadMyAds(){
+  if(!currentUser)return;
+  const{data}=await SB.from('listings').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const grid=$('myAdsGrid');
+  if(!data||!data.length){grid.innerHTML='<div class="empty-sec">هنوز آگهی ندارید</div>';return;}
+  grid.innerHTML=data.map(ad=>{
+    const sb=ad.status==='approved'?'var(--g3)':ad.status==='rejected'?'#FEE2E2':'#FFFBEB';
+    const sc=ad.status==='approved'?'var(--g)':ad.status==='rejected'?'var(--red)':'var(--amber)';
+    const st=ad.status==='approved'?'✅ تأیید':ad.status==='rejected'?'❌ رد شده':'⏳ انتظار';
+    return `<div class="adcard" style="cursor:default">
+      <div class="adcard-img">
+        ${ad.images&&ad.images[0]?`<img src="${ad.images[0]}" loading="lazy">`:`<div class="adcard-emoji">${EMOJIS[ad.cat]||'📦'}</div>`}
+        <div style="position:absolute;top:6px;right:6px;background:${sb};color:${sc};font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--rpill)">${st}</div>
+        <button onclick="event.stopPropagation();deleteMyAd('${ad.id}')" style="position:absolute;bottom:6px;left:6px;background:rgba(239,68,68,.9);color:#fff;border:none;border-radius:var(--rpill);padding:3px 8px;font-size:9px;font-weight:700;cursor:pointer">🗑 حذف</button>
+      </div>
+      <div class="adcard-body">
+        <div class="adcard-title">${ad.title}</div>
+        <div class="adcard-price">${fmtFA(ad.price)} <small>تومان</small></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteMyAd(id){
+  if(!confirm('آگهی حذف بشه؟'))return;
+  const{error}=await SB.from('listings').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('خطا در حذف','err');return;}
+  toast('آگهی حذف شد');loadMyAds();
+}
+
+/* ══ TICKETS ══ */
+async function loadMyTickets(){
+  if(!currentUser)return;
+  const{data}=await SB.from('tickets').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const list=$('myTicketList');
+  if(!data||!data.length){list.innerHTML='<div class="empty-sec">تیکتی ندارید</div>';return;}
+  list.innerHTML=`<div class="ticket-list">${data.map(t=>`
+    <div class="ticket-item" onclick="openTicket('${t.id}','${t.subject.replace(/'/g,"\\'")}')">
+      <div class="ti-head">
+        <span class="ti-subject">${t.subject}</span>
+        <span class="ti-status ${t.status}">${t.status==='open'?'باز':t.status==='answered'?'پاسخ داده':' بسته'}</span>
+      </div>
+      <div class="ti-meta">${relTime(t.created_at)}</div>
+    </div>`).join('')}</div>`;
+}
+
+function openNewTicket(){
+  if(!currentUser){openAuth();return;}
+  $('ticketModalTitle').textContent='تیکت جدید';
+  $('ticketModalBody').innerHTML=`
+    <div class="field"><label>موضوع <span class="req">*</span></label><input type="text" id="tSubject" placeholder="موضوع تیکت"></div>
+    <div class="field"><label>پیام <span class="req">*</span></label><textarea id="tBody" style="min-height:100px" placeholder="مشکل یا سؤالت رو بنویس..."></textarea></div>
+    <button class="btn-primary" onclick="submitTicket()"><i class="ti ti-send" style="font-size:15px"></i>ارسال تیکت</button>`;
+  $('ticketModal').classList.add('on');
+}
+
+async function submitTicket(){
+  const subject=$('tSubject').value.trim();
+  const body=$('tBody').value.trim();
+  if(!subject||!body){toast('همه فیلدها رو پر کن','err');return;}
+  const{data:tk,error}=await SB.from('tickets').insert([{user_id:currentUser.id,subject}]).select().single();
+  if(error){toast('خطا: '+error.message,'err');return;}
+  await SB.from('ticket_messages').insert([{ticket_id:tk.id,sender_id:currentUser.id,is_admin:false,body}]);
+  closeModal('ticketModal');
+  toast('تیکت ارسال شد ✅','ok');
+  loadMyTickets();
+}
+
+async function openTicket(id,subject){
+  $('ticketModalTitle').textContent=subject;
+  $('ticketModalBody').innerHTML='<div class="empty-sec">در حال بارگذاری...</div>';
+  $('ticketModal').classList.add('on');
+  const{data:msgs}=await SB.from('ticket_messages').select('*').eq('ticket_id',id).order('created_at',{ascending:true});
+  // اطلاعات فرستنده‌ها رو جداگانه میگیریم
+  $('ticketModalBody').innerHTML=`
+    <div class="ticket-detail">
+      <div class="ticket-msgs" id="ticketMsgs">
+        ${(msgs||[]).map(m=>`<div class="msg-bubble ${m.is_admin?'admin':'user'}">
+          ${m.body}
+          <div class="msg-meta">${m.is_admin?'پشتیبانی 🛡':'شما'} · ${relTime(m.created_at)}</div>
+        </div>`).join('')}
+      </div>
+      <div class="ticket-reply">
+        <textarea id="replyBody" placeholder="پاسخ بنویس..."></textarea>
+        <button class="btn-send" onclick="sendTicketReply('${id}',false)"><i class="ti ti-send" style="font-size:14px"></i></button>
+      </div>
+    </div>`;
+  const el=$('ticketMsgs');if(el)el.scrollTop=el.scrollHeight;
+}
+
+async function sendTicketReply(ticketId,isAdmin){
+  const bodyEl=$('replyBody');
+  const body=bodyEl?.value.trim();if(!body)return;
+  const senderId=currentUser?.id;if(!senderId)return;
+  const{error}=await SB.from('ticket_messages').insert([{ticket_id:ticketId,sender_id:senderId,is_admin:isAdmin,body}]);
+  if(error){toast('خطا در ارسال','err');return;}
+  if(isAdmin){
+    await SB.from('tickets').update({status:'answered'}).eq('id',ticketId);
+    const{data:tk}=await SB.from('tickets').select('user_id').eq('id',ticketId).single();
+    if(tk){
+      await SB.from('notifications').insert([{user_id:tk.user_id,type:'ticket_reply',title:'پاسخ تیکت',body:'پشتیبانی به تیکت شما پاسخ داد',ref_id:ticketId}]);
+    }
+    loadAdminTickets();
+  }
+  bodyEl.value='';
+  openTicket(ticketId,$('ticketModalTitle').textContent);
+}
+
+/* ══ RENDER LISTINGS ══ */
+async function render(){
+  const grid=$('adsGrid');
+  grid.innerHTML=Array(6).fill(`<div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>`).join('');
+  let q=SB.from('listings').select('*,profiles(username,full_name)').eq('status','approved');
+  if(ST.cat)q=q.eq('cat',ST.cat);
+  if(ST.q)q=q.or(`title.ilike.%${ST.q}%,description.ilike.%${ST.q}%,city.ilike.%${ST.q}%`);
+  if(ST.sort==='cheapest')q=q.order('price',{ascending:true,nullsFirst:false});
+  else if(ST.sort==='expensive')q=q.order('price',{ascending:false,nullsFirst:false});
+  else q=q.order('is_featured',{ascending:false}).order('created_at',{ascending:false});
+  const{data,error}=await q.limit(80);
+  if(error){
+    grid.innerHTML=`<div class="empty"><span class="ei">⚠️</span><h3>خطا در اتصال به Supabase</h3><p>SB_URL و SB_KEY رو در کد تنظیم کن</p></div>`;
+    console.error(error);return;
+  }
+  currentData=data||[];
+  $('resCnt').textContent=currentData.length+' آگهی';
+  $('hTotal').textContent=fmtFA(currentData.length)||'۰';
+  if(!currentData.length){
+    grid.innerHTML=`<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای نیست'}</h3><p>${ST.q?'«'+ST.q+'» پیدا نشد.':'اولین نفر باش!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()">+ ثبت اولین آگهی</button>':''}</div>`;
+    return;
+  }
+  const featured=currentData.filter(a=>a.is_featured), normal=currentData.filter(a=>!a.is_featured);
   let html='';
-  if(ads.length){html+=`<div class="sponsored-row"><div class="sponsored-lbl"><i class="ti ti-star" style="font-size:11px"></i>آگهی‌های ویژه</div><div class="sponsored-line"></div></div>`;html+=ads.map(cardHtml).join('');}
-  if(normals.length&&ads.length) html+=`<div class="sponsored-row" style="margin-top:4px"><div class="sponsored-lbl" style="color:var(--t3)">سایر آگهی‌ها</div><div class="sponsored-line" style="background:rgba(0,0,0,.07)"></div></div>`;
-  html+=normals.map(cardHtml).join('');
+  if(featured.length){
+    html+=`<div class="sp-row"><div class="sp-lbl">⭐ آگهی‌های ویژه</div><div class="sp-line"></div></div>`;
+    html+=featured.map(cardHtml).join('');
+  }
+  if(normal.length&&featured.length)html+=`<div class="sp-row"><div class="sp-lbl" style="color:var(--ink4)">سایر آگهی‌ها</div><div class="sp-line" style="background:var(--bd2)"></div></div>`;
+  html+=normal.map(cardHtml).join('');
   grid.innerHTML=html;
   grid.querySelectorAll('.adcard').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
 }
@@ -828,21 +1215,24 @@ async function render(){
 function cardHtml(ad){
   const em=EMOJIS[ad.cat]||'📦', img0=ad.images&&ad.images[0], isSaved=saved.has(ad.id), fresh=isNew(ad.created_at);
   let ctC='',ctT='';
-  if(ad.cond==='نو'){ctC='ct-new';ctT='نو';}else if(ad.cond==='در حد نو'){ctC='ct-good';ctT='در حد نو';}else if(ad.cond==='کارکرده سالم'){ctC='ct-used';ctT='کارکرده';}else if(ad.cond==='نیاز به تعمیر'){ctC='ct-fix';ctT='نیاز تعمیر';}
-  return `<div class="adcard${ad.is_ad?' is-ad':''}" data-id="${ad.id}">
+  if(ad.cond==='نو'){ctC='ct-new';ctT='نو';}
+  else if(ad.cond==='در حد نو'){ctC='ct-good';ctT='در حد نو';}
+  else if(ad.cond==='کارکرده سالم'){ctC='ct-used';ctT='کارکرده';}
+  else if(ad.cond==='نیاز به تعمیر'){ctC='ct-fix';ctT='نیاز تعمیر';}
+  return `<div class="adcard${ad.is_featured?' featured':''}" data-id="${ad.id}">
     <div class="adcard-img">
-      ${img0?`<img src="${img0}" loading="lazy">`:`<div class="adcard-emoji">${em}</div>`}
-      ${ctT?`<span class="cond-tag ${ctC}">${ctT}</span>`:''}
-      ${ad.is_ad?'<span class="ad-star"><i class="ti ti-star" style="font-size:8px"></i>ویژه</span>':fresh?'<span class="new-badge">جدید</span>':''}
+      ${img0?`<img src="${img0}" loading="lazy" onerror="this.style.display='none'">`:`<div class="adcard-emoji">${em}</div>`}
+      ${ctT?`<span class="ct ${ctC}">${ctT}</span>`:''}
+      ${ad.is_featured?'<span class="feat-badge">⭐ ویژه</span>':fresh?'<span class="new-badge">جدید</span>':''}
       <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();toggleSave('${ad.id}',this)"><i class="ti ti-heart"></i></button>
     </div>
     <div class="adcard-body">
       <div class="adcard-cat">${ad.cat||'سایر'}</div>
       <div class="adcard-title">${ad.title}</div>
-      <div class="adcard-loc"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city} · ${relTime(ad.created_at)}</div>
+      <div class="adcard-loc"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city||''} · ${relTime(ad.created_at)}</div>
       <div class="adcard-foot">
         <div class="adcard-price ${ad.nego==='بله'?'neg':''}">${fmtFA(ad.price)} <small>تومان</small></div>
-        <div class="see-btn"><i class="ti ti-eye" style="font-size:11px"></i>مشاهده</div>
+        <div class="see-btn">مشاهده</div>
       </div>
     </div>
   </div>`;
@@ -851,147 +1241,425 @@ function cardHtml(ad){
 function openModal(id){
   const ad=currentData.find(a=>a.id===id);if(!ad)return;
   activeAd=ad;phoneShown=false;
+  // افزایش بازدید
   SB.from('listings').update({views:(ad.views||0)+1}).eq('id',id);
   const imgs=ad.images||[];
-  const mImg=document.getElementById('mImg'),mEmoji=document.getElementById('mEmoji');
+  const mImg=$('mImg'),mEmoji=$('mEmoji');
   if(imgs.length){mImg.src=imgs[0];mImg.style.display='block';mEmoji.style.display='none';}
   else{mImg.style.display='none';mEmoji.style.display='block';mEmoji.textContent=EMOJIS[ad.cat]||'📦';}
-  document.getElementById('mThumbs').innerHTML=imgs.length>1?imgs.map((s,i)=>`<div class="m-thumb ${i===0?'on':''}" onclick="switchImg('${s}',this)"><img src="${s}" loading="lazy"></div>`).join(''):'';
-  document.getElementById('mCat').innerHTML=`<i class="ti ti-tag" style="font-size:11px"></i>${ad.cat||'آگهی'}`;
-  document.getElementById('mAdBanner').style.display=ad.is_ad?'flex':'none';
-  document.getElementById('mTitle').textContent=ad.title;
-  document.getElementById('mPrice').innerHTML=fmtFA(ad.price)+' <small>تومان</small>';
-  document.getElementById('mNego').innerHTML=ad.nego==='بله'?'<span class="nego-chip"><i class="ti ti-repeat" style="font-size:10px"></i>قابل مذاکره</span>':'';
-  document.getElementById('mSeller').innerHTML=`<div class="seller-av">${(ad.name||'ن').charAt(0)}</div><div><div class="seller-nm">${ad.name||'ناشناس'}</div><div class="seller-mt"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city}</div></div>`;
-  document.getElementById('mDetails').innerHTML=[{l:'وضعیت',v:ad.cond},{l:'دسته',v:ad.cat},{l:'شهر',v:ad.city},{l:'ثبت',v:relTime(ad.created_at)},...(ad.brand?[{l:'برند',v:ad.brand}]:[])].map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
-  document.getElementById('mDesc').textContent=ad.desc||'توضیحاتی وارد نشده.';
-  document.getElementById('phoneReveal').style.display='none';
-  document.getElementById('mCallBtn').innerHTML='<i class="ti ti-phone"></i>نمایش شماره';
+  $('mThumbs').innerHTML=imgs.length>1?imgs.map((s,i)=>`<div class="m-thumb ${i===0?'on':''}" onclick="switchImg('${s}',this)"><img src="${s}" loading="lazy"></div>`).join(''):'';
+  $('mCat').innerHTML=`🏷 ${ad.cat||'آگهی'}`;
+  $('mTitle').textContent=ad.title;
+  $('mPrice').innerHTML=fmtFA(ad.price)+' <small>تومان</small>';
+  $('mNego').innerHTML=ad.nego==='بله'?'<span class="nego-chip">↔️ قابل مذاکره</span>':'';
+  const sellerName=ad.profiles?.full_name||ad.seller_name||'ناشناس';
+  $('mSeller').innerHTML=`<div class="seller-av">${sellerName.charAt(0)}</div><div><div class="seller-nm">${sellerName}</div><div class="seller-mt">📍 ${ad.city||''}</div></div>`;
+  $('mDetails').innerHTML=[
+    {l:'وضعیت',v:ad.cond},{l:'دسته',v:ad.cat},
+    {l:'شهر',v:ad.city},{l:'ثبت',v:relTime(ad.created_at)},
+    ...(ad.brand?[{l:'برند',v:ad.brand}]:[])
+  ].map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v||'—'}</div></div>`).join('');
+  $('mDesc').textContent=ad.description||'توضیحاتی وارد نشده.';
+  $('phoneReveal').style.display='none';
+  $('mCallBtn').innerHTML='<i class="ti ti-phone"></i>نمایش شماره';
   const on=saved.has(ad.id);
-  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
-  document.getElementById('mViews').innerHTML=`<span><i class="ti ti-eye"></i>${(ad.views||0)+1} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
-  document.getElementById('modalBg').classList.add('on');
+  $('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
+  $('mViews').innerHTML=`<span><i class="ti ti-eye"></i>${(ad.views||0)+1} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
+  $('modalBg').classList.add('on');
 }
-function switchImg(s,el){document.getElementById('mImg').src=s;document.querySelectorAll('.m-thumb').forEach(t=>t.classList.remove('on'));el.classList.add('on')}
-document.getElementById('mClose').onclick=()=>document.getElementById('modalBg').classList.remove('on');
-document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on')});
-document.getElementById('mCallBtn').onclick=()=>{
+
+function switchImg(s,el){
+  $('mImg').src=s;
+  document.querySelectorAll('.m-thumb').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+$('mClose').onclick=()=>$('modalBg').classList.remove('on');
+$('modalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on');});
+$('mCallBtn').onclick=()=>{
   if(!activeAd)return;
-  if(!phoneShown){phoneShown=true;const pr=document.getElementById('phoneReveal');pr.textContent='📞 '+activeAd.phone;pr.style.display='block';document.getElementById('mCallBtn').innerHTML='<i class="ti ti-copy"></i>کپی شماره';toast('شماره نمایش داده شد','ok');}
-  else navigator.clipboard.writeText(activeAd.phone).then(()=>toast('📋 شماره کپی شد','ok')).catch(()=>{});
+  if(!phoneShown){
+    phoneShown=true;
+    const pr=$('phoneReveal');pr.textContent='📞 '+activeAd.phone;pr.style.display='block';
+    $('mCallBtn').innerHTML='<i class="ti ti-copy"></i>کپی';
+    toast('شماره نشان داده شد','ok');
+  } else {
+    navigator.clipboard.writeText(activeAd.phone).then(()=>toast('📋 کپی شد','ok')).catch(()=>{});
+  }
 };
-document.getElementById('mSaveBtn').onclick=()=>{
-  if(!activeAd)return;toggleSave(activeAd.id,null);
+$('mSaveBtn').onclick=()=>{
+  if(!activeAd)return;
+  toggleSave(activeAd.id,null);
   const on=saved.has(activeAd.id);
-  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
+  $('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
 };
 
-function toggleSave(id,btn){if(saved.has(id)){saved.delete(id);toast('آگهی از نشان‌ها حذف شد');}else{saved.add(id);toast('🔖 آگهی نشان شد','ok');}localStorage.setItem('bz_saved',JSON.stringify([...saved]));if(btn)btn.classList.toggle('on',saved.has(id));updateBadge()}
-function clearAllSaved(){saved.clear();localStorage.setItem('bz_saved','[]');updateBadge();renderSaved();toast('همه نشان‌ها حذف شد')}
-function renderSaved(){
-  const grid=document.getElementById('savedGrid');
-  if(!saved.size){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>';return}
-  SB.from('listings').select('*').in('id',[...saved]).then(({data})=>{
-    if(!data||!data.length){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>آگهی‌ها حذف شده‌اند</h3></div>';return}
-    data.forEach(d=>{if(!currentData.find(c=>c.id===d.id))currentData.push(d)});
-    grid.innerHTML=data.map(cardHtml).join('');
-    grid.querySelectorAll('.adcard').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
-  });
+function toggleSave(id,btn){
+  if(saved.has(id)){saved.delete(id);toast('حذف از نشان‌ها');}
+  else{saved.add(id);toast('🔖 نشان شد','ok');}
+  localStorage.setItem('bc_saved',JSON.stringify([...saved]));
+  if(btn)btn.classList.toggle('on',saved.has(id));
 }
 
-function openAdModal(){document.getElementById('adModalBg').classList.add('on')}
-function closeAdModal(){document.getElementById('adModalBg').classList.remove('on')}
-document.getElementById('adModalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAdModal()});
-function selPkg(el){document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
-function setAd(v){isAdPost=v;document.getElementById('tnAd').classList.toggle('on',!v);document.getElementById('tyAd').classList.toggle('on',v)}
-
-function toggleSupport(){supOpen=!supOpen;document.getElementById('supMenu').classList.toggle('on',supOpen);document.getElementById('supBtn').innerHTML=supOpen?'<i class="ti ti-x" style="font-size:17px"></i>بستن':'<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی'}
-function closeSupport(){supOpen=false;document.getElementById('supMenu').classList.remove('on');document.getElementById('supBtn').innerHTML='<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی'}
-document.addEventListener('click',e=>{if(supOpen&&!e.target.closest('.support-float'))closeSupport()});
-
-function switchPage(p){
-  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='page-'+p));
-  document.querySelectorAll('.nav-lnk,.nav-saved').forEach(b=>b.classList.toggle('on',b.dataset&&b.dataset.to===p));
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset.to===p));
-  if(p==='saved')renderSaved();
-}
-function goHome(){switchPage('home')}
-function goSell(){resetForm();switchPage('sell')}
-
-document.querySelectorAll('.nav-lnk,.nav-saved,.mtab').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.to==='sell')resetForm();switchPage(b.dataset.to)}));
-document.getElementById('btnNew').onclick=()=>{resetForm();switchPage('sell')};
-
+/* ══ SEARCH ══ */
 let sT;
-document.getElementById('navQ').addEventListener('input',function(){clearTimeout(sT);ST.q=this.value.trim();sT=setTimeout(render,360)});
-function heroSearch(){ST.q=document.getElementById('heroQ').value.trim();ST.cat=document.getElementById('heroCat').value;document.getElementById('navQ').value=ST.q;document.querySelectorAll('.cat-chip').forEach(c=>c.classList.toggle('on',c.dataset.cat===ST.cat));document.getElementById('resLbl').textContent=ST.cat||'جدیدترین آگهی‌ها';goHome();render()}
-document.getElementById('catsRow').addEventListener('click',e=>{const c=e.target.closest('.cat-chip');if(!c)return;document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');ST.cat=c.dataset.cat;document.getElementById('resLbl').textContent=c.dataset.cat||'جدیدترین آگهی‌ها';render()});
-document.querySelectorAll('.sort-b').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.sort-b').forEach(x=>x.classList.remove('on'));b.classList.add('on');ST.sort=b.dataset.sort;render()}));
+$('navQ').addEventListener('input',function(){clearTimeout(sT);ST.q=this.value.trim();sT=setTimeout(render,360);});
+function heroSearch(){
+  ST.q=$('heroQ').value.trim();ST.cat=$('heroCat').value;
+  $('navQ').value=ST.q;
+  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.toggle('on',c.dataset.cat===ST.cat));
+  $('resLbl').textContent=ST.cat||'جدیدترین آگهی‌ها';
+  goHome();render();
+}
+$('catsRow').addEventListener('click',e=>{
+  const c=e.target.closest('.cat-chip');if(!c)return;
+  document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+  ST.cat=c.dataset.cat;$('resLbl').textContent=c.dataset.cat||'جدیدترین آگهی‌ها';render();
+});
+document.querySelectorAll('.sort-b').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.sort-b').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  ST.sort=b.dataset.sort;render();
+}));
 
-const uz=document.getElementById('uploadZone');
-uz.addEventListener('click',()=>document.getElementById('fileInput').click());
-uz.addEventListener('dragover',e=>{e.preventDefault();uz.style.borderColor='var(--mint)'});
+/* ══ UPLOAD ══ */
+const uz=$('uploadZone');
+uz.addEventListener('click',()=>$('fileInput').click());
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.style.borderColor='var(--p)';});
 uz.addEventListener('dragleave',()=>uz.style.borderColor='');
-uz.addEventListener('drop',e=>{e.preventDefault();uz.style.borderColor='';const dt=new DataTransfer();[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')).forEach(f=>dt.items.add(f));document.getElementById('fileInput').files=dt.files;document.getElementById('fileInput').dispatchEvent(new Event('change'))});
-document.getElementById('fileInput').addEventListener('change',function(){
+uz.addEventListener('drop',e=>{
+  e.preventDefault();uz.style.borderColor='';
+  const dt=new DataTransfer();
+  [...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')).forEach(f=>dt.items.add(f));
+  $('fileInput').files=dt.files;
+  $('fileInput').dispatchEvent(new Event('change'));
+});
+$('fileInput').addEventListener('change',function(){
   [...this.files].forEach(f=>{
-    if(pickedFiles.length>=8){toast('حداکثر ۸ عکس','err');return}
-    if(!f.type.startsWith('image/')){toast('فقط عکس','err');return}
-    if(f.size>5*1024*1024){toast('حداکثر ۵MB','err');return}
+    if(pickedFiles.length>=8){toast('حداکثر ۸ عکس','err');return;}
+    if(!f.type.startsWith('image/')){toast('فقط عکس','err');return;}
+    if(f.size>5*1024*1024){toast('حداکثر ۵MB','err');return;}
     pickedFiles.push(f);
     const r=new FileReader();
-    r.onload=ev=>{const d=document.createElement('div');d.className='thumb';const img=document.createElement('img');img.src=ev.target.result;const del=document.createElement('button');del.className='tdel';del.innerHTML='×';del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove()};d.appendChild(img);d.appendChild(del);document.getElementById('thumbRow').appendChild(d)};
+    r.onload=ev=>{
+      const d=document.createElement('div');d.className='thumb';
+      const img=document.createElement('img');img.src=ev.target.result;
+      const del=document.createElement('button');del.className='tdel';del.innerHTML='×';
+      del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove();};
+      d.appendChild(img);d.appendChild(del);
+      $('thumbRow').appendChild(d);
+    };
     r.readAsDataURL(f);
-  });this.value='';
+  });
+  this.value='';
 });
 
-document.getElementById('condGrid').addEventListener('click',e=>{const b=e.target.closest('.copt');if(!b)return;document.querySelectorAll('.copt').forEach(x=>x.classList.remove('on'));b.classList.add('on');cond=b.dataset.v});
-document.getElementById('fTitle').addEventListener('input',function(){document.getElementById('tc').textContent=this.value.length});
-document.getElementById('fDesc').addEventListener('input',function(){document.getElementById('dc').textContent=this.value.length});
-document.getElementById('fPrice').addEventListener('input',function(){const r=this.value.replace(/[^0-9]/g,'');if(r)this.value=fmtEN(r)});
+/* ══ SELL FORM ══ */
+$('condGrid').addEventListener('click',e=>{
+  const b=e.target.closest('.copt');if(!b)return;
+  document.querySelectorAll('.copt').forEach(x=>x.classList.remove('on'));b.classList.add('on');cond=b.dataset.v;
+});
+$('fTitle').addEventListener('input',function(){$('tc').textContent=this.value.length;});
+$('fDesc').addEventListener('input',function(){$('dc').textContent=this.value.length;});
+$('fPrice').addEventListener('input',function(){const r=this.value.replace(/[^0-9]/g,'');if(r)this.value=fmtEN(r);});
+function setFeat(v){isFeature=v;$('fbNo').classList.toggle('on',!v);$('fbYes').classList.toggle('on',v);}
 
-document.getElementById('submitBtn').addEventListener('click',async()=>{
-  const title=document.getElementById('fTitle').value.trim();
-  const cat=document.getElementById('fCat').value;
-  const price=document.getElementById('fPrice').value.replace(/,/g,'').trim();
-  const phone=document.getElementById('fPhone').value.trim();
-  const city=document.getElementById('fCity').value.trim();
-  const desc=document.getElementById('fDesc').value.trim();
-  const nego=document.getElementById('fNego').value;
-  const name=document.getElementById('fName').value.trim();
-  const brand=document.getElementById('fBrand').value.trim();
-  if(!title){toast('⚠️ عنوان رو بنویس','err');return}
-  if(!cat){toast('⚠️ دسته‌بندی انتخاب کن','err');return}
-  if(!price){toast('⚠️ قیمت وارد کن','err');return}
-  if(!phone||phone.replace(/\D/g,'').length<10){toast('⚠️ شماره معتبر وارد کن','err');return}
-  if(!city){toast('⚠️ شهر رو بنویس','err');return}
-  const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.innerHTML='⏳ در حال ثبت...';
+$('submitBtn').addEventListener('click',async()=>{
+  if(!currentUser){openAuth();toast('ابتدا وارد شو','err');return;}
+  if(currentProfile?.role==='banned'){toast('حساب شما مسدود شده','err');return;}
+  const title=$('fTitle').value.trim();
+  const cat=$('fCat').value;
+  const price=$('fPrice').value.replace(/,/g,'').trim();
+  const phone=$('fPhone').value.trim();
+  const city=$('fCity').value.trim();
+  const description=$('fDesc').value.trim();
+  const nego=$('fNego').value;
+  const brand=$('fBrand').value.trim();
+  if(!title){toast('عنوان رو بنویس','err');return;}
+  if(!cat){toast('دسته‌بندی انتخاب کن','err');return;}
+  if(!price){toast('قیمت وارد کن','err');return;}
+  if(!phone||phone.replace(/\D/g,'').length<10){toast('شماره معتبر وارد کن','err');return;}
+  if(!city){toast('شهر رو بنویس','err');return;}
+  const btn=$('submitBtn');btn.disabled=true;btn.innerHTML='⏳ در حال ثبت...';
   let imageUrls=[];
   for(const file of pickedFiles){
     const ext=file.name.split('.').pop()||'jpg';
     const fp=`listings/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const {error:upErr}=await SB.storage.from('images').upload(fp,file);
-    if(!upErr){const {data:{publicUrl}}=SB.storage.from('images').getPublicUrl(fp);imageUrls.push(publicUrl);}
+    const{error:upErr}=await SB.storage.from('images').upload(fp,file);
+    if(!upErr){
+      const{data:{publicUrl}}=SB.storage.from('images').getPublicUrl(fp);
+      imageUrls.push(publicUrl);
+    }
   }
-  const {error}=await SB.from('listings').insert([{title,cat,cond,desc,brand,price,nego,phone,city,name:name||'ناشناس',images:imageUrls,is_ad:isAdPost}]);
-  btn.disabled=false;btn.innerHTML='<i class="ti ti-check" style="font-size:16px"></i>ثبت آگهی';
-  if(error){toast('❌ خطا: '+error.message,'err');return}
-  document.getElementById('formArea').style.display='none';
-  document.getElementById('sicCard').innerHTML=[{l:'عنوان',v:title},{l:'قیمت',v:fmtFA(price)+' تومان'},{l:'شهر',v:city},{l:'تماس',v:phone}].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
-  document.getElementById('successArea').style.display='';
-  render();
+  const hasPkg=currentProfile?.ad_package&&currentProfile?.ad_expires_at&&new Date(currentProfile.ad_expires_at)>new Date();
+  const{error}=await SB.from('listings').insert([{
+    user_id:currentUser.id,title,cat,cond,description,brand,price,nego,phone,city,
+    seller_name:currentProfile?.full_name||currentProfile?.username||'ناشناس',
+    images:imageUrls,is_featured:isFeature||hasPkg,status:'pending'
+  }]);
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-send" style="font-size:15px"></i>ثبت آگهی';
+  if(error){toast('خطا: '+error.message,'err');return;}
+  $('formArea').style.display='none';
+  $('sicCard').innerHTML=[
+    {l:'عنوان',v:title},{l:'قیمت',v:fmtFA(price)+' تومان'},
+    {l:'شهر',v:city},{l:'وضعیت',v:'⏳ در انتظار تأیید'}
+  ].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
+  $('successArea').style.display='';
+  resetForm();
 });
 
 function resetForm(){
-  document.getElementById('formArea').style.display='';
-  document.getElementById('successArea').style.display='none';
-  ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fName','fBrand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
-  document.getElementById('tc').textContent='0';document.getElementById('dc').textContent='0';
-  document.getElementById('thumbRow').innerHTML='';pickedFiles=[];cond='نو';isAdPost=false;
+  $('formArea').style.display='';$('successArea').style.display='none';
+  ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fBrand'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('tc').textContent='0';$('dc').textContent='0';
+  $('thumbRow').innerHTML='';pickedFiles=[];cond='نو';isFeature=false;
   document.querySelectorAll('.copt').forEach((b,i)=>b.classList.toggle('on',i===0));
-  setAd(false);
+  setFeat(false);
 }
 
+/* ══ ADMIN ══ */
+async function loadAdminData(){
+  const [r1,r2,r3,r4,r5,r6]=await Promise.all([
+    SB.from('listings').select('*',{count:'exact',head:true}),
+    SB.from('listings').select('*',{count:'exact',head:true}).eq('status','approved'),
+    SB.from('listings').select('*',{count:'exact',head:true}).eq('status','pending'),
+    SB.from('listings').select('*',{count:'exact',head:true}).eq('status','rejected'),
+    SB.from('profiles').select('*',{count:'exact',head:true}),
+    SB.from('tickets').select('*',{count:'exact',head:true}).eq('status','open'),
+  ]);
+  $('st-total').textContent=r1.count||0;
+  $('st-approved').textContent=r2.count||0;
+  $('st-pending').textContent=r3.count||0;
+  $('st-rejected').textContent=r4.count||0;
+  $('st-users').textContent=r5.count||0;
+  $('st-tickets').textContent=r6.count||0;
+  loadPendingAds();loadAdminUsers();loadAdminTickets();loadAllAdminAds();
+}
+
+async function loadPendingAds(){
+  const{data}=await SB.from('listings').select('*,profiles(username,full_name)').eq('status','pending').order('created_at',{ascending:false});
+  const list=$('pendingList');
+  if(!data||!data.length){list.innerHTML='<div class="empty-sec">آگهی در انتظاری ندارید 🎉</div>';return;}
+  list.innerHTML=data.map(ad=>`
+    <div class="pending-card">
+      <div class="pending-head">
+        <div>
+          <div class="pending-title">${ad.title}</div>
+          <div class="pending-meta">
+            دسته: ${ad.cat||'—'} · قیمت: ${fmtFA(ad.price)} تومان · شهر: ${ad.city||'—'}<br>
+            فروشنده: ${ad.profiles?.full_name||ad.profiles?.username||ad.seller_name||'ناشناس'} · ${relTime(ad.created_at)}
+            ${ad.images&&ad.images[0]?`<br><img src="${ad.images[0]}" style="max-width:140px;max-height:90px;border-radius:8px;margin-top:6px;object-fit:cover">`:''}
+            ${ad.description?`<br><em style="color:var(--ink3);font-size:11px">${ad.description.substring(0,120)}...</em>`:''}
+          </div>
+        </div>
+        <div class="pending-actions">
+          <button class="btn-approve" onclick="adminAdAction('${ad.id}','approved','${ad.user_id||''}')">✅ تأیید</button>
+          <button class="btn-reject" onclick="adminAdAction('${ad.id}','rejected','${ad.user_id||''}')">❌ رد</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function adminAdAction(adId,status,userId){
+  const{error}=await SB.from('listings').update({status}).eq('id',adId);
+  if(error){toast('خطا: '+error.message,'err');return;}
+  if(userId){
+    const type=status==='approved'?'ad_approved':'ad_rejected';
+    const title=status==='approved'?'آگهی شما تأیید شد ✅':'آگهی شما رد شد ❌';
+    const body=status==='approved'?'آگهی‌ات در بازارچه منتشر شد':'آگهی‌ات توسط ادمین رد شد.';
+    await SB.from('notifications').insert([{user_id:userId,type,title,body,ref_id:adId}]);
+  }
+  toast(status==='approved'?'✅ آگهی تأیید شد':'❌ آگهی رد شد');
+  loadPendingAds();loadAdminData();render();
+}
+
+async function loadAllAdminAds(){
+  const{data}=await SB.from('listings').select('*').order('created_at',{ascending:false}).limit(100);
+  const grid=$('adminAdsGrid');
+  if(!data||!data.length){grid.innerHTML='<div class="empty-sec">آگهی‌ای نیست</div>';return;}
+  grid.innerHTML=data.map(ad=>{
+    const sb=ad.status==='approved'?'var(--g3)':ad.status==='rejected'?'#FEE2E2':'#FFFBEB';
+    const sc=ad.status==='approved'?'var(--g)':ad.status==='rejected'?'var(--red)':'var(--amber)';
+    return `<div class="adcard" style="cursor:default">
+      <div class="adcard-img">
+        ${ad.images&&ad.images[0]?`<img src="${ad.images[0]}" loading="lazy">`:`<div class="adcard-emoji">${EMOJIS[ad.cat]||'📦'}</div>`}
+        <div style="position:absolute;top:5px;right:5px;background:${sb};color:${sc};font-size:9px;font-weight:800;padding:2px 7px;border-radius:var(--rpill)">${ad.status==='approved'?'✅':ad.status==='rejected'?'❌':'⏳'}</div>
+        <button onclick="adminDeleteAd('${ad.id}','${ad.user_id||''}')" style="position:absolute;bottom:5px;left:5px;background:rgba(239,68,68,.9);color:#fff;border:none;border-radius:var(--rpill);padding:2px 8px;font-size:9px;font-weight:700;cursor:pointer">🗑 حذف</button>
+      </div>
+      <div class="adcard-body"><div class="adcard-title">${ad.title}</div><div class="adcard-price">${fmtFA(ad.price)} <small>تومان</small></div></div>
+    </div>`;
+  }).join('');
+}
+
+async function adminDeleteAd(id,userId){
+  if(!confirm('آگهی حذف بشه؟'))return;
+  const{error}=await SB.from('listings').delete().eq('id',id);
+  if(error){toast('خطا در حذف: '+error.message,'err');return;}
+  if(userId){
+    await SB.from('notifications').insert([{user_id:userId,type:'system',title:'آگهی حذف شد',body:'یکی از آگهی‌هایت توسط ادمین حذف شد'}]);
+  }
+  toast('آگهی حذف شد');loadAllAdminAds();loadPendingAds();loadAdminData();render();
+}
+
+async function loadAdminUsers(){
+  const{data}=await SB.from('profiles').select('*').order('created_at',{ascending:false});
+  const tbody=$('userTableBody');
+  if(!data||!data.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1rem;color:var(--ink4)">کاربری نیست</td></tr>';return;}
+  tbody.innerHTML=data.map(u=>`
+    <tr>
+      <td><strong>${u.full_name||'—'}</strong><div style="font-size:10px;color:var(--ink4)">@${u.username||''}</div></td>
+      <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${u.email||u.id?.substring(0,12)+'...'||'—'}</td>
+      <td>${u.city||'—'}</td>
+      <td><span class="role-badge rb-${u.role||'user'}">${u.role==='admin'?'ادمین':u.role==='banned'?'مسدود':'کاربر'}</span></td>
+      <td>${u.ad_package&&u.ad_expires_at&&new Date(u.ad_expires_at)>new Date()?`<span style="background:#FEF9C3;color:#B45309;border-radius:var(--rpill);padding:2px 7px;font-size:10px;font-weight:700">${PKG_LABELS[u.ad_package]||u.ad_package}</span>`:'—'}</td>
+      <td style="font-size:11px">${relTime(u.created_at)}</td>
+      <td>
+        <div class="user-actions">
+          ${u.role!=='banned'?`<button class="ua-btn ua-ban" onclick="banUser('${u.id}','banned')">🚫 مسدود</button>`:`<button class="ua-btn ua-unban" onclick="banUser('${u.id}','user')">✅ رفع</button>`}
+          <button class="ua-btn ua-pkg" onclick="openPkgModal('${u.id}','${(u.full_name||u.username||'').replace(/'/g,"\\'")}')">⭐ پکیج</button>
+          <button class="ua-btn ua-del" onclick="adminDeleteUser('${u.id}')">🗑 حذف</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function banUser(id,role){
+  const{error}=await SB.from('profiles').update({role}).eq('id',id);
+  if(error){toast('خطا','err');return;}
+  toast(role==='banned'?'کاربر مسدود شد':'مسدودی رفع شد');
+  loadAdminUsers();
+}
+
+// حذف کاربر — فقط پروفایل و آگهی‌هاش (admin.deleteUser نیاز به service_role دارد)
+async function adminDeleteUser(id){
+  if(!confirm('کاربر و آگهی‌هاش حذف بشه؟'))return;
+  // حذف آگهی‌های کاربر
+  await SB.from('listings').delete().eq('user_id',id);
+  // حذف تیکت‌ها
+  await SB.from('tickets').delete().eq('user_id',id);
+  // حذف اعلان‌ها
+  await SB.from('notifications').delete().eq('user_id',id);
+  // حذف پروفایل
+  const{error}=await SB.from('profiles').delete().eq('id',id);
+  if(error){toast('خطا: '+error.message,'err');return;}
+  toast('کاربر و داده‌هاش حذف شد');
+  loadAdminUsers();loadAdminData();
+}
+
+function openPkgModal(userId,userName){
+  pkgTargetUser=userId;
+  $('pkgUserName').textContent=userName;
+  $('pkgModal').classList.add('on');
+}
+function selPkgOpt(el){
+  document.querySelectorAll('.pkg-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');pkgSelected=el.dataset.pkg;
+}
+async function applyPkg(){
+  if(!pkgTargetUser)return;
+  let expires=null,pkg=pkgSelected;
+  if(pkg!=='none'){
+    const days={'weekly':7,'monthly':30,'quarterly':90};
+    const d=new Date();d.setDate(d.getDate()+(days[pkg]||7));expires=d.toISOString();
+  } else pkg=null;
+  const{error}=await SB.from('profiles').update({ad_package:pkg,ad_expires_at:expires}).eq('id',pkgTargetUser);
+  if(error){toast('خطا','err');return;}
+  if(pkgTargetUser&&pkg){
+    await SB.from('notifications').insert([{user_id:pkgTargetUser,type:'system',title:'پکیج تبلیغاتی فعال شد ⭐',body:`پکیج ${PKG_LABELS[pkgSelected]||''} فعال شد`}]);
+  }
+  closeModal('pkgModal');
+  toast('پکیج اعمال شد ✅','ok');
+  loadAdminUsers();
+}
+
+async function loadAdminTickets(){
+  const{data}=await SB.from('tickets').select('*,profiles(full_name,username)').order('created_at',{ascending:false});
+  const list=$('adminTicketList');
+  if(!data||!data.length){list.innerHTML='<div class="empty-sec">تیکتی نیست</div>';return;}
+  list.innerHTML=data.map(t=>`
+    <div class="admin-ticket-item ${t.status==='open'?'unread':''}" onclick="adminOpenTicket('${t.id}','${t.subject.replace(/'/g,"\\'")}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:13px;font-weight:700">${t.subject}</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:3px">از: ${t.profiles?.full_name||t.profiles?.username||'ناشناس'} · ${relTime(t.created_at)}</div>
+        </div>
+        <span class="ti-status ${t.status}">${t.status==='open'?'باز':t.status==='answered'?'پاسخ داده':'بسته'}</span>
+      </div>
+    </div>`).join('');
+}
+
+async function adminOpenTicket(id,subject){
+  $('ticketModalTitle').textContent='🎫 '+subject;
+  $('ticketModalBody').innerHTML='<div class="empty-sec">در حال بارگذاری...</div>';
+  $('ticketModal').classList.add('on');
+  const{data:msgs}=await SB.from('ticket_messages').select('*').eq('ticket_id',id).order('created_at',{ascending:true});
+  $('ticketModalBody').innerHTML=`
+    <div class="ticket-detail">
+      <div class="ticket-msgs" id="ticketMsgs">
+        ${(msgs||[]).map(m=>`<div class="msg-bubble ${m.is_admin?'admin':'user'}">
+          ${m.body}
+          <div class="msg-meta">${m.is_admin?'ادمین 🛡':'کاربر'} · ${relTime(m.created_at)}</div>
+        </div>`).join('')}
+      </div>
+      <div class="ticket-reply">
+        <textarea id="replyBody" placeholder="پاسخ ادمین..."></textarea>
+        <button class="btn-send" onclick="sendTicketReply('${id}',true)"><i class="ti ti-send" style="font-size:14px"></i></button>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:8px">
+      <button onclick="closeTicketAdmin('${id}')" style="background:var(--sand);border:1.5px solid var(--bd2);border-radius:var(--rpill);padding:7px 13px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer">✅ بستن تیکت</button>
+    </div>`;
+  const el=$('ticketMsgs');if(el)el.scrollTop=el.scrollHeight;
+}
+
+async function closeTicketAdmin(id){
+  await SB.from('tickets').update({status:'closed'}).eq('id',id);
+  closeModal('ticketModal');
+  toast('تیکت بسته شد');loadAdminTickets();loadAdminData();
+}
+
+/* ══ AD MODAL ══ */
+function openAdModal(){$('adModal').classList.add('on');}
+function closeAdModal(){$('adModal').classList.remove('on');}
+$('adModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAdModal();});
+function selPkg(el){document.querySelectorAll('.ad-pkg').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
+
+/* ══ NAVIGATION ══ */
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='page-'+p));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('on',b.dataset&&b.dataset.to===p));
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset&&b.dataset.to===p));
+}
+function goHome(){switchPage('home');render();}
+function goSell(){
+  if(!currentUser){openAuth();return;}
+  if(currentProfile?.role==='banned'){toast('حساب مسدود است','err');return;}
+  resetForm();switchPage('sell');
+}
+
+document.querySelectorAll('.nav-btn,.mtab').forEach(b=>b.addEventListener('click',()=>{
+  const to=b.dataset?.to;if(!to)return;
+  if(to==='sell'){goSell();return;}
+  if(to==='profile'){if(!currentUser){openAuth();return;}switchPage('profile');loadProfileData();return;}
+  switchPage(to);if(to==='home')render();
+}));
+
+/* ══ ADMIN TABS ══ */
+document.querySelectorAll('.atab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.atab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.toggle('on',s.id==='as-'+t.dataset.at));
+}));
+
+/* ══ SUPPORT ══ */
+function toggleSupport(){
+  supOpen=!supOpen;
+  $('supMenu').classList.toggle('on',supOpen);
+  $('supBtn').innerHTML=supOpen?'<i class="ti ti-x" style="font-size:15px"></i>بستن':'<i class="ti ti-headset" style="font-size:16px"></i>پشتیبانی';
+}
+function closeSupport(){supOpen=false;$('supMenu').classList.remove('on');$('supBtn').innerHTML='<i class="ti ti-headset" style="font-size:16px"></i>پشتیبانی';}
+document.addEventListener('click',e=>{if(supOpen&&!e.target.closest('.sup-float'))closeSupport();});
+
+/* ══ INIT ══ */
+initAuth();
 render();
 </script>
 </body>
