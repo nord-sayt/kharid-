@@ -1391,11 +1391,23 @@ async function adminTab(tab) {
   const labels = {pending:'آگهی‌های در انتظار تایید',approved:'آگهی‌های تایید شده',rejected:'آگهی‌های رد شده'};
   title.textContent = labels[tab] || '';
 
-  const { data, error } = await SB.from('listings').select('*').eq('status', tab).order('created_at',{ascending:false});
-  if (error || !data || !data.length) {
-    list.innerHTML = '<div class="admin-empty">آگهی‌ای وجود ندارد</div>';
-    return;
-  }
+  const { data, error } = await SB
+  .from('listings')
+  .select('*')
+  .eq('status', tab)
+  .order('created_at', { ascending: false });
+
+if (error) {
+  console.log(error);
+  list.innerHTML = '<div class="admin-empty">خطا در دریافت اطلاعات</div>';
+  return;
+}
+
+if (!data || data.length === 0) {
+  console.log("No data for tab:", tab);
+  list.innerHTML = '<div class="admin-empty">آگهی‌ای وجود ندارد</div>';
+  return;
+}
 
   list.innerHTML = data.map(ad => {
     const em = EMOJIS[ad.cat] || '📦', img0 = ad.images && ad.images[0];
