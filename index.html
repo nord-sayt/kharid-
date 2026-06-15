@@ -9,17 +9,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
 const SUPABASE_URL = 'https://ffpzdohwrhdrdgtczzjc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J8zWi6EO4xP3LxmsS2gXig_HY3aHycL';
-/* ═══════════════════════════════════════════════════
-   ایمیل ادمین — فقط اینجا عوض کن
-═══════════════════════════════════════════════════ */
-const ADMIN_EMAIL = 'admin@gmail.com';
+const ADMIN_EMAIL  = 'admin@gmail.com';
 /*
-  SQL برای Supabase → SQL Editor:
+  SQL (Supabase → SQL Editor):
 
+  -- جدول اشتراک کاربران
+  create table if not exists user_plans (
+    id uuid default gen_random_uuid() primary key,
+    user_id uuid unique not null,
+    user_name text,
+    plan text default 'normal',   -- normal | weekly | monthly | diamond
+    plan_expires_at timestamptz,
+    updated_at timestamptz default now()
+  );
+  alter table user_plans enable row level security;
+  create policy "all_access" on user_plans for all using (true) with check (true);
+
+  -- جدول آگهی‌ها
   create table if not exists listings (
     id uuid default gen_random_uuid() primary key,
     title text, cat text, cond text, desc text, brand text,
@@ -38,7 +47,6 @@ const ADMIN_EMAIL = 'admin@gmail.com';
   create policy "admin_all"       on listings for all using (true) with check (true);
 */
 </script>
-
 <style>
 :root{
   --ink:#0E1A14;--forest:#14542E;--green:#1A7A47;--mint:#25B067;--lime:#7ED957;
@@ -48,6 +56,7 @@ const ADMIN_EMAIL = 'admin@gmail.com';
   --t1:#0E1A14;--t2:#3D5045;--t3:#7A9080;
   --r:14px;--rsm:9px;--pill:999px;
   --shg:0 6px 28px rgba(26,122,71,.32);--shh:0 14px 44px rgba(14,26,20,.13);
+  --diamond:#6366f1;--gold:#E8A020;--weekly:#25B067;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -59,7 +68,7 @@ a{text-decoration:none;color:inherit}
 ::-webkit-scrollbar-thumb{background:#b8c8be;border-radius:4px}
 
 /* NAV */
-.nav{position:sticky;top:0;z-index:90;height:58px;padding:0 1rem;display:flex;align-items:center;gap:10px;background:rgba(253,251,247,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)}
+.nav{position:sticky;top:0;z-index:90;height:58px;padding:0 1rem;display:flex;align-items:center;gap:8px;background:rgba(253,251,247,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)}
 .logo{font-size:19px;font-weight:800;color:var(--forest);letter-spacing:-1px;display:flex;align-items:center;gap:3px;flex-shrink:0}
 .logo em{color:var(--mint);font-style:normal}
 .nav-q{flex:1;max-width:420px;position:relative}
@@ -67,30 +76,37 @@ a{text-decoration:none;color:inherit}
 .nav-q input:focus{outline:none;border-color:var(--mint);background:var(--paper);box-shadow:0 0 0 3px rgba(37,176,103,.1)}
 .nav-q .qi{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:16px;pointer-events:none}
 .sp{flex:1}
-.nav-lnk{padding:6px 11px;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;font-weight:500}
+.nav-lnk{padding:6px 11px;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;font-weight:500;white-space:nowrap}
 .nav-lnk:hover{background:var(--sand);color:var(--forest)}
 .nav-lnk.on{color:var(--forest);font-weight:700}
 .nav-saved{position:relative;padding:6px 11px;color:var(--t2);font-size:13px;border-radius:var(--rsm);transition:.15s;display:flex;align-items:center;gap:5px;font-weight:500}
 .nav-saved:hover{background:var(--sand);color:var(--forest)}
 .nav-saved.on{color:var(--forest);font-weight:700}
 .sv-badge{background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:none;align-items:center;justify-content:center;font-weight:800}
-.btn-new{height:36px;padding:0 16px;background:var(--forest);color:var(--lime);border-radius:var(--pill);font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:var(--shg);transition:.2s;white-space:nowrap}
+.btn-new{height:36px;padding:0 14px;background:var(--forest);color:var(--lime);border-radius:var(--pill);font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:var(--shg);transition:.2s;white-space:nowrap;flex-shrink:0}
 .btn-new:hover{background:var(--green);transform:translateY(-1px)}
-.nav-auth{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.auth-email{font-size:12px;color:var(--t2);font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn-login{height:34px;padding:0 14px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:12px;font-weight:700;color:var(--forest);transition:.2s}
+.nav-auth{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.auth-email{font-size:12px;color:var(--t2);font-weight:600;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-login{height:34px;padding:0 14px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:12px;font-weight:700;color:var(--forest);transition:.2s;white-space:nowrap}
 .btn-login:hover{background:var(--sand)}
-.btn-logout{height:34px;padding:0 12px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:12px;color:var(--red);transition:.2s;display:flex;align-items:center;gap:4px}
+.btn-logout{height:34px;padding:0 10px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:12px;color:var(--red);transition:.2s;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .btn-logout:hover{background:#fde8e6}
-.btn-profile-nav{height:34px;padding:0 12px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:12px;color:var(--forest);font-weight:600;transition:.2s;display:flex;align-items:center;gap:5px}
+.btn-profile-nav{height:34px;padding:0 10px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:12px;color:var(--forest);font-weight:600;transition:.2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
 .btn-profile-nav:hover{background:var(--sand)}
-.avatar-sm{width:26px;height:26px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.admin-nav-btn{height:34px;padding:0 12px;border:1.5px solid var(--red);border-radius:var(--pill);font-size:12px;color:var(--red);font-weight:700;transition:.2s;display:flex;align-items:center;gap:4px}
+.avatar-sm{width:26px;height:26px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.avatar-sm img{width:100%;height:100%;object-fit:cover}
+.admin-nav-btn{height:34px;padding:0 10px;border:1.5px solid var(--red);border-radius:var(--pill);font-size:12px;color:var(--red);font-weight:700;transition:.2s;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .admin-nav-btn:hover{background:var(--red);color:#fff}
 
+/* plan badges */
+.plan-badge{display:inline-flex;align-items:center;gap:3px;border-radius:var(--pill);padding:2px 8px;font-size:10px;font-weight:800}
+.plan-weekly{background:#e8f4ee;color:var(--green)}
+.plan-monthly{background:#fef6e4;color:var(--amber)}
+.plan-diamond{background:#ede9fe;color:var(--diamond)}
+
 /* mobile nav */
-.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:80;background:rgba(253,251,247,.97);backdrop-filter:blur(16px);border-top:1px solid var(--bd);height:60px;padding:0 8px;align-items:center;justify-content:space-around}
-.mtab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;border-radius:var(--rsm);color:var(--t3);font-size:10px;font-weight:600;transition:.15s;position:relative}
+.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:80;background:rgba(253,251,247,.97);backdrop-filter:blur(16px);border-top:1px solid var(--bd);height:60px;padding:0 4px;align-items:center;justify-content:space-around}
+.mtab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:var(--rsm);color:var(--t3);font-size:10px;font-weight:600;transition:.15s;position:relative;min-width:0}
 .mtab i{font-size:20px}
 .mtab.on{color:var(--forest)}
 .mtab-badge{position:absolute;top:4px;right:8px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;display:none;align-items:center;justify-content:center;font-weight:800}
@@ -167,6 +183,7 @@ a{text-decoration:none;color:inherit}
 .adcard{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;display:flex;flex-direction:column}
 .adcard:hover{border-color:var(--mint);box-shadow:var(--shh);transform:translateY(-4px)}
 .adcard.is-ad{border-color:rgba(232,160,32,.35)}
+.adcard.is-diamond{border-color:rgba(99,102,241,.35);box-shadow:0 0 0 1px rgba(99,102,241,.1)}
 .adcard-img{aspect-ratio:1;background:var(--sand);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .adcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
 .adcard:hover .adcard-img img{transform:scale(1.06)}
@@ -180,6 +197,9 @@ a{text-decoration:none;color:inherit}
 .fav-btn{position:absolute;top:7px;left:7px;width:28px;height:28px;border-radius:50%;background:rgba(253,251,247,.88);border:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--t3);backdrop-filter:blur(4px);transition:.15s;z-index:1;cursor:pointer}
 .fav-btn:hover,.fav-btn.on{color:var(--red);transform:scale(1.1)}
 .ad-star{position:absolute;top:7px;right:7px;background:var(--amber);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px}
+.ad-diamond-badge{position:absolute;top:7px;right:7px;background:var(--diamond);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px}
+.ad-gold-badge{position:absolute;top:7px;right:7px;background:var(--gold);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px}
+.ad-weekly-badge{position:absolute;top:7px;right:7px;background:var(--weekly);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px}
 .new-badge{position:absolute;top:7px;right:7px;background:var(--lime);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill)}
 .adcard-body{padding:11px;flex:1;display:flex;flex-direction:column}
 .adcard-cat{font-size:9px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
@@ -203,6 +223,13 @@ a{text-decoration:none;color:inherit}
 .empty h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px}
 .empty p{font-size:13px;color:var(--t3);line-height:1.7}
 .btn-first{margin-top:1.25rem;display:inline-flex;align-items:center;gap:6px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer}
+
+/* LOGIN GATE (برای کاربر لاگین نشده) */
+.login-gate{grid-column:1/-1;text-align:center;padding:4rem 1rem}
+.login-gate .gate-icon{font-size:56px;margin-bottom:1rem}
+.login-gate h3{font-size:20px;font-weight:800;margin-bottom:8px;color:var(--ink)}
+.login-gate p{color:var(--t3);margin-bottom:1.5rem;font-size:14px}
+.login-gate-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
 /* SAVED */
 .saved-pg{max-width:1140px;margin:0 auto;padding:1.5rem 1rem 5rem}
@@ -317,8 +344,8 @@ a{text-decoration:none;color:inherit}
 /* AD MODAL */
 .ad-modal-bg{position:fixed;inset:0;z-index:210;background:rgba(14,26,20,.6);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:1rem}
 .ad-modal-bg.on{display:flex}
-.ad-modal{background:var(--paper);border-radius:var(--r);width:100%;max-width:460px;overflow:hidden;box-shadow:0 40px 80px rgba(14,26,20,.4)}
-.ad-modal-head{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:1.5rem;text-align:center;color:#fff}
+.ad-modal{background:var(--paper);border-radius:var(--r);width:100%;max-width:500px;overflow:hidden;box-shadow:0 40px 80px rgba(14,26,20,.4)}
+.ad-modal-head{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:1.5rem;text-align:center;color:#fff;position:relative}
 .ad-modal-head h3{font-size:20px;font-weight:800;margin-bottom:4px}
 .ad-modal-head p{font-size:12px;opacity:.55}
 .ad-modal-body{padding:1.25rem}
@@ -326,10 +353,13 @@ a{text-decoration:none;color:inherit}
 .pkg-card{border:2px solid var(--bd);border-radius:var(--r);padding:1rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px}
 .pkg-card:hover{border-color:var(--amber)}
 .pkg-card.on{border-color:var(--amber);background:var(--amber-l)}
+.pkg-card.diamond-pkg.on{border-color:var(--diamond);background:#ede9fe}
+.pkg-card.diamond-pkg:hover{border-color:var(--diamond)}
 .pkg-icon{font-size:28px}
 .pkg-name{font-size:14px;font-weight:800;color:var(--ink)}
 .pkg-desc{font-size:11px;color:var(--t3);margin-top:2px}
-.pkg-price{font-size:16px;font-weight:800;color:var(--amber);margin-right:auto}
+.pkg-price{font-size:16px;font-weight:800;color:var(--amber);margin-right:auto;white-space:nowrap}
+.diamond-price{color:var(--diamond)}
 .btn-order{width:100%;height:48px;background:var(--amber);color:var(--ink);border:none;border-radius:var(--pill);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;transition:.2s}
 .btn-order:hover{background:#f59e0b}
 .modal-close-x{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -357,12 +387,23 @@ a{text-decoration:none;color:inherit}
 
 /* PROFILE */
 .profile-pg{max-width:720px;margin:0 auto;padding:1.5rem 1rem 5rem}
-.profile-card{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
-.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.profile-card{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem}
+.profile-top{display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.profile-avatar-wrap{position:relative;flex-shrink:0}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid var(--bd2)}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-avatar-edit{position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--forest);color:var(--lime);border:2px solid var(--paper);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:.15s}
+.profile-avatar-edit:hover{background:var(--green)}
 .profile-info{flex:1;min-width:0}
-.profile-name{font-size:18px;font-weight:800;color:var(--ink)}
-.profile-email{font-size:13px;color:var(--t2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.profile-since{font-size:12px;color:var(--t3);margin-top:2px}
+.profile-name{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.profile-email{font-size:13px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px}
+.profile-since{font-size:12px;color:var(--t3);display:flex;align-items:center;gap:5px}
+.profile-plan-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.profile-actions{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:1rem;border-top:1px solid var(--bd)}
+.pstat{text-align:center}
+.pstat-num{font-size:22px;font-weight:800;color:var(--forest)}
+.pstat-lbl{font-size:11px;color:var(--t3);margin-top:2px}
 .profile-hd{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
 .profile-empty{text-align:center;padding:3rem 1rem;color:var(--t3);background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r)}
 .pending-chip{display:inline-flex;align-items:center;gap:4px;background:#FEF6E4;color:var(--amber);border-radius:var(--pill);padding:3px 8px;font-size:9px;font-weight:800}
@@ -370,7 +411,7 @@ a{text-decoration:none;color:inherit}
 .rejected-chip{display:inline-flex;align-items:center;gap:4px;background:#fde8e6;color:var(--red);border-radius:var(--pill);padding:3px 8px;font-size:9px;font-weight:800}
 
 /* ADMIN */
-.admin-pg{max-width:900px;margin:0 auto;padding:1.5rem 1rem 5rem}
+.admin-pg{max-width:960px;margin:0 auto;padding:1.5rem 1rem 5rem}
 .admin-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
 .admin-hd h2{font-size:20px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
 .admin-badge{background:var(--red);color:#fff;border-radius:var(--pill);padding:3px 10px;font-size:11px;font-weight:800}
@@ -382,7 +423,7 @@ a{text-decoration:none;color:inherit}
 .admin-row-img{width:64px;height:64px;border-radius:var(--rsm);object-fit:cover;flex-shrink:0;background:var(--sand);display:flex;align-items:center;justify-content:center;font-size:26px}
 .admin-row-info{flex:1;min-width:0}
 .admin-row-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px}
-.admin-row-meta{font-size:11px;color:var(--t3);display:flex;flex-wrap:wrap;gap:8px}
+.admin-row-meta{font-size:11px;color:var(--t3);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .admin-row-actions{display:flex;gap:7px;flex-shrink:0;flex-wrap:wrap}
 .btn-approve{height:32px;padding:0 14px;background:#e8f4ee;color:var(--green);border:1.5px solid rgba(37,176,103,.3);border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:4px}
 .btn-approve:hover{background:var(--green);color:#fff}
@@ -390,7 +431,7 @@ a{text-decoration:none;color:inherit}
 .btn-reject:hover{background:var(--amber);color:#fff}
 .btn-del-ad{height:32px;padding:0 12px;background:#fde8e6;color:var(--red);border:1.5px solid rgba(217,79,61,.2);border-radius:var(--pill);font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
 .btn-del-ad:hover{background:var(--red);color:#fff}
-.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
+.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.25rem}
 .astat{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1rem;text-align:center}
 .astat-num{font-size:24px;font-weight:800;color:var(--forest)}
 .astat-lbl{font-size:11px;color:var(--t3);margin-top:3px}
@@ -398,13 +439,25 @@ a{text-decoration:none;color:inherit}
 .btn-del-all{height:40px;padding:0 18px;background:var(--red);color:#fff;border:none;border-radius:var(--pill);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
 .btn-del-all:hover{opacity:.85}
 
-/* USERS TABLE */
+/* کاربران — جدول */
+.users-wrap{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden}
 .users-table{width:100%;border-collapse:collapse;font-size:13px}
 .users-table th{text-align:right;padding:10px 12px;font-size:11px;font-weight:700;color:var(--t3);border-bottom:1.5px solid var(--bd);background:var(--sand)}
 .users-table td{padding:10px 12px;border-bottom:1px solid var(--bd);color:var(--t1);vertical-align:middle}
 .users-table tr:last-child td{border:none}
-.users-table tr:hover td{background:var(--cream)}
-.user-av{width:30px;height:30px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.users-table tr{cursor:pointer;transition:.15s}
+.users-table tr:hover td{background:rgba(37,176,103,.05)}
+.user-av{width:32px;height:32px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;vertical-align:middle;margin-left:8px}
+.user-av img{width:100%;height:100%;object-fit:cover}
+.plan-select{height:30px;padding:0 8px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:11px;font-weight:700;background:var(--paper);color:var(--t1);cursor:pointer;transition:.2s;font-family:'Vazirmatn',sans-serif}
+.plan-select:focus{outline:none;border-color:var(--mint)}
+
+/* پنل کاربر در ادمین */
+.user-detail-panel{background:var(--cream);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem;display:none}
+.user-detail-panel.on{display:block}
+.udp-hd{font-size:15px;font-weight:800;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.udp-close{width:28px;height:28px;border-radius:50%;background:var(--bd2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.udp-close:hover{background:var(--red);color:#fff}
 
 /* RULES */
 .rules-pg{max-width:720px;margin:0 auto;padding:2rem 1rem 5rem}
@@ -430,7 +483,7 @@ a{text-decoration:none;color:inherit}
 .sup-menu{position:absolute;bottom:54px;left:0;width:240px;background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);box-shadow:var(--shh);overflow:hidden;display:none}
 .sup-menu.on{display:block}
 .sup-head{padding:12px 14px;font-size:13px;font-weight:800;border-bottom:1px solid var(--bd)}
-.sup-item{display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13px;font-weight:500;color:var(--t1);border-bottom:1px solid var(--bd);cursor:pointer;transition:.15s}
+.sup-item{display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13px;font-weight:500;color:var(--t1);border-bottom:1px solid var(--bd);cursor:pointer;transition:.15s;text-decoration:none}
 .sup-item:last-child{border:none}
 .sup-item:hover{background:var(--sand)}
 .sup-item i{color:var(--mint);font-size:17px}
@@ -445,7 +498,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 .ft-col a{display:block;font-size:12px;color:rgba(255,255,255,.45);padding:4px 0;cursor:pointer;transition:.15s}
 .ft-col a:hover{color:var(--lime)}
 .ft-support h4{font-size:13px;font-weight:800;color:#fff;margin-bottom:.85rem}
-.ft-contact-lnk{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:12px;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.05);transition:.15s;cursor:pointer}
+.ft-contact-lnk{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:12px;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.05);transition:.15s;cursor:pointer;text-decoration:none}
 .ft-contact-lnk:last-child{border:none;padding-bottom:0}
 .ft-contact-lnk:hover{color:var(--lime)}
 .ft-contact-lnk i{color:var(--lime);font-size:15px;flex-shrink:0}
@@ -458,6 +511,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 @media(max-width:680px){
   .nav-lnk{display:none}
   .nav-saved{display:none}
+  .auth-email{display:none}
   .mobile-tabs{display:flex}
   .support-float{bottom:72px;left:12px}
   .toast{bottom:72px}
@@ -470,7 +524,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
   .sbar-sep{display:none}
   .promo-banner{flex-direction:column;align-items:flex-start;gap:.75rem}
   .promo-pkgs{display:none}
-  .cats-wrap,.toolbar,.grid-wrap,.sell-pg,.saved-pg,.rules-pg,.promo-wrap{padding-left:.75rem;padding-right:.75rem}
+  .cats-wrap,.toolbar,.grid-wrap,.sell-pg,.saved-pg,.rules-pg,.promo-wrap,.profile-pg,.admin-pg{padding-left:.75rem;padding-right:.75rem}
   .two{grid-template-columns:1fr 1fr}
   .cond-grid{grid-template-columns:1fr 1fr}
   .ft-top{grid-template-columns:1fr 1fr}
@@ -479,8 +533,10 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
   .modal{grid-template-columns:1fr}
   .m-gallery{border-radius:var(--r) var(--r) 0 0}
   .m-main-img,.m-emoji{border-radius:var(--r) var(--r) 0 0}
-  .auth-email{display:none}
   .admin-row{flex-direction:column}
+  .profile-stats{grid-template-columns:repeat(3,1fr)}
+  .users-table{font-size:11px}
+  .users-table td,.users-table th{padding:8px 8px}
 }
 @media(max-width:380px){
   .ads-grid{grid-template-columns:1fr 1fr}
@@ -489,7 +545,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 </style>
 </head>
 <body>
-
 <div class="toast" id="toast"></div>
 
 <!-- NAV -->
@@ -511,15 +566,14 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
     <div id="navGuest">
       <button class="btn-login" onclick="openAuthModal('login')">ورود / ثبت‌نام</button>
     </div>
-    <div id="navUser" style="display:none;align-items:center;gap:8px">
+    <div id="navUser" style="display:none;align-items:center;gap:6px">
       <div class="avatar-sm" id="navAvatar">ک</div>
       <span class="auth-email" id="navEmail"></span>
       <button class="btn-profile-nav" onclick="switchPage('profile')">
         <i class="ti ti-user" style="font-size:13px"></i>پروفایل
       </button>
-      <!-- دکمه پنل ادمین — فقط برای ادمین نمایش -->
       <button class="admin-nav-btn" id="adminNavBtn" style="display:none" onclick="switchPage('admin')">
-        <i class="ti ti-shield" style="font-size:13px"></i>پنل ادمین
+        <i class="ti ti-shield" style="font-size:13px"></i>ادمین
       </button>
       <button class="btn-logout" onclick="doLogout()">
         <i class="ti ti-logout" style="font-size:13px"></i>خروج
@@ -580,12 +634,13 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
         <div class="promo-icon">📣</div>
         <div class="promo-text">
           <strong>آگهی‌ات رو تبلیغ کن — بیشتر دیده بشو</strong>
-          <span>با تبلیغ ویژه، آگهی‌ات بالای همه نشون داده میشه</span>
+          <span>با اشتراک ویژه، الماس یا طلایی بالای همه بیا</span>
         </div>
       </div>
       <div class="promo-pkgs">
         <button class="ppkg" onclick="openAdModal()"><span class="ptag">ویژه</span>هفتگی — ۵۰ هزار</button>
         <button class="ppkg" onclick="openAdModal()"><span class="ptag">طلایی</span>ماهانه — ۱۵۰ هزار</button>
+        <button class="ppkg" onclick="openAdModal()"><span class="ptag" style="background:var(--diamond);color:#fff">الماس</span>۳ ماهه — ۳۰۰ هزار</button>
       </div>
       <button class="btn-ad" onclick="openAdModal()"><i class="ti ti-star" style="font-size:14px"></i>سفارش تبلیغ</button>
     </div>
@@ -643,7 +698,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 
 <!-- SELL -->
 <div class="page" id="page-sell">
-  <!-- بلاک لاگین — وقتی وارد نشده نشون داده میشه -->
   <div id="sellGate" style="display:none;max-width:420px;margin:4rem auto;padding:0 1rem;text-align:center">
     <div style="font-size:56px;margin-bottom:1rem">🔒</div>
     <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">برای ثبت آگهی وارد شو</h2>
@@ -656,7 +710,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 
   <div class="sell-pg" id="formArea" style="display:none">
     <div class="sell-hd"><h2>ثبت آگهی رایگان</h2><p>چند دقیقه وقت بذار — مستقیم با خریدار ارتباط بگیر</p></div>
-
     <div class="ad-toggle">
       <div class="at-left">
         <div class="at-icon">⭐</div>
@@ -673,7 +726,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 
     <div class="step-card">
       <div class="step-hd"><span class="snum">۱</span><div><div class="step-hd-t">عکس محصول</div><div class="step-hd-s">تا ۸ عکس — عکس بیشتر = فروش سریع‌تر</div></div></div>
-      <div class="upload-zone" id="uploadZone"><i class="ti ti-photo-plus"></i><div class="ut">کلیک کن یا بکش بنداز</div><div class="us">JPG · PNG · WEBP — حداکثر 10MB</div></div>
+      <div class="upload-zone" id="uploadZone"><i class="ti ti-photo-plus"></i><div class="ut">کلیک کن یا بکش بنداز</div><div class="us">JPG · PNG · WEBP — حداکثر ۱۰MB</div></div>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
       <div class="thumb-row" id="thumbRow"></div>
     </div>
@@ -715,6 +768,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       </div>
     </div>
   </div>
+
   <div class="success-pg" id="successArea" style="display:none">
     <div class="sring">🎉</div>
     <h2>آگهی‌ات ثبت شد!</h2>
@@ -735,15 +789,31 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
     </div>
     <div id="profileUser" style="display:none">
       <div class="profile-card">
-        <div class="profile-avatar" id="profileAvatar">ک</div>
-        <div class="profile-info">
-          <div class="profile-name" id="profileName">کاربر</div>
-          <div class="profile-email" id="profileEmail">user@email.com</div>
-          <div class="profile-since" id="profileSince">عضو بازارنو</div>
+        <div class="profile-top">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profileAvatar">ک</div>
+            <div class="profile-avatar-edit" onclick="document.getElementById('avatarInput').click()" title="تغییر عکس پروفایل">
+              <i class="ti ti-camera" style="font-size:13px"></i>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none">
+          </div>
+          <div class="profile-info">
+            <div class="profile-name" id="profileName">کاربر</div>
+            <div class="profile-email" id="profileEmail">user@email.com</div>
+            <div class="profile-since" id="profileSince"><i class="ti ti-calendar" style="font-size:11px"></i> عضو بازارنو</div>
+            <div class="profile-plan-row" id="profilePlanRow"></div>
+          </div>
+          <div style="margin-right:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <button class="btn-logout" onclick="doLogout()">
+              <i class="ti ti-logout" style="font-size:13px"></i>خروج
+            </button>
+          </div>
         </div>
-        <button class="btn-logout" onclick="doLogout()" style="margin-right:auto">
-          <i class="ti ti-logout" style="font-size:13px"></i>خروج
-        </button>
+        <div class="profile-stats">
+          <div class="pstat"><div class="pstat-num" id="pStatTotal">—</div><div class="pstat-lbl">کل آگهی</div></div>
+          <div class="pstat"><div class="pstat-num" id="pStatApproved">—</div><div class="pstat-lbl">تأیید شده</div></div>
+          <div class="pstat"><div class="pstat-num" id="pStatPending">—</div><div class="pstat-lbl">در انتظار</div></div>
+        </div>
       </div>
       <div class="profile-hd"><i class="ti ti-list" style="color:var(--mint)"></i>آگهی‌های من</div>
       <div id="myListings"><div class="profile-empty">در حال بارگذاری...</div></div>
@@ -756,7 +826,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
   <div class="admin-pg">
     <div class="admin-hd">
       <h2><i class="ti ti-shield" style="color:var(--red)"></i>پنل مدیریت <span class="admin-badge">ADMIN</span></h2>
-      <button class="btn-logout" onclick="doAdminLogout()">
+      <button class="btn-logout" onclick="doLogout()">
         <i class="ti ti-logout" style="font-size:13px"></i>خروج از پنل
       </button>
     </div>
@@ -772,6 +842,14 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button class="admin-tab" onclick="adminShowTab('rejected')">❌ رد شده</button>
       <button class="admin-tab" onclick="adminShowTab('users')">👥 کاربران</button>
     </div>
+    <!-- پنل جزئیات کاربر -->
+    <div class="user-detail-panel" id="userDetailPanel">
+      <div class="udp-hd">
+        <span id="udpTitle">آگهی‌های کاربر</span>
+        <div class="udp-close" onclick="closeUserDetail()"><i class="ti ti-x"></i></div>
+      </div>
+      <div id="udpContent"></div>
+    </div>
     <div id="adminListings"></div>
     <div class="admin-danger">
       <button class="btn-del-all" onclick="adminDeleteAll()"><i class="ti ti-trash"></i>حذف همه آگهی‌ها</button>
@@ -783,7 +861,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 <div class="page" id="page-rules">
   <div class="rules-pg">
     <div class="rules-hd">📋 قوانین و مقررات بازارنو</div>
-    <div class="rules-sub">آخرین بروزرسانی خرداد 1405— لطفاً قبل از استفاده مطالعه کنید</div>
+    <div class="rules-sub">آخرین بروزرسانی خرداد ۱۴۰۵ — لطفاً قبل از استفاده مطالعه کنید</div>
     <div class="rules-note"><i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><span>استفاده از بازارنو به معنای قبول این قوانین است. در صورت تخلف، آگهی حذف خواهد شد.</span></div>
     <div class="rule-card"><h3><i class="ti ti-circle-check"></i>قوانین کلی</h3><ul><li>ثبت آگهی کاملاً رایگان است</li><li>اطلاعات باید صحیح و واقعی باشد</li><li>تصاویر باید مربوط به همان کالا باشند</li><li>قیمت‌گذاری منطقی الزامی است</li></ul></div>
     <div class="rule-card"><h3><i class="ti ti-ban"></i>موارد ممنوع</h3><ul><li>فروش کالاهای غیرقانونی یا تقلبی</li><li>ثبت آگهی با اطلاعات دروغ</li><li>فروش دارو، سلاح یا مواد مخدر</li><li>کلاهبرداری از خریداران</li></ul></div>
@@ -827,21 +905,20 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <div class="pkg-grid">
         <div class="pkg-card on" onclick="selPkg(this)"><div class="pkg-icon">⚡</div><div><div class="pkg-name">ویژه هفتگی</div><div class="pkg-desc">۷ روز در بالای لیست</div></div><div class="pkg-price">۵۰,۰۰۰</div></div>
         <div class="pkg-card" onclick="selPkg(this)"><div class="pkg-icon">🥇</div><div><div class="pkg-name">طلایی ماهانه</div><div class="pkg-desc">۳۰ روز + نشان طلایی</div></div><div class="pkg-price">۱۵۰,۰۰۰</div></div>
+        <div class="pkg-card diamond-pkg" onclick="selPkg(this)"><div class="pkg-icon">💎</div><div><div class="pkg-name">الماس ۳ ماهه</div><div class="pkg-desc">۹۰ روز + نشان الماس + اولویت اول</div></div><div class="pkg-price diamond-price">۳۰۰,۰۰۰</div></div>
       </div>
       <button class="btn-order" onclick="toast('به زودی...','ok');closeAdModal()"><i class="ti ti-shopping-cart" style="font-size:16px"></i>ثبت سفارش</button>
     </div>
   </div>
 </div>
 
-<!-- AUTH MODAL — فقط دو تب: ورود و ثبت‌نام -->
+<!-- AUTH MODAL -->
 <div class="auth-modal-bg" id="authModalBg">
   <div class="auth-modal">
     <div class="auth-tabs">
       <div class="auth-tab on" id="tabLogin" onclick="switchAuthTab('login')">ورود</div>
       <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">ثبت‌نام</div>
     </div>
-
-    <!-- LOGIN: فقط ایمیل + رمز -->
     <div id="authLoginPanel" class="auth-body">
       <div class="auth-title">خوش برگشتی! 👋</div>
       <div class="auth-sub">با ایمیل و رمز وارد شو</div>
@@ -851,16 +928,14 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button class="btn-auth" id="btnLogin" onclick="doLogin()"><i class="ti ti-login" style="font-size:16px"></i>ورود</button>
       <div class="auth-footer-note">حساب نداری؟ <span onclick="switchAuthTab('register')" style="color:var(--mint);cursor:pointer;font-weight:700">ثبت‌نام کن</span></div>
     </div>
-
-    <!-- REGISTER: اسم + ایمیل + رمز + تکرار رمز -->
     <div id="authRegisterPanel" class="auth-body" style="display:none">
       <div class="auth-title">ثبت‌نام رایگان 🎉</div>
       <div class="auth-sub">یه حساب بساز و آگهی بذار</div>
       <div class="auth-err" id="registerErr"></div>
       <div class="auth-field"><label>نام <span class="req">*</span></label><input type="text" id="regName" placeholder="نام یا نام مستعار"></div>
       <div class="auth-field"><label>ایمیل <span class="req">*</span></label><input type="email" id="regEmail" placeholder="example@email.com"></div>
-      <div class="auth-field"><label>رمز عبور <span class="req">*</span> (حداقل ۶ کاراکتر)</label><input type="password" id="regPass" placeholder="رمز عبور"></div>
-      <div class="auth-field"><label>تکرار رمز عبور <span class="req">*</span></label><input type="password" id="regPass2" placeholder="رمز عبور را دوباره وارد کن"></div>
+      <div class="auth-field"><label>رمز عبور <span class="req">*</span></label><input type="password" id="regPass" placeholder="حداقل ۶ کاراکتر"></div>
+      <div class="auth-field"><label>تکرار رمز <span class="req">*</span></label><input type="password" id="regPass2" placeholder="رمز عبور را دوباره وارد کن"></div>
       <button class="btn-auth" id="btnRegister" onclick="doRegister()"><i class="ti ti-user-plus" style="font-size:16px"></i>ثبت‌نام</button>
       <div class="auth-footer-note">قبلاً ثبت‌نام کردی؟ <span onclick="switchAuthTab('login')" style="color:var(--mint);cursor:pointer;font-weight:700">وارد شو</span></div>
     </div>
@@ -906,7 +981,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
     </div>
   </div>
   <div class="ft-bottom">
-    <span>© 1405 بازارنو — تمامی حقوق محفوظ است</span>
+    <span>© ۱۴۰۵ بازارنو — تمامی حقوق محفوظ است</span>
     <div class="trust-row">
       <span class="tbadge"><i class="ti ti-shield-check"></i>امن</span>
       <span class="tbadge"><i class="ti ti-certificate"></i>نماد اعتماد</span>
@@ -916,11 +991,18 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 </footer>
 
 <script>
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    INIT
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const EMOJIS = {'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠','پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗','ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'};
+
+const PLANS = {
+  normal:  { label:'معمولی',   icon:'',   cls:'',              priority:0 },
+  weekly:  { label:'ویژه ۷روزه', icon:'⚡', cls:'plan-weekly',  priority:1 },
+  monthly: { label:'طلایی ماهه', icon:'🥇', cls:'plan-monthly', priority:2 },
+  diamond: { label:'الماس ۳ماهه','icon':'💎', cls:'plan-diamond', priority:3 }
+};
 
 let ST = {cat:'', sort:'newest', q:''};
 let cond = 'نو', pickedFiles = [], activeAd = null, currentData = [], isAdPost = false, phoneShown = false, supOpen = false;
@@ -928,10 +1010,11 @@ let saved = new Set(JSON.parse(localStorage.getItem('bz_saved') || '[]'));
 let currentUser = null;
 let isAdmin = false;
 let adminCurrentTab = 'pending';
+let userPlansCache = {}; // cache: user_id → plan
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    UTILS
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 function toast(msg, type='') {
   const e = document.getElementById('toast');
   e.innerHTML = msg; e.className = 'toast on ' + type;
@@ -948,46 +1031,60 @@ function relTime(ts) {
   return new Date(ts).toLocaleDateString('fa-IR');
 }
 function isNew(ts) { return Date.now() - new Date(ts).getTime() < 3600000 * 6; }
-
-/* ═══════════════════════════════════════
-   AUTH SESSION
-═══════════════════════════════════════ */
-async function initAuth() {
-  const { data: { session } } = await SB.auth.getSession();
-  if(session) setUser(session.user);
-  SB.auth.onAuthStateChange((_ev, session) => setUser(session ? session.user : null));
+function isPlanActive(planData) {
+  if(!planData || planData.plan === 'normal') return false;
+  if(!planData.plan_expires_at) return false;
+  return new Date(planData.plan_expires_at) > new Date();
+}
+function getUserPlan(userId) {
+  const pd = userPlansCache[userId];
+  if(!pd || !isPlanActive(pd)) return 'normal';
+  return pd.plan;
 }
 
-function setUser(user) {
+/* ══════════════════════════════════════
+   AUTH
+══════════════════════════════════════ */
+async function initAuth() {
+  const { data: { session } } = await SB.auth.getSession();
+  if(session) await setUser(session.user);
+  SB.auth.onAuthStateChange(async (_ev, session) => {
+    await setUser(session ? session.user : null);
+  });
+}
+
+async function setUser(user) {
   currentUser = user;
   const guestEl = document.getElementById('navGuest');
   const userEl  = document.getElementById('navUser');
 
   if(user) {
-    // بررسی ادمین بودن
     isAdmin = (user.email === ADMIN_EMAIL);
-
     guestEl.style.display = 'none';
     userEl.style.display  = 'flex';
 
     const displayName = user.user_metadata?.name || user.email.split('@')[0];
-    const initial = displayName.charAt(0).toUpperCase();
+    const avatarUrl   = user.user_metadata?.avatar_url || '';
+    const initial     = displayName.charAt(0).toUpperCase();
 
-    document.getElementById('navAvatar').textContent = initial;
-    document.getElementById('navEmail').textContent  = displayName;
+    // NAV avatar
+    const navAv = document.getElementById('navAvatar');
+    navAv.innerHTML = avatarUrl ? `<img src="${avatarUrl}" alt="">` : initial;
 
-    // دکمه پنل ادمین فقط برای ادمین
+    document.getElementById('navEmail').textContent = displayName;
     document.getElementById('adminNavBtn').style.display = isAdmin ? 'flex' : 'none';
 
-    // Profile page
+    // Profile
     document.getElementById('profileGuest').style.display = 'none';
     document.getElementById('profileUser').style.display  = 'block';
-    document.getElementById('profileAvatar').textContent  = initial;
-    document.getElementById('profileName').textContent    = displayName;
-    document.getElementById('profileEmail').textContent   = user.email;
-    document.getElementById('profileSince').textContent   = 'عضو بازارنو · ' + new Date(user.created_at || Date.now()).toLocaleDateString('fa-IR');
+    const profAv = document.getElementById('profileAvatar');
+    profAv.innerHTML = avatarUrl ? `<img src="${avatarUrl}" alt="">` : initial;
+    document.getElementById('profileName').textContent  = displayName;
+    document.getElementById('profileEmail').textContent = user.email;
+    document.getElementById('profileSince').innerHTML   = `<i class="ti ti-calendar" style="font-size:11px"></i> عضو از ${new Date(user.created_at || Date.now()).toLocaleDateString('fa-IR')}`;
 
-    // بروز کردن صفحه فروش
+    // Plan badge در پروفایل
+    await loadMyPlan();
     updateSellPage();
   } else {
     isAdmin = false;
@@ -1000,16 +1097,27 @@ function setUser(user) {
   }
 }
 
+async function loadMyPlan() {
+  if(!currentUser) return;
+  const { data } = await SB.from('user_plans').select('*').eq('user_id', currentUser.id).single();
+  const plan = (data && isPlanActive(data)) ? data.plan : 'normal';
+  const pd = PLANS[plan] || PLANS.normal;
+  const row = document.getElementById('profilePlanRow');
+  if(plan !== 'normal') {
+    const exp = data?.plan_expires_at ? new Date(data.plan_expires_at).toLocaleDateString('fa-IR') : '';
+    row.innerHTML = `<span class="plan-badge ${pd.cls}">${pd.icon} اشتراک ${pd.label}</span>${exp ? `<span style="font-size:11px;color:var(--t3)">تا ${exp}</span>` : ''}`;
+  } else {
+    row.innerHTML = `<span class="plan-badge" style="background:var(--sand);color:var(--t2)">کاربر معمولی</span>`;
+  }
+}
+
 function updateSellPage() {
-  // اگر صفحه فروش باز بود، وضعیت رو آپدیت کن
   const gate = document.getElementById('sellGate');
   const form = document.getElementById('formArea');
   const succ = document.getElementById('successArea');
   if(currentUser) {
     gate.style.display = 'none';
-    if(succ.style.display === 'none' || succ.style.display === '') {
-      form.style.display = 'block';
-    }
+    if(succ.style.display === 'none' || succ.style.display === '') form.style.display = 'block';
   } else {
     gate.style.display = 'block';
     form.style.display = 'none';
@@ -1017,121 +1125,162 @@ function updateSellPage() {
   }
 }
 
-/* ═══════════════════════════════════════
-   AUTH MODAL — فقط 2 تب
-═══════════════════════════════════════ */
-function openAuthModal(tab = 'login') {
+/* ══════════════════════════════════════
+   AUTH MODAL
+══════════════════════════════════════ */
+function openAuthModal(tab='login') {
   document.getElementById('authModalBg').classList.add('on');
   switchAuthTab(tab);
 }
-function closeAuthModal() {
-  document.getElementById('authModalBg').classList.remove('on');
-}
-document.getElementById('authModalBg').addEventListener('click', e => {
-  if(e.target === e.currentTarget) closeAuthModal();
-});
+function closeAuthModal() { document.getElementById('authModalBg').classList.remove('on'); }
+document.getElementById('authModalBg').addEventListener('click', e => { if(e.target===e.currentTarget) closeAuthModal(); });
 
 function switchAuthTab(tab) {
-  document.getElementById('authLoginPanel').style.display    = tab === 'login'    ? 'block' : 'none';
-  document.getElementById('authRegisterPanel').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('tabLogin').classList.toggle('on',    tab === 'login');
-  document.getElementById('tabRegister').classList.toggle('on', tab === 'register');
+  document.getElementById('authLoginPanel').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('authRegisterPanel').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('tabLogin').classList.toggle('on',    tab==='login');
+  document.getElementById('tabRegister').classList.toggle('on', tab==='register');
 }
 
-/* ورود */
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginErr');
   errEl.classList.remove('on');
-  if(!email || !pass) { errEl.textContent = 'ایمیل و رمز را وارد کن'; errEl.classList.add('on'); return; }
+  if(!email||!pass){ errEl.textContent='ایمیل و رمز را وارد کن'; errEl.classList.add('on'); return; }
   const btn = document.getElementById('btnLogin');
-  btn.disabled = true; btn.innerHTML = '⏳ در حال ورود...';
-  const { error } = await SB.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-login" style="font-size:16px"></i>ورود';
-  if(error) {
-    errEl.textContent = error.message === 'Invalid login credentials' ? 'ایمیل یا رمز اشتباه است' : 'خطا: ' + error.message;
-    errEl.classList.add('on'); return;
-  }
+  btn.disabled=true; btn.innerHTML='⏳ در حال ورود...';
+  const {error} = await SB.auth.signInWithPassword({email, password:pass});
+  btn.disabled=false; btn.innerHTML='<i class="ti ti-login" style="font-size:16px"></i>ورود';
+  if(error){ errEl.textContent=error.message==='Invalid login credentials'?'ایمیل یا رمز اشتباه است':'خطا: '+error.message; errEl.classList.add('on'); return; }
   closeAuthModal();
-  // اگر ادمین وارد شد، پنل ادمین رو باز کن
-  if(email === ADMIN_EMAIL) {
-    toast('✅ خوش آمدی ادمین!', 'ok');
-    switchPage('admin');
-  } else {
-    toast('✅ خوش آمدی!', 'ok');
-  }
+  if(email===ADMIN_EMAIL){ toast('✅ خوش آمدی ادمین!','ok'); switchPage('admin'); }
+  else toast('✅ خوش آمدی!','ok');
 }
 
-/* ثبت‌نام */
 async function doRegister() {
-  const name   = document.getElementById('regName').value.trim();
-  const email  = document.getElementById('regEmail').value.trim();
-  const pass   = document.getElementById('regPass').value;
-  const pass2  = document.getElementById('regPass2').value;
-  const errEl  = document.getElementById('registerErr');
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  const pass2 = document.getElementById('regPass2').value;
+  const errEl = document.getElementById('registerErr');
   errEl.classList.remove('on');
-  if(!name)  { errEl.textContent = 'نام را وارد کن'; errEl.classList.add('on'); return; }
-  if(!email) { errEl.textContent = 'ایمیل را وارد کن'; errEl.classList.add('on'); return; }
-  if(!pass)  { errEl.textContent = 'رمز را وارد کن'; errEl.classList.add('on'); return; }
-  if(pass.length < 6) { errEl.textContent = 'رمز باید حداقل ۶ کاراکتر باشد'; errEl.classList.add('on'); return; }
-  if(pass !== pass2)  { errEl.textContent = 'تکرار رمز مطابقت ندارد'; errEl.classList.add('on'); return; }
+  if(!name){ errEl.textContent='نام را وارد کن'; errEl.classList.add('on'); return; }
+  if(!email){ errEl.textContent='ایمیل را وارد کن'; errEl.classList.add('on'); return; }
+  if(pass.length<6){ errEl.textContent='رمز باید حداقل ۶ کاراکتر باشد'; errEl.classList.add('on'); return; }
+  if(pass!==pass2){ errEl.textContent='تکرار رمز مطابقت ندارد'; errEl.classList.add('on'); return; }
   const btn = document.getElementById('btnRegister');
-  btn.disabled = true; btn.innerHTML = '⏳ در حال ثبت...';
-  const { error } = await SB.auth.signUp({ email, password: pass, options: { data: { name } } });
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-user-plus" style="font-size:16px"></i>ثبت‌نام';
-  if(error) { errEl.textContent = 'خطا: ' + error.message; errEl.classList.add('on'); return; }
+  btn.disabled=true; btn.innerHTML='⏳ در حال ثبت...';
+  const {error} = await SB.auth.signUp({email, password:pass, options:{data:{name}}});
+  btn.disabled=false; btn.innerHTML='<i class="ti ti-user-plus" style="font-size:16px"></i>ثبت‌نام';
+  if(error){ errEl.textContent='خطا: '+error.message; errEl.classList.add('on'); return; }
   closeAuthModal();
-  toast('🎉 ثبت‌نام موفق! به بازارنو خوش آمدی', 'ok');
+  toast('🎉 ثبت‌نام موفق! به بازارنو خوش آمدی','ok');
 }
 
 async function doLogout() {
   await SB.auth.signOut();
-  isAdmin = false;
+  isAdmin=false;
   toast('با موفقیت خارج شدی');
   switchPage('home');
 }
 
-function doAdminLogout() {
-  doLogout();
-}
+/* ══════════════════════════════════════
+   AVATAR UPLOAD
+══════════════════════════════════════ */
+document.getElementById('avatarInput').addEventListener('change', async function() {
+  if(!currentUser||!this.files[0]) return;
+  const file = this.files[0];
+  if(file.size > 3*1024*1024){ toast('حداکثر ۳MB','err'); return; }
+  toast('⏳ در حال آپلود عکس...');
+  const ext = file.name.split('.').pop()||'jpg';
+  const fp = `avatars/${currentUser.id}.${ext}`;
+  const {error:upErr} = await SB.storage.from('images').upload(fp, file, {upsert:true});
+  if(upErr){ toast('خطا در آپلود: '+upErr.message,'err'); return; }
+  const {data:{publicUrl}} = SB.storage.from('images').getPublicUrl(fp);
+  const {error:updateErr} = await SB.auth.updateUser({data:{avatar_url: publicUrl}});
+  if(updateErr){ toast('خطا: '+updateErr.message,'err'); return; }
+  // بروزرسانی UI
+  document.getElementById('profileAvatar').innerHTML = `<img src="${publicUrl}" alt="">`;
+  document.getElementById('navAvatar').innerHTML = `<img src="${publicUrl}" alt="">`;
+  toast('✅ عکس پروفایل بروز شد','ok');
+  this.value='';
+});
 
-/* ═══════════════════════════════════════
-   RENDER LISTINGS
-═══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   RENDER — با اولویت‌بندی اشتراک‌ها
+══════════════════════════════════════ */
 async function render() {
   const grid = document.getElementById('adsGrid');
-  grid.innerHTML = Array(8).fill(`<div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>`).join('');
 
-  // برای ادمین: همه آگهی‌ها — برای بقیه: فقط approved
-  let q;
-  if(isAdmin) {
-    q = SB.from('listings').select('*');
-  } else {
-    q = SB.from('listings').select('*').eq('status','approved');
-  }
-  if(ST.cat) q = q.eq('cat', ST.cat);
-  if(ST.q)   q = q.or(`title.ilike.%${ST.q}%,desc.ilike.%${ST.q}%,city.ilike.%${ST.q}%,brand.ilike.%${ST.q}%`);
-  if(ST.sort === 'cheapest') q = q.order('price', {ascending:true});
-  else if(ST.sort === 'expensive') q = q.order('price', {ascending:false});
-  else q = q.order('created_at', {ascending:false});
-
-  const { data, error } = await q.limit(60);
-  currentData = data || [];
-
-  document.getElementById('resCnt').textContent  = currentData.length + ' آگهی';
-  document.getElementById('hTotal').textContent   = fmtFA(currentData.filter(a=>a.status==='approved').length) || '۰';
-
-  if(!currentData.length) {
-    grid.innerHTML = `<div class="empty"><span class="ei">📋</span><h3>${ST.q ? 'نتیجه‌ای پیدا نشد' : 'هنوز آگهی‌ای نیست'}</h3><p>${ST.q ? 'برای «'+ST.q+'» چیزی پیدا نشد.' : 'اولین نفر باش!'}</p>${!ST.q ? '<button class="btn-first" onclick="goSell()"><i class="ti ti-plus"></i>ثبت اولین آگهی</button>' : ''}</div>`;
+  // اگر لاگین نشده → نمایش login gate
+  if(!currentUser) {
+    grid.innerHTML = `<div class="login-gate">
+      <div class="gate-icon">🔐</div>
+      <h3>برای مشاهده آگهی‌ها وارد شو</h3>
+      <p>ثبت‌نام رایگانه و فقط چند ثانیه طول می‌کشه!</p>
+      <div class="login-gate-btns">
+        <button onclick="openAuthModal('login')" class="btn-first"><i class="ti ti-login" style="font-size:14px"></i>ورود به حساب</button>
+        <button onclick="openAuthModal('register')" style="display:inline-flex;align-items:center;gap:6px;background:var(--sand);color:var(--forest);border:none;border-radius:var(--pill);padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer"><i class="ti ti-user-plus" style="font-size:14px"></i>ثبت‌نام رایگان</button>
+      </div>
+    </div>`;
+    document.getElementById('hTotal').textContent = '—';
+    document.getElementById('resCnt').textContent = '—';
     return;
   }
-  const ads = currentData.filter(a => a.is_ad && a.status==='approved');
-  const normals = currentData.filter(a => !a.is_ad);
+
+  grid.innerHTML = Array(8).fill(`<div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>`).join('');
+
+  // لود پلن‌های کاربران (برای نمایش اولویت)
+  const {data: plansData} = await SB.from('user_plans').select('*');
+  userPlansCache = {};
+  (plansData||[]).forEach(p => { userPlansCache[p.user_id] = p; });
+
+  let q = isAdmin ? SB.from('listings').select('*') : SB.from('listings').select('*').eq('status','approved');
+  if(ST.cat) q = q.eq('cat', ST.cat);
+  if(ST.q)   q = q.or(`title.ilike.%${ST.q}%,desc.ilike.%${ST.q}%,city.ilike.%${ST.q}%,brand.ilike.%${ST.q}%`);
+  if(ST.sort==='cheapest') q = q.order('price',{ascending:true});
+  else if(ST.sort==='expensive') q = q.order('price',{ascending:false});
+  else q = q.order('created_at',{ascending:false});
+
+  const {data, error} = await q.limit(60);
+  currentData = data||[];
+
+  document.getElementById('resCnt').textContent = currentData.length+' آگهی';
+  document.getElementById('hTotal').textContent = fmtFA(currentData.filter(a=>a.status==='approved').length)||'۰';
+
+  if(!currentData.length) {
+    grid.innerHTML = `<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای نیست'}</h3><p>${ST.q?'برای «'+ST.q+'» چیزی پیدا نشد.':'اولین نفر باش!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()"><i class="ti ti-plus"></i>ثبت اولین آگهی</button>':''}</div>`;
+    return;
+  }
+
+  // اولویت‌بندی: الماس > طلایی > ویژه > معمولی
+  function getAdPriority(ad) {
+    const plan = getUserPlan(ad.user_id);
+    return PLANS[plan]?.priority || 0;
+  }
+  const sorted = [...currentData].sort((a,b) => getAdPriority(b) - getAdPriority(a));
+
+  // جدا کردن ردیف‌های ویژه
+  const diamonds = sorted.filter(a => getUserPlan(a.user_id)==='diamond' && a.status==='approved');
+  const golds    = sorted.filter(a => getUserPlan(a.user_id)==='monthly' && a.status==='approved');
+  const weeklies = sorted.filter(a => getUserPlan(a.user_id)==='weekly'  && a.status==='approved');
+  const normals  = sorted.filter(a => getUserPlan(a.user_id)==='normal'  || (isAdmin && a.status!=='approved'));
+
   let html = '';
-  if(ads.length) {
-    html += `<div class="sponsored-row"><div class="sponsored-lbl"><i class="ti ti-star" style="font-size:11px"></i>آگهی‌های ویژه</div><div class="sponsored-line"></div></div>`;
-    html += ads.map(cardHtml).join('');
+  if(diamonds.length) {
+    html += `<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--diamond)"><i class="ti ti-diamond" style="font-size:11px"></i>اشتراک الماس</div><div class="sponsored-line" style="background:rgba(99,102,241,.25)"></div></div>`;
+    html += diamonds.map(cardHtml).join('');
+  }
+  if(golds.length) {
+    html += `<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--amber)"><i class="ti ti-medal" style="font-size:11px"></i>اشتراک طلایی</div><div class="sponsored-line"></div></div>`;
+    html += golds.map(cardHtml).join('');
+  }
+  if(weeklies.length) {
+    html += `<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--green)"><i class="ti ti-star" style="font-size:11px"></i>اشتراک ویژه</div><div class="sponsored-line" style="background:rgba(37,176,103,.25)"></div></div>`;
+    html += weeklies.map(cardHtml).join('');
+  }
+  if(normals.length && (diamonds.length||golds.length||weeklies.length)) {
     html += `<div class="sponsored-row" style="margin-top:4px"><div class="sponsored-lbl" style="color:var(--t3)">سایر آگهی‌ها</div><div class="sponsored-line" style="background:rgba(0,0,0,.07)"></div></div>`;
   }
   html += normals.map(cardHtml).join('');
@@ -1140,25 +1289,34 @@ async function render() {
 }
 
 function cardHtml(ad) {
-  const em = EMOJIS[ad.cat] || '📦', img0 = ad.images && ad.images[0];
+  const em = EMOJIS[ad.cat]||'📦', img0 = ad.images&&ad.images[0];
   const isSaved = saved.has(ad.id), fresh = isNew(ad.created_at);
   let ctC='', ctT='';
   if(ad.cond==='نو'){ctC='ct-new';ctT='نو';}
   else if(ad.cond==='در حد نو'){ctC='ct-good';ctT='در حد نو';}
   else if(ad.cond==='کارکرده سالم'){ctC='ct-used';ctT='کارکرده';}
   else if(ad.cond==='نیاز به تعمیر'){ctC='ct-fix';ctT='نیاز تعمیر';}
-  // نشان pending برای ادمین
-  const pendingBadge = isAdmin && ad.status !== 'approved' ? `<div style="position:absolute;top:0;left:0;right:0;background:${ad.status==='pending'?'var(--amber)':'var(--red)'};color:#fff;font-size:9px;font-weight:800;padding:3px 6px;text-align:center">${ad.status==='pending'?'⏳ در انتظار':'❌ رد شده'}</div>` : '';
-  return `<div class="adcard${ad.is_ad?' is-ad':''}" data-id="${ad.id}">
+
+  const plan = getUserPlan(ad.user_id);
+  let topBadge = '';
+  if(plan==='diamond') topBadge = '<span class="ad-diamond-badge">💎 الماس</span>';
+  else if(plan==='monthly') topBadge = '<span class="ad-gold-badge">🥇 طلایی</span>';
+  else if(plan==='weekly') topBadge = '<span class="ad-weekly-badge">⚡ ویژه</span>';
+  else if(fresh && ad.status==='approved') topBadge = '<span class="new-badge">جدید</span>';
+
+  const pendingBadge = isAdmin && ad.status!=='approved' ? `<div style="position:absolute;top:0;left:0;right:0;background:${ad.status==='pending'?'var(--amber)':'var(--red)'};color:#fff;font-size:9px;font-weight:800;padding:3px 6px;text-align:center">${ad.status==='pending'?'⏳ در انتظار':'❌ رد شده'}</div>` : '';
+  const cardCls = plan==='diamond' ? ' is-diamond' : plan==='monthly'||plan==='weekly' ? ' is-ad' : '';
+
+  return `<div class="adcard${cardCls}" data-id="${ad.id}">
     <div class="adcard-img">
       ${img0 ? `<img src="${img0}" loading="lazy">` : `<div class="adcard-emoji">${em}</div>`}
       ${pendingBadge}
       ${ctT ? `<span class="cond-tag ${ctC}">${ctT}</span>` : ''}
-      ${ad.is_ad ? '<span class="ad-star"><i class="ti ti-star" style="font-size:8px"></i>ویژه</span>' : fresh && ad.status==='approved' ? '<span class="new-badge">جدید</span>' : ''}
-      <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();toggleSave('${ad.id}',this)"><i class="ti ti-heart"></i></button>
+      ${topBadge}
+      <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();handleFav('${ad.id}',this)"><i class="ti ti-heart"></i></button>
     </div>
     <div class="adcard-body">
-      <div class="adcard-cat">${ad.cat || 'سایر'}</div>
+      <div class="adcard-cat">${ad.cat||'سایر'}</div>
       <div class="adcard-title">${ad.title}</div>
       <div class="adcard-loc"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city} · ${relTime(ad.created_at)}</div>
       <div class="adcard-foot">
@@ -1169,169 +1327,168 @@ function cardHtml(ad) {
   </div>`;
 }
 
-/* ═══════════════════════════════════════
+/* نشان: فقط لاگین‌شده‌ها */
+function handleFav(id, btn) {
+  if(!currentUser) { openAuthModal('login'); toast('برای نشان کردن ابتدا وارد شو','err'); return; }
+  toggleSave(id, btn);
+}
+
+/* ══════════════════════════════════════
    DETAIL MODAL
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 function openModal(id) {
-  const ad = currentData.find(a => a.id === id); if(!ad) return;
-  activeAd = ad; phoneShown = false;
+  if(!currentUser) { openAuthModal('login'); return; }
+  const ad = currentData.find(a=>a.id===id); if(!ad) return;
+  activeAd=ad; phoneShown=false;
   SB.from('listings').update({views:(ad.views||0)+1}).eq('id',id);
-  const imgs = ad.images || [];
-  const mImg = document.getElementById('mImg'), mEmoji = document.getElementById('mEmoji');
-  if(imgs.length) { mImg.src=imgs[0]; mImg.style.display='block'; mEmoji.style.display='none'; }
-  else { mImg.style.display='none'; mEmoji.style.display='flex'; mEmoji.textContent=EMOJIS[ad.cat]||'📦'; }
-  document.getElementById('mThumbs').innerHTML = imgs.length > 1 ? imgs.map((s,i) => `<div class="m-thumb ${i===0?'on':''}" onclick="switchImg('${s}',this)"><img src="${s}" loading="lazy"></div>`).join('') : '';
-  document.getElementById('mCat').innerHTML = `<i class="ti ti-tag" style="font-size:11px"></i>${ad.cat||'آگهی'}`;
-  document.getElementById('mAdBanner').style.display = ad.is_ad ? 'flex' : 'none';
-  document.getElementById('mTitle').textContent = ad.title;
-  document.getElementById('mPrice').innerHTML = fmtFA(ad.price)+' <small>تومان</small>';
-  document.getElementById('mNego').innerHTML = ad.nego==='بله' ? '<span class="nego-chip"><i class="ti ti-repeat" style="font-size:10px"></i>قابل مذاکره</span>' : '';
-  document.getElementById('mSeller').innerHTML = `<div class="seller-av">${(ad.name||'ن').charAt(0)}</div><div><div class="seller-nm">${ad.name||'ناشناس'}</div><div class="seller-mt"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city}</div></div>`;
-  document.getElementById('mDetails').innerHTML = [{l:'وضعیت',v:ad.cond},{l:'دسته',v:ad.cat},{l:'شهر',v:ad.city},{l:'ثبت',v:relTime(ad.created_at)},...(ad.brand?[{l:'برند',v:ad.brand}]:[])].map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
-  document.getElementById('mDesc').textContent = ad.desc || 'توضیحاتی وارد نشده.';
-  document.getElementById('phoneReveal').style.display = 'none';
-  document.getElementById('mCallBtn').innerHTML = '<i class="ti ti-phone"></i>نمایش شماره';
-  const on = saved.has(ad.id);
-  document.getElementById('mSaveBtn').innerHTML = `<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
-  document.getElementById('mViews').innerHTML = `<span><i class="ti ti-eye"></i>${(ad.views||0)+1} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
+  const imgs=ad.images||[];
+  const mImg=document.getElementById('mImg'), mEmoji=document.getElementById('mEmoji');
+  if(imgs.length){mImg.src=imgs[0];mImg.style.display='block';mEmoji.style.display='none';}
+  else{mImg.style.display='none';mEmoji.style.display='flex';mEmoji.textContent=EMOJIS[ad.cat]||'📦';}
+  document.getElementById('mThumbs').innerHTML=imgs.length>1?imgs.map((s,i)=>`<div class="m-thumb ${i===0?'on':''}" onclick="switchImg('${s}',this)"><img src="${s}" loading="lazy"></div>`).join(''):'';
+  document.getElementById('mCat').innerHTML=`<i class="ti ti-tag" style="font-size:11px"></i>${ad.cat||'آگهی'}`;
+  document.getElementById('mAdBanner').style.display=ad.is_ad?'flex':'none';
+  document.getElementById('mTitle').textContent=ad.title;
+  document.getElementById('mPrice').innerHTML=fmtFA(ad.price)+' <small>تومان</small>';
+  document.getElementById('mNego').innerHTML=ad.nego==='بله'?'<span class="nego-chip"><i class="ti ti-repeat" style="font-size:10px"></i>قابل مذاکره</span>':'';
+  document.getElementById('mSeller').innerHTML=`<div class="seller-av">${(ad.name||'ن').charAt(0)}</div><div><div class="seller-nm">${ad.name||'ناشناس'}</div><div class="seller-mt"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city}</div></div>`;
+  document.getElementById('mDetails').innerHTML=[{l:'وضعیت',v:ad.cond},{l:'دسته',v:ad.cat},{l:'شهر',v:ad.city},{l:'ثبت',v:relTime(ad.created_at)},...(ad.brand?[{l:'برند',v:ad.brand}]:[])].map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
+  document.getElementById('mDesc').textContent=ad.desc||'توضیحاتی وارد نشده.';
+  document.getElementById('phoneReveal').style.display='none';
+  document.getElementById('mCallBtn').innerHTML='<i class="ti ti-phone"></i>نمایش شماره';
+  const on=saved.has(ad.id);
+  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
+  document.getElementById('mViews').innerHTML=`<span><i class="ti ti-eye"></i>${(ad.views||0)+1} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
   document.getElementById('modalBg').classList.add('on');
 }
 function switchImg(s,el){document.getElementById('mImg').src=s;document.querySelectorAll('.m-thumb').forEach(t=>t.classList.remove('on'));el.classList.add('on');}
-document.getElementById('mClose').onclick = () => document.getElementById('modalBg').classList.remove('on');
-document.getElementById('modalBg').addEventListener('click', e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on');});
-document.getElementById('mCallBtn').onclick = () => {
+document.getElementById('mClose').onclick=()=>document.getElementById('modalBg').classList.remove('on');
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on');});
+document.getElementById('mCallBtn').onclick=()=>{
   if(!activeAd) return;
-  if(!phoneShown) {
-    phoneShown = true;
-    const pr = document.getElementById('phoneReveal');
-    pr.textContent = '📞 '+activeAd.phone; pr.style.display='block';
-    document.getElementById('mCallBtn').innerHTML = '<i class="ti ti-copy"></i>کپی شماره';
+  if(!phoneShown){
+    phoneShown=true;
+    const pr=document.getElementById('phoneReveal');
+    pr.textContent='📞 '+activeAd.phone; pr.style.display='block';
+    document.getElementById('mCallBtn').innerHTML='<i class="ti ti-copy"></i>کپی شماره';
     toast('شماره نمایش داده شد','ok');
   } else {
     navigator.clipboard.writeText(activeAd.phone).then(()=>toast('📋 شماره کپی شد','ok')).catch(()=>{});
   }
 };
-document.getElementById('mSaveBtn').onclick = () => {
+document.getElementById('mSaveBtn').onclick=()=>{
   if(!activeAd) return;
-  toggleSave(activeAd.id, null);
-  const on = saved.has(activeAd.id);
-  document.getElementById('mSaveBtn').innerHTML = `<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
+  if(!currentUser){ openAuthModal('login'); return; }
+  toggleSave(activeAd.id,null);
+  const on=saved.has(activeAd.id);
+  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
 };
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    SAVED
-═══════════════════════════════════════ */
-function updateBadge() {
-  const n = saved.size;
-  document.getElementById('svBadge').textContent = n;
-  document.getElementById('svBadge').style.display = n ? 'flex' : 'none';
-  document.getElementById('mtBadge').textContent = n;
-  document.getElementById('mtBadge').style.display = n ? 'flex' : 'none';
+══════════════════════════════════════ */
+function updateBadge(){
+  const n=saved.size;
+  document.getElementById('svBadge').textContent=n;
+  document.getElementById('svBadge').style.display=n?'flex':'none';
+  document.getElementById('mtBadge').textContent=n;
+  document.getElementById('mtBadge').style.display=n?'flex':'none';
 }
 updateBadge();
 
-function toggleSave(id, btn) {
-  if(saved.has(id)) { saved.delete(id); toast('آگهی از نشان‌ها حذف شد'); }
-  else { saved.add(id); toast('🔖 آگهی نشان شد','ok'); }
-  localStorage.setItem('bz_saved', JSON.stringify([...saved]));
-  if(btn) btn.classList.toggle('on', saved.has(id));
+function toggleSave(id,btn){
+  if(saved.has(id)){saved.delete(id);toast('آگهی از نشان‌ها حذف شد');}
+  else{saved.add(id);toast('🔖 آگهی نشان شد','ok');}
+  localStorage.setItem('bz_saved',JSON.stringify([...saved]));
+  if(btn) btn.classList.toggle('on',saved.has(id));
   updateBadge();
 }
-function clearAllSaved() { saved.clear(); localStorage.setItem('bz_saved','[]'); updateBadge(); renderSaved(); toast('همه نشان‌ها حذف شد'); }
-function renderSaved() {
-  const grid = document.getElementById('savedGrid');
-  if(!saved.size) { grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>'; return; }
+function clearAllSaved(){
+  if(!currentUser){ openAuthModal('login'); return; }
+  saved.clear(); localStorage.setItem('bz_saved','[]'); updateBadge(); renderSaved(); toast('همه نشان‌ها حذف شد');
+}
+function renderSaved(){
+  const grid=document.getElementById('savedGrid');
+  if(!currentUser){
+    grid.innerHTML=`<div class="login-gate"><div class="gate-icon">🔐</div><h3>برای مشاهده نشان‌ها وارد شو</h3><p></p><div class="login-gate-btns"><button onclick="openAuthModal('login')" class="btn-first">ورود</button></div></div>`;
+    return;
+  }
+  if(!saved.size){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>';return;}
   SB.from('listings').select('*').in('id',[...saved]).then(({data})=>{
     if(!data||!data.length){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>آگهی‌ها حذف شده‌اند</h3></div>';return;}
     data.forEach(d=>{if(!currentData.find(c=>c.id===d.id))currentData.push(d);});
-    grid.innerHTML = data.map(cardHtml).join('');
+    grid.innerHTML=data.map(cardHtml).join('');
     grid.querySelectorAll('.adcard').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
   });
 }
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    SUBMIT LISTING
-═══════════════════════════════════════ */
-document.getElementById('submitBtn').addEventListener('click', async () => {
-  if(!currentUser) { openAuthModal('login'); return; }
-  const title = document.getElementById('fTitle').value.trim();
-  const cat   = document.getElementById('fCat').value;
-  const price = document.getElementById('fPrice').value.replace(/,/g,'').trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const city  = document.getElementById('fCity').value.trim();
-  const desc  = document.getElementById('fDesc').value.trim();
-  const nego  = document.getElementById('fNego').value;
-  const name  = document.getElementById('fName').value.trim();
-  const brand = document.getElementById('fBrand').value.trim();
-
-  if(!title) { toast('⚠️ عنوان رو بنویس','err'); return; }
-  if(!cat)   { toast('⚠️ دسته‌بندی انتخاب کن','err'); return; }
-  if(!price) { toast('⚠️ قیمت وارد کن','err'); return; }
-  if(!phone || phone.replace(/\D/g,'').length !== 11) { toast('⚠️ شماره معتبر وارد کن','err'); return; }
-  if(!city)  { toast('⚠️ شهر رو بنویس','err'); return; }
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.innerHTML = '⏳ در حال ثبت...';
-
-  let imageUrls = [];
-  for(const file of pickedFiles) {
-    const ext = file.name.split('.').pop() || 'jpg';
-    const fp  = `listings/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error: upErr } = await SB.storage.from('images').upload(fp, file);
-    if(!upErr) { const { data: { publicUrl } } = SB.storage.from('images').getPublicUrl(fp); imageUrls.push(publicUrl); }
+══════════════════════════════════════ */
+document.getElementById('submitBtn').addEventListener('click', async()=>{
+  if(!currentUser){openAuthModal('login');return;}
+  const title=document.getElementById('fTitle').value.trim();
+  const cat  =document.getElementById('fCat').value;
+  const price=document.getElementById('fPrice').value.replace(/,/g,'').trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  const city =document.getElementById('fCity').value.trim();
+  const desc =document.getElementById('fDesc').value.trim();
+  const nego =document.getElementById('fNego').value;
+  const name =document.getElementById('fName').value.trim();
+  const brand=document.getElementById('fBrand').value.trim();
+  if(!title){toast('⚠️ عنوان رو بنویس','err');return;}
+  if(!cat)  {toast('⚠️ دسته‌بندی انتخاب کن','err');return;}
+  if(!price){toast('⚠️ قیمت وارد کن','err');return;}
+  if(!phone||phone.replace(/\D/g,'').length!==11){toast('⚠️ شماره معتبر وارد کن','err');return;}
+  if(!city) {toast('⚠️ شهر رو بنویس','err');return;}
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.innerHTML='⏳ در حال ثبت...';
+  let imageUrls=[];
+  for(const file of pickedFiles){
+    const ext=file.name.split('.').pop()||'jpg';
+    const fp=`listings/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const {error:upErr}=await SB.storage.from('images').upload(fp,file);
+    if(!upErr){const {data:{publicUrl}}=SB.storage.from('images').getPublicUrl(fp);imageUrls.push(publicUrl);}
   }
-
-  const displayName = currentUser.user_metadata?.name || name || 'ناشناس';
-  const { error } = await SB.from('listings').insert([{
-    title, cat, cond, desc, brand, price, nego,
-    phone, city, name: displayName,
-    images: imageUrls, is_ad: isAdPost,
-    status: 'pending',
-    user_id: currentUser.id
+  const displayName=currentUser.user_metadata?.name||name||'ناشناس';
+  const {error}=await SB.from('listings').insert([{
+    title,cat,cond,desc,brand,price,nego,phone,city,
+    name:displayName,images:imageUrls,is_ad:isAdPost,
+    status:'pending',user_id:currentUser.id
   }]);
-
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-check" style="font-size:16px"></i>ثبت آگهی';
-  if(error) { toast('❌ خطا: '+error.message,'err'); return; }
-
-  document.getElementById('formArea').style.display = 'none';
-  document.getElementById('sicCard').innerHTML = [{l:'عنوان',v:title},{l:'قیمت',v:fmtFA(price)+' تومان'},{l:'شهر',v:city},{l:'تماس',v:phone}].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
-  document.getElementById('successArea').style.display = '';
+  btn.disabled=false; btn.innerHTML='<i class="ti ti-check" style="font-size:16px"></i>ثبت آگهی';
+  if(error){toast('❌ خطا: '+error.message,'err');return;}
+  document.getElementById('formArea').style.display='none';
+  document.getElementById('sicCard').innerHTML=[{l:'عنوان',v:title},{l:'قیمت',v:fmtFA(price)+' تومان'},{l:'شهر',v:city},{l:'تماس',v:phone}].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
+  document.getElementById('successArea').style.display='';
   render();
 });
 
-/* ═══════════════════════════════════════
-   PROFILE — آگهی‌های من + حذف
-═══════════════════════════════════════ */
-async function loadMyListings() {
+/* ══════════════════════════════════════
+   PROFILE — آگهی‌های من
+══════════════════════════════════════ */
+async function loadMyListings(){
   if(!currentUser) return;
-  const container = document.getElementById('myListings');
-  container.innerHTML = '<div class="profile-empty">در حال بارگذاری...</div>';
-
-  const { data, error } = await SB.from('listings')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('created_at', {ascending:false});
-
-  if(error || !data || !data.length) {
-    container.innerHTML = '<div class="profile-empty">هنوز آگهی‌ای ثبت نکردی 📋</div>';
+  const container=document.getElementById('myListings');
+  container.innerHTML='<div class="profile-empty">در حال بارگذاری...</div>';
+  const {data,error}=await SB.from('listings').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  if(error||!data||!data.length){
+    container.innerHTML='<div class="profile-empty">هنوز آگهی‌ای ثبت نکردی 📋</div>';
+    document.getElementById('pStatTotal').textContent='۰';
+    document.getElementById('pStatApproved').textContent='۰';
+    document.getElementById('pStatPending').textContent='۰';
     return;
   }
-  container.innerHTML = data.map(ad => {
-    const statusBadge = ad.status==='approved'
-      ? '<span class="approved-chip">✅ تأیید شده</span>'
-      : ad.status==='rejected'
-      ? '<span class="rejected-chip">❌ رد شده</span>'
-      : '<span class="pending-chip">⏳ در انتظار تأیید</span>';
+  document.getElementById('pStatTotal').textContent=fmtFA(data.length);
+  document.getElementById('pStatApproved').textContent=fmtFA(data.filter(a=>a.status==='approved').length);
+  document.getElementById('pStatPending').textContent=fmtFA(data.filter(a=>a.status==='pending').length);
+  container.innerHTML=data.map(ad=>{
+    const sb=ad.status==='approved'?'<span class="approved-chip">✅ تأیید شده</span>':ad.status==='rejected'?'<span class="rejected-chip">❌ رد شده</span>':'<span class="pending-chip">⏳ در انتظار تأیید</span>';
     return `<div class="admin-row" id="myad-${ad.id}">
-      ${ad.images&&ad.images[0] ? `<img class="admin-row-img" src="${ad.images[0]}" alt="">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
+      ${ad.images&&ad.images[0]?`<img class="admin-row-img" src="${ad.images[0]}" alt="">`:`<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
       <div class="admin-row-info">
         <div class="admin-row-title">${ad.title}</div>
-        <div class="admin-row-meta">
-          <span>${fmtFA(ad.price)} تومان</span>
-          <span>${ad.city}</span>
-          <span>${relTime(ad.created_at)}</span>
-          ${statusBadge}
-        </div>
+        <div class="admin-row-meta"><span>${fmtFA(ad.price)} تومان</span><span>${ad.city}</span><span>${relTime(ad.created_at)}</span>${sb}</div>
       </div>
       <div class="admin-row-actions">
         <button class="btn-del-ad" onclick="deleteMyListing('${ad.id}')"><i class="ti ti-trash"></i>حذف</button>
@@ -1340,95 +1497,104 @@ async function loadMyListings() {
   }).join('');
 }
 
-async function deleteMyListing(id) {
+async function deleteMyListing(id){
   if(!confirm('این آگهی حذف شود؟')) return;
-  const { error } = await SB.from('listings').delete().eq('id', id).eq('user_id', currentUser.id);
-  if(error) { toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('خطا: '+error.message,'err');return;}
   document.getElementById('myad-'+id)?.remove();
-  toast('آگهی حذف شد','ok');
-  render();
+  toast('آگهی حذف شد','ok'); render();
 }
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    ADMIN PANEL
-═══════════════════════════════════════ */
-async function loadAdminData() {
+══════════════════════════════════════ */
+async function loadAdminData(){
   if(!isAdmin) return;
-  // ادمین با service role نداریم — query بدون RLS filter
-  const [r1, r2, r3] = await Promise.all([
-    SB.from('listings').select('id', {count:'exact', head:true}).eq('status','pending'),
-    SB.from('listings').select('id', {count:'exact', head:true}).eq('status','approved'),
-    SB.from('listings').select('id', {count:'exact', head:true}).eq('status','rejected'),
+  const [r1,r2,r3]=await Promise.all([
+    SB.from('listings').select('id',{count:'exact',head:true}).eq('status','pending'),
+    SB.from('listings').select('id',{count:'exact',head:true}).eq('status','approved'),
+    SB.from('listings').select('id',{count:'exact',head:true}).eq('status','rejected'),
   ]);
-  document.getElementById('aStat1').textContent = fmtFA(r1.count) || '0';
-  document.getElementById('aStat2').textContent = fmtFA(r2.count) || '0';
-  document.getElementById('aStat3').textContent = fmtFA(r3.count) || '0';
-
-  const { data: ud } = await SB.from('listings').select('user_id').not('user_id','is',null);
-  const uniq = new Set((ud||[]).map(r=>r.user_id));
-  document.getElementById('aStat4').textContent = fmtFA(uniq.size) || '0';
-
+  document.getElementById('aStat1').textContent=fmtFA(r1.count)||'0';
+  document.getElementById('aStat2').textContent=fmtFA(r2.count)||'0';
+  document.getElementById('aStat3').textContent=fmtFA(r3.count)||'0';
+  const {data:ud}=await SB.from('listings').select('user_id').not('user_id','is',null);
+  const uniq=new Set((ud||[]).map(r=>r.user_id));
+  document.getElementById('aStat4').textContent=fmtFA(uniq.size)||'0';
   adminShowTab(adminCurrentTab);
 }
 
-async function adminShowTab(tab) {
-  adminCurrentTab = tab;
-  document.querySelectorAll('.admin-tab').forEach((t,i) => {
-    t.classList.toggle('on', ['pending','approved','rejected','users'][i] === tab);
-  });
-  const container = document.getElementById('adminListings');
-  container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--t3)">در حال بارگذاری...</div>';
+async function adminShowTab(tab){
+  adminCurrentTab=tab;
+  closeUserDetail();
+  document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('on',['pending','approved','rejected','users'][i]===tab));
+  const container=document.getElementById('adminListings');
+  container.innerHTML='<div style="padding:2rem;text-align:center;color:var(--t3)">در حال بارگذاری...</div>';
 
-  if(tab === 'users') {
-    const { data } = await SB.from('listings').select('user_id,name,created_at').not('user_id','is',null);
-    const userMap = {};
-    (data||[]).forEach(r => {
-      if(!userMap[r.user_id]) userMap[r.user_id] = {id:r.user_id,name:r.name,firstSeen:r.created_at,count:0};
+  if(tab==='users'){
+    // لود پلن‌ها
+    const {data:plansData}=await SB.from('user_plans').select('*');
+    const plans={};
+    (plansData||[]).forEach(p=>{plans[p.user_id]=p;});
+
+    const {data}=await SB.from('listings').select('user_id,name,created_at').not('user_id','is',null);
+    const userMap={};
+    (data||[]).forEach(r=>{
+      if(!userMap[r.user_id]) userMap[r.user_id]={id:r.user_id,name:r.name,firstSeen:r.created_at,count:0};
       userMap[r.user_id].count++;
     });
-    const users = Object.values(userMap);
-    if(!users.length) { container.innerHTML='<div class="profile-empty">هیچ کاربری آگهی ثبت نکرده</div>'; return; }
-    container.innerHTML = `<div style="background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden">
-      <table class="users-table">
-        <thead><tr><th>کاربر</th><th>شناسه</th><th>تعداد آگهی</th><th>اولین فعالیت</th></tr></thead>
-        <tbody>${users.map(u=>`<tr>
-          <td><span class="user-av">${(u.name||'ک').charAt(0)}</span> ${u.name||'ناشناس'}</td>
-          <td style="font-size:10px;color:var(--t3)">${u.id.substring(0,16)}...</td>
-          <td>${u.count} آگهی</td>
-          <td>${relTime(u.firstSeen)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`;
-    return;
-  }
+    const users=Object.values(userMap);
+    if(!users.length){container.innerHTML='<div class="profile-empty">هیچ کاربری آگهی ثبت نکرده</div>';return;}
 
-  // برای ادمین، آگهی‌ها رو بدون RLS بگیر
-  // چون policy "select_approved" جلوی pending رو می‌گیره،
-  // ما policy "select_own" داریم ولی ادمین user_id نداره
-  // راه‌حل: ادمین با ایمیل خودش لاگین کرده و policy admin_all همه رو می‌بینه
-  const { data, error } = await SB.from('listings').select('*').eq('status', tab).order('created_at',{ascending:false});
-  if(error) {
-    // اگر RLS جلوش رو گرفت، پیام مناسب بده
-    container.innerHTML = `<div style="color:var(--red);padding:1rem;background:var(--paper);border-radius:var(--r)">
-      <b>⚠️ خطای دسترسی</b><br><br>
-      در Supabase → SQL Editor این query رو اجرا کن:<br><br>
-      <code style="font-size:11px;direction:ltr;display:block;background:var(--sand);padding:10px;border-radius:6px;margin-top:8px">
-      DROP POLICY IF EXISTS "admin_all" ON listings;<br>
-      CREATE POLICY "admin_all" ON listings FOR ALL USING (true) WITH CHECK (true);
-      </code>
+    container.innerHTML=`<div class="users-wrap">
+      <table class="users-table">
+        <thead><tr><th>کاربر</th><th>آگهی</th><th>اشتراک</th><th>اولین فعالیت</th></tr></thead>
+        <tbody>${users.map(u=>{
+          const pd=plans[u.id];
+          const activePlan=(pd&&isPlanActive(pd))?pd.plan:'normal';
+          const pInfo=PLANS[activePlan]||PLANS.normal;
+          const expiry=pd?.plan_expires_at?new Date(pd.plan_expires_at).toLocaleDateString('fa-IR'):'';
+          return `<tr onclick="adminViewUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')">
+            <td><span class="user-av">${(u.name||'ک').charAt(0)}</span>${u.name||'ناشناس'}</td>
+            <td>${u.count} آگهی</td>
+            <td>
+              <select class="plan-select" onclick="event.stopPropagation()" onchange="adminSetPlan('${u.id}','${(u.name||'').replace(/'/g,"\\'")}',this.value)">
+                <option value="normal"  ${activePlan==='normal' ?'selected':''}>معمولی</option>
+                <option value="weekly"  ${activePlan==='weekly' ?'selected':''}>⚡ ویژه ۷روزه</option>
+                <option value="monthly" ${activePlan==='monthly'?'selected':''}>🥇 طلایی ماهانه</option>
+                <option value="diamond" ${activePlan==='diamond'?'selected':''}>💎 الماس ۳ماهه</option>
+              </select>
+              ${expiry&&activePlan!=='normal'?`<div style="font-size:10px;color:var(--t3);margin-top:3px">تا ${expiry}</div>`:''}
+            </td>
+            <td style="font-size:11px;color:var(--t3)">${relTime(u.firstSeen)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
     </div>`;
     return;
   }
-  if(!data||!data.length) { container.innerHTML='<div class="profile-empty">آگهی‌ای در این بخش وجود ندارد</div>'; return; }
 
-  container.innerHTML = data.map(ad => `
+  const {data,error}=await SB.from('listings').select('*').eq('status',tab).order('created_at',{ascending:false});
+  if(error){
+    container.innerHTML=`<div style="color:var(--red);padding:1rem;background:var(--paper);border-radius:var(--r)">
+      <b>⚠️ خطای دسترسی RLS</b><br><br>در SQL Editor اجرا کن:<br>
+      <code style="font-size:11px;direction:ltr;display:block;background:var(--sand);padding:10px;border-radius:6px;margin-top:8px">
+      DROP POLICY IF EXISTS "admin_all" ON listings;<br>
+      CREATE POLICY "admin_all" ON listings FOR ALL USING (true) WITH CHECK (true);
+      </code></div>`;
+    return;
+  }
+  if(!data||!data.length){container.innerHTML='<div class="profile-empty">آگهی‌ای در این بخش وجود ندارد</div>';return;}
+
+  container.innerHTML=data.map(ad=>`
     <div class="admin-row" id="arow-${ad.id}">
-      ${ad.images&&ad.images[0] ? `<img class="admin-row-img" src="${ad.images[0]}" alt="">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
+      ${ad.images&&ad.images[0]?`<img class="admin-row-img" src="${ad.images[0]}" alt="">`:`<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
       <div class="admin-row-info">
         <div class="admin-row-title">${ad.title}</div>
         <div class="admin-row-meta">
           <span>${fmtFA(ad.price)} تومان</span><span>${ad.city}</span>
           <span>${ad.phone}</span><span>${relTime(ad.created_at)}</span>
-          ${ad.user_id?`<span style="font-size:10px;color:var(--t3)">uid:${ad.user_id.substring(0,8)}…</span>`:''}
+          ${ad.name?`<span style="font-weight:600;color:var(--t2)">👤 ${ad.name}</span>`:''}
         </div>
         ${ad.desc?`<div style="font-size:12px;color:var(--t2);margin-top:6px;line-height:1.6">${ad.desc.substring(0,120)}${ad.desc.length>120?'...':''}</div>`:''}
       </div>
@@ -1440,151 +1606,207 @@ async function adminShowTab(tab) {
     </div>`).join('');
 }
 
-async function adminAction(id, status) {
-  const { error } = await SB.from('listings').update({status}).eq('id',id);
-  if(error) { toast('خطا: '+error.message,'err'); return; }
+/* کلیک روی کاربر → نمایش آگهی‌هایش */
+async function adminViewUser(userId, userName) {
+  const panel = document.getElementById('userDetailPanel');
+  const content = document.getElementById('udpContent');
+  document.getElementById('udpTitle').textContent = `آگهی‌های ${userName||'کاربر'}`;
+  panel.classList.add('on');
+  content.innerHTML='<div style="padding:1rem;color:var(--t3)">در حال بارگذاری...</div>';
+
+  const {data,error}=await SB.from('listings').select('*').eq('user_id',userId).order('created_at',{ascending:false});
+  if(error||!data||!data.length){
+    content.innerHTML='<div class="profile-empty" style="padding:1rem">این کاربر هنوز آگهی ثبت نکرده یا آگهی‌ها قابل دسترس نیست.</div>';
+    return;
+  }
+  content.innerHTML=data.map(ad=>{
+    const sb=ad.status==='approved'?'<span class="approved-chip">✅ تأیید</span>':ad.status==='rejected'?'<span class="rejected-chip">❌ رد</span>':'<span class="pending-chip">⏳ انتظار</span>';
+    return `<div class="admin-row" style="margin-bottom:6px" id="arow-${ad.id}">
+      ${ad.images&&ad.images[0]?`<img class="admin-row-img" src="${ad.images[0]}" alt="">`:`<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
+      <div class="admin-row-info">
+        <div class="admin-row-title">${ad.title}</div>
+        <div class="admin-row-meta"><span>${fmtFA(ad.price)} تومان</span><span>${ad.city}</span><span>${relTime(ad.created_at)}</span>${sb}</div>
+      </div>
+      <div class="admin-row-actions">
+        ${ad.status!=='approved'?`<button class="btn-approve" onclick="adminAction('${ad.id}','approved')"><i class="ti ti-check"></i>تأیید</button>`:''}
+        ${ad.status!=='rejected'?`<button class="btn-reject" onclick="adminAction('${ad.id}','rejected')">رد</button>`:''}
+        <button class="btn-del-ad" onclick="adminDelete('${ad.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeUserDetail(){
+  document.getElementById('userDetailPanel').classList.remove('on');
+  document.getElementById('udpContent').innerHTML='';
+}
+
+/* تغییر اشتراک کاربر */
+async function adminSetPlan(userId, userName, plan){
+  let expiresAt=null;
+  const now=new Date();
+  if(plan==='weekly')  { const d=new Date(now); d.setDate(d.getDate()+7);  expiresAt=d.toISOString(); }
+  if(plan==='monthly') { const d=new Date(now); d.setMonth(d.getMonth()+1); expiresAt=d.toISOString(); }
+  if(plan==='diamond') { const d=new Date(now); d.setMonth(d.getMonth()+3); expiresAt=d.toISOString(); }
+
+  const {error}=await SB.from('user_plans').upsert({
+    user_id:userId, user_name:userName,
+    plan, plan_expires_at:expiresAt, updated_at:new Date().toISOString()
+  }, {onConflict:'user_id'});
+
+  if(error){ toast('خطا: '+error.message,'err'); return; }
+  const pInfo=PLANS[plan];
+  toast(`✅ اشتراک ${pInfo.label} برای ${userName} فعال شد`,'ok');
+  // بروز cache
+  userPlansCache[userId]={user_id:userId,plan,plan_expires_at:expiresAt};
+  render(); // رفرش لیست آگهی‌ها
+}
+
+async function adminAction(id, status){
+  const {error}=await SB.from('listings').update({status}).eq('id',id);
+  if(error){toast('خطا: '+error.message,'err');return;}
   document.getElementById('arow-'+id)?.remove();
   toast(status==='approved'?'✅ تأیید شد':'❌ رد شد','ok');
   loadAdminData(); render();
 }
-async function adminDelete(id) {
+async function adminDelete(id){
   if(!confirm('این آگهی حذف شود؟')) return;
-  const { error } = await SB.from('listings').delete().eq('id',id);
-  if(error) { toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').delete().eq('id',id);
+  if(error){toast('خطا: '+error.message,'err');return;}
   document.getElementById('arow-'+id)?.remove();
   toast('آگهی حذف شد','ok'); loadAdminData();
 }
-async function adminDeleteAll() {
+async function adminDeleteAll(){
   if(!confirm('⚠️ همه آگهی‌ها حذف شوند؟')) return;
-  const { error } = await SB.from('listings').delete().neq('id','00000000-0000-0000-0000-000000000000');
-  if(error) { toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  if(error){toast('خطا: '+error.message,'err');return;}
   toast('همه آگهی‌ها حذف شدند','ok'); loadAdminData(); render();
 }
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    AD MODAL
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 function openAdModal(){document.getElementById('adModalBg').classList.add('on');}
 function closeAdModal(){document.getElementById('adModalBg').classList.remove('on');}
 document.getElementById('adModalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAdModal();});
 function selPkg(el){document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
 function setAd(v){isAdPost=v;document.getElementById('tnAd').classList.toggle('on',!v);document.getElementById('tyAd').classList.toggle('on',v);}
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    SUPPORT
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 function toggleSupport(){supOpen=!supOpen;document.getElementById('supMenu').classList.toggle('on',supOpen);document.getElementById('supBtn').innerHTML=supOpen?'<i class="ti ti-x" style="font-size:17px"></i>بستن':'<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی';}
 function closeSupport(){supOpen=false;document.getElementById('supMenu').classList.remove('on');document.getElementById('supBtn').innerHTML='<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی';}
 document.addEventListener('click',e=>{if(supOpen&&!e.target.closest('.support-float'))closeSupport();});
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    NAVIGATION
-═══════════════════════════════════════ */
-function switchPage(p) {
-  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on', e.id==='page-'+p));
-  document.querySelectorAll('.nav-lnk,.nav-saved').forEach(b=>b.classList.toggle('on', b.dataset&&b.dataset.to===p));
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on', b.dataset.to===p));
-  if(p === 'saved')   renderSaved();
-  if(p === 'profile') loadMyListings();
-  if(p === 'sell')    updateSellPage();
-  if(p === 'admin') {
-    if(!isAdmin) { toast('⚠️ دسترسی ندارید','err'); switchPage('home'); return; }
+══════════════════════════════════════ */
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='page-'+p));
+  document.querySelectorAll('.nav-lnk,.nav-saved').forEach(b=>b.classList.toggle('on',b.dataset&&b.dataset.to===p));
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset.to===p));
+  if(p==='saved')   renderSaved();
+  if(p==='profile') loadMyListings();
+  if(p==='sell')    updateSellPage();
+  if(p==='admin'){
+    if(!isAdmin){toast('⚠️ دسترسی ندارید','err');switchPage('home');return;}
     loadAdminData();
   }
 }
-function goHome() { switchPage('home'); }
-function goSell() { resetForm(); switchPage('sell'); }
+function goHome(){switchPage('home');}
+function goSell(){resetForm();switchPage('sell');}
 
-document.querySelectorAll('.nav-lnk,.nav-saved,.mtab').forEach(b=>b.addEventListener('click', ()=>{
+document.querySelectorAll('.nav-lnk,.nav-saved,.mtab').forEach(b=>b.addEventListener('click',()=>{
   if(b.dataset.to==='sell') resetForm();
   switchPage(b.dataset.to);
 }));
-document.getElementById('btnNew').onclick = ()=>{ resetForm(); switchPage('sell'); };
+document.getElementById('btnNew').onclick=()=>{resetForm();switchPage('sell');};
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    SEARCH
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 let sT;
-document.getElementById('navQ').addEventListener('input', function(){
+document.getElementById('navQ').addEventListener('input',function(){
   clearTimeout(sT); ST.q=this.value.trim(); sT=setTimeout(render,360);
 });
-function heroSearch() {
-  ST.q = document.getElementById('heroQ').value.trim();
-  ST.cat = document.getElementById('heroCat').value;
-  document.getElementById('navQ').value = ST.q;
-  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.toggle('on', c.dataset.cat===ST.cat));
-  document.getElementById('resLbl').textContent = ST.cat || 'جدیدترین آگهی‌ها';
+function heroSearch(){
+  ST.q=document.getElementById('heroQ').value.trim();
+  ST.cat=document.getElementById('heroCat').value;
+  document.getElementById('navQ').value=ST.q;
+  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.toggle('on',c.dataset.cat===ST.cat));
+  document.getElementById('resLbl').textContent=ST.cat||'جدیدترین آگهی‌ها';
   goHome(); render();
 }
-document.getElementById('catsRow').addEventListener('click', e=>{
-  const c = e.target.closest('.cat-chip'); if(!c) return;
-  document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
-  ST.cat = c.dataset.cat;
-  document.getElementById('resLbl').textContent = c.dataset.cat || 'جدیدترین آگهی‌ها';
+document.getElementById('catsRow').addEventListener('click',e=>{
+  const c=e.target.closest('.cat-chip');if(!c)return;
+  document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+  ST.cat=c.dataset.cat;
+  document.getElementById('resLbl').textContent=c.dataset.cat||'جدیدترین آگهی‌ها';
   render();
 });
 document.querySelectorAll('.sort-b').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.sort-b').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  document.querySelectorAll('.sort-b').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   ST.sort=b.dataset.sort; render();
 }));
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    FILE UPLOAD
-═══════════════════════════════════════ */
-const uz = document.getElementById('uploadZone');
+══════════════════════════════════════ */
+const uz=document.getElementById('uploadZone');
 uz.addEventListener('click',()=>document.getElementById('fileInput').click());
 uz.addEventListener('dragover',e=>{e.preventDefault();uz.style.borderColor='var(--mint)';});
 uz.addEventListener('dragleave',()=>uz.style.borderColor='');
 uz.addEventListener('drop',e=>{
-  e.preventDefault(); uz.style.borderColor='';
-  const dt = new DataTransfer();
+  e.preventDefault();uz.style.borderColor='';
+  const dt=new DataTransfer();
   [...e.dataTransfer.files].filter(f=>f.type.startsWith('image')).forEach(f=>dt.items.add(f));
   document.getElementById('fileInput').files=dt.files;
   document.getElementById('fileInput').dispatchEvent(new Event('change'));
 });
-document.getElementById('fileInput').addEventListener('change', function(){
+document.getElementById('fileInput').addEventListener('change',function(){
   [...this.files].forEach(f=>{
     if(pickedFiles.length>=8){toast('حداکثر ۸ عکس','err');return;}
     if(!f.type.startsWith('image')){toast('فقط عکس','err');return;}
-    if(f.size>5*1024*1024){toast('حداکثر ۵MB','err');return;}
+    if(f.size>10*1024*1024){toast('حداکثر ۱۰MB','err');return;}
     pickedFiles.push(f);
     const r=new FileReader();
     r.onload=ev=>{
-      const d=document.createElement('div'); d.className='thumb';
-      const img=document.createElement('img'); img.src=ev.target.result;
-      const del=document.createElement('button'); del.className='tdel'; del.innerHTML='×';
+      const d=document.createElement('div');d.className='thumb';
+      const img=document.createElement('img');img.src=ev.target.result;
+      const del=document.createElement('button');del.className='tdel';del.innerHTML='×';
       del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove();};
-      d.appendChild(img); d.appendChild(del);
+      d.appendChild(img);d.appendChild(del);
       document.getElementById('thumbRow').appendChild(d);
     };
     r.readAsDataURL(f);
-  }); this.value='';
+  });this.value='';
 });
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    FORM HELPERS
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 document.getElementById('condGrid').addEventListener('click',e=>{
-  const b=e.target.closest('.copt'); if(!b) return;
-  document.querySelectorAll('.copt').forEach(x=>x.classList.remove('on')); b.classList.add('on'); cond=b.dataset.v;
+  const b=e.target.closest('.copt');if(!b)return;
+  document.querySelectorAll('.copt').forEach(x=>x.classList.remove('on'));b.classList.add('on');cond=b.dataset.v;
 });
 document.getElementById('fTitle').addEventListener('input',function(){document.getElementById('tc').textContent=this.value.length;});
 document.getElementById('fDesc').addEventListener('input',function(){document.getElementById('dc').textContent=this.value.length;});
 document.getElementById('fPrice').addEventListener('input',function(){const r=this.value.replace(/[^0-9]/g,'');if(r)this.value=fmtEN(r);});
 
-function resetForm() {
+function resetForm(){
   document.getElementById('successArea').style.display='none';
   ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fName','fBrand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('tc').textContent='0'; document.getElementById('dc').textContent='0';
-  document.getElementById('thumbRow').innerHTML=''; pickedFiles=[]; cond='نو'; isAdPost=false;
+  document.getElementById('tc').textContent='0';document.getElementById('dc').textContent='0';
+  document.getElementById('thumbRow').innerHTML='';pickedFiles=[];cond='نو';isAdPost=false;
   document.querySelectorAll('.copt').forEach((b,i)=>b.classList.toggle('on',i===0));
   setAd(false);
   updateSellPage();
 }
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    START
-═══════════════════════════════════════ */
+══════════════════════════════════════ */
 initAuth();
 render();
 </script>
