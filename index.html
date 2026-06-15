@@ -10,115 +10,6 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!--
-  ═══════════════════════════════════════════════════════════
-  SQL کامل Supabase — در SQL Editor اجرا کن
-  ═══════════════════════════════════════════════════════════
-
-  -- 1) جدول آگهی‌ها
-  create table if not exists listings (
-    id uuid default gen_random_uuid() primary key,
-    title text not null,
-    cat text,
-    cond text default 'نو',
-    description text,
-    brand text,
-    price bigint default 0,
-    nego text default 'بله',
-    phone text,
-    city text,
-    name text,
-    images text[] default '{}',
-    views int default 0,
-    is_ad boolean default false,
-    status text default 'pending',
-    user_id uuid,
-    created_at timestamptz default now(),
-    updated_at timestamptz default now()
-  );
-
-  -- 2) جدول اشتراک‌ها
-  create table if not exists user_plans (
-    id uuid default gen_random_uuid() primary key,
-    user_id uuid not null,
-    user_name text,
-    plan text default 'normal',
-    plan_expires_at timestamptz,
-    created_at timestamptz default now(),
-    updated_at timestamptz default now(),
-    constraint user_plans_user_id_key unique (user_id)
-  );
-
-  -- 3) جدول پرداخت‌ها (آماده برای اتصال درگاه)
-  create table if not exists payments (
-    id uuid default gen_random_uuid() primary key,
-    user_id uuid not null,
-    plan text not null,
-    amount bigint not null,
-    status text default 'pending',
-    authority text,
-    ref_id text,
-    gateway text default 'zarinpal',
-    created_at timestamptz default now(),
-    updated_at timestamptz default now()
-  );
-
-  -- 4) RLS — listings
-  alter table listings enable row level security;
-  drop policy if exists "select_approved" on listings;
-  drop policy if exists "select_own" on listings;
-  drop policy if exists "insert_own" on listings;
-  drop policy if exists "delete_own" on listings;
-  drop policy if exists "admin_all" on listings;
-  drop policy if exists "update_own" on listings;
-
-  create policy "select_approved" on listings for select using (status = 'approved');
-  create policy "select_own"      on listings for select using (auth.uid() = user_id);
-  create policy "insert_own"      on listings for insert with check (auth.uid() = user_id);
-  create policy "update_own"      on listings for update using (auth.uid() = user_id);
-  create policy "delete_own"      on listings for delete using (auth.uid() = user_id);
-  create policy "admin_all"       on listings for all using (true) with check (true);
-
-  -- 5) RLS — user_plans
-  alter table user_plans enable row level security;
-  drop policy if exists "select_own_plan" on user_plans;
-  drop policy if exists "admin_plans" on user_plans;
-
-  create policy "select_own_plan" on user_plans for select using (auth.uid() = user_id);
-  create policy "admin_plans"     on user_plans for all using (true) with check (true);
-
-  -- 6) RLS — payments
-  alter table payments enable row level security;
-  drop policy if exists "select_own_pay" on payments;
-  drop policy if exists "admin_payments" on payments;
-
-  create policy "select_own_pay" on payments for select using (auth.uid() = user_id);
-  create policy "admin_payments" on payments for all using (true) with check (true);
-
-  -- 7) Storage bucket (اگر وجود نداشت)
-  insert into storage.buckets (id, name, public)
-  values ('images', 'images', true)
-  on conflict (id) do nothing;
-
-  drop policy if exists "images_public_read"  on storage.objects;
-  drop policy if exists "images_auth_upload"  on storage.objects;
-  drop policy if exists "images_auth_delete"  on storage.objects;
-
-  create policy "images_public_read"  on storage.objects for select  using (bucket_id = 'images');
-  create policy "images_auth_upload"  on storage.objects for insert  with check (bucket_id = 'images' and auth.role() = 'authenticated');
-  create policy "images_auth_delete"  on storage.objects for delete  using (bucket_id = 'images' and auth.uid()::text = (storage.foldername(name))[1]);
-
-  ═══════════════════════════════════════════════════════════
-  پیکربندی درگاه پرداخت — بعداً پر کن
-  ═══════════════════════════════════════════════════════════
-  const PAYMENT_CONFIG = {
-    enabled: false,                  // ← true کن بعد از پیکربندی
-    merchantId: 'YOUR_MERCHANT_ID',  // ← شناسه پذیرنده زرین‌پال
-    callbackUrl: 'YOUR_CALLBACK_URL',// ← آدرس بازگشت
-    gateway: 'zarinpal'
-  };
--->
-
 <style>
 :root{
   --ink:#0E1A14;--forest:#14542E;--green:#1A7A47;--mint:#25B067;--lime:#7ED957;
@@ -170,8 +61,6 @@ img{max-width:100%;display:block}
 .avatar-sm img{width:100%;height:100%;object-fit:cover}
 .admin-nav-btn{height:34px;padding:0 10px;border:1.5px solid var(--red);border-radius:var(--pill);font-size:12px;color:var(--red);font-weight:700;transition:.2s;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .admin-nav-btn:hover{background:var(--red);color:#fff}
-
-/* plan badges */
 .plan-badge{display:inline-flex;align-items:center;gap:3px;border-radius:var(--pill);padding:2px 8px;font-size:10px;font-weight:800}
 .plan-weekly{background:#e8f4ee;color:var(--green)}
 .plan-monthly{background:#fef6e4;color:var(--amber)}
@@ -252,17 +141,41 @@ img{max-width:100%;display:block}
 .sponsored-lbl{font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .sponsored-line{flex:1;height:1px;background:rgba(232,160,32,.25)}
 
-/* CARD */
-.adcard{background:var(--card);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;position:relative}
+/* ═══ CARD — عمودی مثل دیوار ═══ */
+.adcard{
+  background:var(--card);
+  border:1.5px solid var(--bd);
+  border-radius:var(--r);
+  overflow:hidden;
+  cursor:pointer;
+  transition:all .2s;
+  display:flex;
+  flex-direction:column;   /* ← عمودی: عکس بالا، متن پایین */
+  position:relative;
+}
 .adcard:hover{border-color:var(--mint);box-shadow:var(--shh);transform:translateY(-3px)}
 .adcard.is-ad{border-color:rgba(232,160,32,.4)}
 .adcard.is-gold{border-color:rgba(232,160,32,.5);box-shadow:0 0 0 1px rgba(232,160,32,.15)}
 .adcard.is-diamond{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 1px rgba(99,102,241,.15)}
-.adcard-img{aspect-ratio:4/3;background:var(--sand);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+
+/* عکس — نسبت ثابت 4:3 */
+.adcard-img{
+  width:100%;
+  aspect-ratio:4/3;
+  background:var(--sand);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;   /* ← مهم: عکس جمع نشه */
+}
 .adcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
 .adcard:hover .adcard-img img{transform:scale(1.05)}
 .adcard-emoji{font-size:48px;transition:transform .25s}
 .adcard:hover .adcard-emoji{transform:scale(1.08)}
+
+/* تگ‌های روی عکس */
 .cond-tag{position:absolute;bottom:7px;right:7px;font-size:9px;padding:3px 8px;border-radius:var(--pill);font-weight:700;backdrop-filter:blur(4px)}
 .ct-new{background:rgba(37,176,103,.9);color:#fff}
 .ct-good{background:rgba(255,243,204,.95);color:#7A5800}
@@ -275,7 +188,15 @@ img{max-width:100%;display:block}
 .ad-gold-badge{position:absolute;top:7px;right:7px;background:rgba(232,160,32,.9);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px;backdrop-filter:blur(4px)}
 .ad-weekly-badge{position:absolute;top:7px;right:7px;background:rgba(37,176,103,.9);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);display:flex;align-items:center;gap:3px;backdrop-filter:blur(4px)}
 .new-badge{position:absolute;top:7px;right:7px;background:rgba(126,217,87,.9);color:var(--ink);font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--pill);backdrop-filter:blur(4px)}
-.adcard-body{padding:11px;flex:1;display:flex;flex-direction:column}
+
+/* بدنه کارت — زیر عکس */
+.adcard-body{
+  padding:11px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
 .adcard-cat{font-size:9px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
 .adcard-title{font-size:12px;font-weight:600;line-height:1.5;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;color:var(--t1)}
 .adcard-loc{font-size:10px;color:var(--t3);display:flex;align-items:center;gap:3px;margin-bottom:8px}
@@ -296,13 +217,9 @@ img{max-width:100%;display:block}
 .empty h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px}
 .empty p{font-size:13px;color:var(--t3);line-height:1.7}
 .btn-first{margin-top:1.25rem;display:inline-flex;align-items:center;gap:6px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer}
-
-/* load-more */
 .load-more-wrap{grid-column:1/-1;display:flex;justify-content:center;padding:1rem 0}
 .btn-load-more{height:42px;padding:0 28px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:13px;font-weight:700;color:var(--t2);background:var(--paper);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px}
 .btn-load-more:hover{border-color:var(--mint);color:var(--forest)}
-
-/* LOGIN GATE */
 .login-gate{grid-column:1/-1;text-align:center;padding:4rem 1rem}
 .login-gate .gate-icon{font-size:56px;margin-bottom:1rem}
 .login-gate h3{font-size:20px;font-weight:800;margin-bottom:8px;color:var(--ink)}
@@ -381,7 +298,7 @@ img{max-width:100%;display:block}
 .sl{color:var(--t3);font-size:12px}
 .btn-back{display:inline-flex;align-items:center;gap:6px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shg)}
 
-/* MODAL detail */
+/* MODAL detail — عمودی روی موبایل، دو ستون روی دسکتاپ */
 .modal-bg{position:fixed;inset:0;z-index:200;background:rgba(14,26,20,.55);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem}
 .modal-bg.on{display:flex}
 .modal{background:var(--paper);border-radius:var(--r);width:100%;max-width:820px;max-height:92vh;overflow-y:auto;position:relative;display:grid;grid-template-columns:1fr 1fr;box-shadow:0 40px 80px rgba(14,26,20,.35)}
@@ -409,7 +326,7 @@ img{max-width:100%;display:block}
 .dchip{background:var(--sand);border-radius:var(--rsm);padding:6px 10px;font-size:11px;display:flex;flex-direction:column;gap:1px;min-width:70px}
 .dl{color:var(--t3);font-size:10px}
 .dv{font-weight:700;color:var(--t1)}
-.m-desc{font-size:13px;color:var(--t2);line-height:1.8;white-space:pre-wrap}
+.m-desc{font-size:13px;color:var(--t2);line-height:1.8;white-space:pre-wrap;word-break:break-word}
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto;padding-top:.5rem}
 .btn-call{height:46px;background:var(--forest);color:var(--lime);border:none;border-radius:var(--pill);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s;cursor:pointer;box-shadow:var(--shg)}
 .btn-call:hover{background:var(--green)}
@@ -419,7 +336,7 @@ img{max-width:100%;display:block}
 .m-views{font-size:11px;color:var(--t3);display:flex;gap:12px}
 .m-views span{display:flex;align-items:center;gap:4px}
 
-/* AD MODAL — اشتراک */
+/* AD MODAL */
 .ad-modal-bg{position:fixed;inset:0;z-index:210;background:rgba(14,26,20,.6);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:1rem}
 .ad-modal-bg.on{display:flex}
 .ad-modal{background:var(--paper);border-radius:var(--r);width:100%;max-width:520px;overflow:hidden;box-shadow:0 40px 80px rgba(14,26,20,.4);max-height:92vh;overflow-y:auto}
@@ -518,8 +435,6 @@ img{max-width:100%;display:block}
 .admin-danger{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--bd)}
 .btn-del-all{height:40px;padding:0 18px;background:var(--red);color:#fff;border:none;border-radius:var(--pill);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
 .btn-del-all:hover{opacity:.85}
-
-/* کاربران */
 .users-wrap{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);overflow:auto}
 .users-table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
 .users-table th{text-align:right;padding:10px 12px;font-size:11px;font-weight:700;color:var(--t3);border-bottom:1.5px solid var(--bd);background:var(--sand);white-space:nowrap}
@@ -528,19 +443,13 @@ img{max-width:100%;display:block}
 .users-table tbody tr{cursor:pointer;transition:.15s}
 .users-table tbody tr:hover td{background:rgba(37,176,103,.05)}
 .user-av{width:32px;height:32px;border-radius:50%;background:var(--forest);color:var(--lime);font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;vertical-align:middle;margin-left:8px}
-.user-av img{width:100%;height:100%;object-fit:cover}
 .plan-select{height:30px;padding:0 8px;border:1.5px solid var(--bd2);border-radius:var(--pill);font-size:11px;font-weight:700;background:var(--paper);color:var(--t1);cursor:pointer;transition:.2s;font-family:'Vazirmatn',sans-serif}
 .plan-select:focus{outline:none;border-color:var(--mint)}
-
-/* پنل جزئیات کاربر */
 .user-detail-panel{background:var(--cream);border:1.5px solid var(--bd);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem;display:none}
 .user-detail-panel.on{display:block}
 .udp-hd{font-size:15px;font-weight:800;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .udp-close{width:28px;height:28px;border-radius:50%;background:var(--bd2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0}
 .udp-close:hover{background:var(--red);color:#fff}
-
-/* پرداخت‌ها */
-.payments-wrap{margin-top:1rem}
 .payment-row{background:var(--paper);border:1.5px solid var(--bd);border-radius:var(--r);padding:1rem;display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
 .pay-status{display:inline-flex;align-items:center;gap:4px;border-radius:var(--pill);padding:3px 8px;font-size:9px;font-weight:800}
 .pay-status.success{background:#e8f4ee;color:var(--green)}
@@ -618,6 +527,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
   .ft-top{grid-template-columns:1fr 1fr}
   .modal-actions{grid-template-columns:1fr}
   .ads-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  /* modal عمودی روی موبایل */
   .modal{grid-template-columns:1fr}
   .m-gallery{border-radius:var(--r) var(--r) 0 0}
   .m-main-img,.m-emoji{border-radius:var(--r) var(--r) 0 0}
@@ -656,15 +566,9 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
     <div id="navUser" style="display:none;align-items:center;gap:6px">
       <div class="avatar-sm" id="navAvatar">ک</div>
       <span class="auth-email" id="navEmail"></span>
-      <button class="btn-profile-nav" onclick="switchPage('profile')">
-        <i class="ti ti-user" style="font-size:13px"></i>پروفایل
-      </button>
-      <button class="admin-nav-btn" id="adminNavBtn" style="display:none" onclick="switchPage('admin')">
-        <i class="ti ti-shield" style="font-size:13px"></i>ادمین
-      </button>
-      <button class="btn-logout" onclick="doLogout()">
-        <i class="ti ti-logout" style="font-size:13px"></i>خروج
-      </button>
+      <button class="btn-profile-nav" onclick="switchPage('profile')"><i class="ti ti-user" style="font-size:13px"></i>پروفایل</button>
+      <button class="admin-nav-btn" id="adminNavBtn" style="display:none" onclick="switchPage('admin')"><i class="ti ti-shield" style="font-size:13px"></i>ادمین</button>
+      <button class="btn-logout" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i>خروج</button>
     </div>
   </div>
   <button class="btn-new" id="btnNew"><i class="ti ti-plus" style="font-size:14px"></i>آگهی رایگان</button>
@@ -704,7 +608,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       </svg>
     </div>
   </section>
-
   <div class="stats-bar">
     <div class="sbar-item"><i class="ti ti-list-check"></i><div><div class="sbar-num" id="hTotal">—</div><div class="sbar-lbl">آگهی فعال</div></div></div>
     <div class="sbar-sep"></div>
@@ -714,7 +617,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
     <div class="sbar-sep"></div>
     <div class="sbar-item"><i class="ti ti-speakerphone"></i><div><div class="sbar-num" onclick="openAdModal()" style="cursor:pointer;text-decoration:underline dotted">تبلیغ</div><div class="sbar-lbl">دیده بشو</div></div></div>
   </div>
-
   <div class="promo-wrap">
     <div class="promo-banner">
       <div class="promo-left">
@@ -732,7 +634,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button class="btn-ad" onclick="openAdModal()"><i class="ti ti-star" style="font-size:14px"></i>سفارش تبلیغ</button>
     </div>
   </div>
-
   <div class="cats-wrap">
     <span class="sec-t">دسته‌بندی‌ها</span>
     <div class="cats-row" id="catsRow">
@@ -747,7 +648,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button class="cat-chip" data-cat="وسایل کودک"><span class="ci">🧸</span>کودک</button>
     </div>
   </div>
-
   <div class="toolbar">
     <div style="display:flex;align-items:center">
       <span class="res-lbl" id="resLbl">جدیدترین آگهی‌ها</span>
@@ -759,7 +659,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button class="sort-b" data-sort="expensive">گران‌ترین</button>
     </div>
   </div>
-
   <div class="grid-wrap">
     <div class="ads-grid" id="adsGrid">
       <div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>
@@ -796,30 +695,21 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button onclick="openAuthModal('register')" style="display:inline-flex;align-items:center;gap:6px;background:var(--sand);color:var(--forest);border:none;border-radius:var(--pill);padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer"><i class="ti ti-user-plus" style="font-size:14px"></i>ثبت‌نام رایگان</button>
     </div>
   </div>
-
   <div class="sell-pg" id="formArea" style="display:none">
     <div class="sell-hd"><h2>ثبت آگهی رایگان</h2><p>چند دقیقه وقت بذار — مستقیم با خریدار ارتباط بگیر</p></div>
     <div class="ad-toggle">
-      <div class="at-left">
-        <div class="at-icon">⭐</div>
-        <div class="at-text">
-          <strong>آگهی ویژه (تبلیغ پولی)</strong>
-          <span>بالای لیست — بیشتر دیده میشه</span>
-        </div>
-      </div>
+      <div class="at-left"><div class="at-icon">⭐</div><div class="at-text"><strong>آگهی ویژه (تبلیغ پولی)</strong><span>بالای لیست — بیشتر دیده میشه</span></div></div>
       <div class="at-btns">
         <button class="atbtn on" id="tnAd" onclick="setAd(false)">معمولی</button>
         <button class="atbtn off" id="tyAd" onclick="openAdModal()">ویژه ⭐</button>
       </div>
     </div>
-
     <div class="step-card">
       <div class="step-hd"><span class="snum">۱</span><div><div class="step-hd-t">عکس محصول</div><div class="step-hd-s">تا ۸ عکس — عکس بیشتر = فروش سریع‌تر</div></div></div>
       <div class="upload-zone" id="uploadZone"><i class="ti ti-photo-plus"></i><div class="ut">کلیک کن یا بکش بنداز</div><div class="us">JPG · PNG · WEBP — حداکثر ۱۰MB</div></div>
       <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
       <div class="thumb-row" id="thumbRow"></div>
     </div>
-
     <div class="step-card">
       <div class="step-hd"><span class="snum">۲</span><div><div class="step-hd-t">اطلاعات آگهی</div><div class="step-hd-s">هر چه دقیق‌تر، سریع‌تر می‌فروشی</div></div></div>
       <div class="field"><label>عنوان <span class="req">*</span></label><input type="text" id="fTitle" maxlength="80" placeholder="مثلاً آیفون ۱۴ پرو ۲۵۶ گیگ بنفش"><div class="field-hint"><span></span><span><span id="tc">0</span>/80</span></div></div>
@@ -839,7 +729,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       </div>
       <div class="field"><label>توضیحات</label><textarea id="fDesc" maxlength="700" placeholder="ویژگی‌ها، دلیل فروش، نکات مهم..."></textarea><div class="field-hint"><span></span><span><span id="dc">0</span>/700</span></div></div>
     </div>
-
     <div class="step-card">
       <div class="step-hd"><span class="snum">۳</span><div><div class="step-hd-t">قیمت و تماس</div><div class="step-hd-s">این اطلاعات رو خریدار می‌بینه</div></div></div>
       <div class="two">
@@ -857,7 +746,6 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       </div>
     </div>
   </div>
-
   <div class="success-pg" id="successArea" style="display:none">
     <div class="sring">🎉</div>
     <h2>آگهی‌ات ثبت شد!</h2>
@@ -881,9 +769,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
         <div class="profile-top">
           <div class="profile-avatar-wrap">
             <div class="profile-avatar" id="profileAvatar">ک</div>
-            <div class="profile-avatar-edit" onclick="document.getElementById('avatarInput').click()" title="تغییر عکس پروفایل">
-              <i class="ti ti-camera" style="font-size:13px"></i>
-            </div>
+            <div class="profile-avatar-edit" onclick="document.getElementById('avatarInput').click()" title="تغییر عکس پروفایل"><i class="ti ti-camera" style="font-size:13px"></i></div>
             <input type="file" id="avatarInput" accept="image/*" style="display:none">
           </div>
           <div class="profile-info">
@@ -896,9 +782,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
             <button onclick="openAdModal()" style="height:34px;padding:0 12px;border:1.5px solid var(--amber);border-radius:var(--pill);font-size:12px;color:var(--amber);font-weight:700;display:flex;align-items:center;gap:4px;transition:.2s;background:none" onmouseover="this.style.background='var(--amber)';this.style.color='var(--ink)'" onmouseout="this.style.background='none';this.style.color='var(--amber)'">
               <i class="ti ti-star" style="font-size:13px"></i>ارتقا اشتراک
             </button>
-            <button class="btn-logout" onclick="doLogout()">
-              <i class="ti ti-logout" style="font-size:13px"></i>خروج
-            </button>
+            <button class="btn-logout" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i>خروج</button>
           </div>
         </div>
         <div class="profile-stats">
@@ -918,9 +802,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
   <div class="admin-pg">
     <div class="admin-hd">
       <h2><i class="ti ti-shield" style="color:var(--red)"></i>پنل مدیریت <span class="admin-badge">ADMIN</span></h2>
-      <button class="btn-logout" onclick="doLogout()">
-        <i class="ti ti-logout" style="font-size:13px"></i>خروج از پنل
-      </button>
+      <button class="btn-logout" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i>خروج از پنل</button>
     </div>
     <div class="admin-stats">
       <div class="astat"><div class="astat-num" id="aStat1">—</div><div class="astat-lbl">در انتظار</div></div>
@@ -937,10 +819,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <button class="admin-tab" onclick="adminShowTab('payments')">💳 پرداخت‌ها</button>
     </div>
     <div class="user-detail-panel" id="userDetailPanel">
-      <div class="udp-hd">
-        <span id="udpTitle">آگهی‌های کاربر</span>
-        <div class="udp-close" onclick="closeUserDetail()"><i class="ti ti-x"></i></div>
-      </div>
+      <div class="udp-hd"><span id="udpTitle">آگهی‌های کاربر</span><div class="udp-close" onclick="closeUserDetail()"><i class="ti ti-x"></i></div></div>
       <div id="udpContent"></div>
     </div>
     <div id="adminListings"></div>
@@ -990,50 +869,19 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
   </div>
 </div>
 
-<!-- AD/PLAN MODAL -->
+<!-- AD MODAL -->
 <div class="ad-modal-bg" id="adModalBg">
   <div class="ad-modal" style="position:relative">
     <button class="modal-close-x" onclick="closeAdModal()"><i class="ti ti-x"></i></button>
-    <div class="ad-modal-head">
-      <h3>⭐ خرید اشتراک</h3>
-      <p>آگهی‌ات رو بالای همه نشون بده</p>
-    </div>
+    <div class="ad-modal-head"><h3>⭐ خرید اشتراک</h3><p>آگهی‌ات رو بالای همه نشون بده</p></div>
     <div class="ad-modal-body">
       <div class="pkg-grid">
-        <div class="pkg-card on" data-plan="weekly" data-price="50000" onclick="selPkg(this)">
-          <div class="pkg-icon">⚡</div>
-          <div>
-            <div class="pkg-name">ویژه هفتگی</div>
-            <div class="pkg-desc">۷ روز در بالای لیست · نشان سبز</div>
-          </div>
-          <div class="pkg-price">۵۰,۰۰۰</div>
-        </div>
-        <div class="pkg-card" data-plan="monthly" data-price="150000" onclick="selPkg(this)">
-          <div class="pkg-icon">🥇</div>
-          <div>
-            <div class="pkg-name">طلایی ماهانه</div>
-            <div class="pkg-desc">۳۰ روز + نشان طلایی + اولویت بالاتر</div>
-          </div>
-          <div class="pkg-price">۱۵۰,۰۰۰</div>
-        </div>
-        <div class="pkg-card diamond-pkg" data-plan="diamond" data-price="300000" onclick="selPkg(this)">
-          <div class="pkg-icon">💎</div>
-          <div>
-            <div class="pkg-name">الماس ۳ ماهه</div>
-            <div class="pkg-desc">۹۰ روز + نشان الماس + اولویت اول</div>
-          </div>
-          <div class="pkg-price diamond-price">۳۰۰,۰۰۰</div>
-        </div>
+        <div class="pkg-card on" data-plan="weekly" data-price="50000" onclick="selPkg(this)"><div class="pkg-icon">⚡</div><div><div class="pkg-name">ویژه هفتگی</div><div class="pkg-desc">۷ روز در بالای لیست · نشان سبز</div></div><div class="pkg-price">۵۰,۰۰۰</div></div>
+        <div class="pkg-card" data-plan="monthly" data-price="150000" onclick="selPkg(this)"><div class="pkg-icon">🥇</div><div><div class="pkg-name">طلایی ماهانه</div><div class="pkg-desc">۳۰ روز + نشان طلایی + اولویت بالاتر</div></div><div class="pkg-price">۱۵۰,۰۰۰</div></div>
+        <div class="pkg-card diamond-pkg" data-plan="diamond" data-price="300000" onclick="selPkg(this)"><div class="pkg-icon">💎</div><div><div class="pkg-name">الماس ۳ ماهه</div><div class="pkg-desc">۹۰ روز + نشان الماس + اولویت اول</div></div><div class="pkg-price diamond-price">۳۰۰,۰۰۰</div></div>
       </div>
-      <!-- درگاه پرداخت — غیرفعال تا پیکربندی -->
-      <div class="pay-notice" id="payNotice">
-        <i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:2px"></i>
-        <span>درگاه پرداخت هنوز پیکربندی نشده است.<br>برای خرید اشتراک با پشتیبانی تماس بگیرید: <strong>09212302379</strong></span>
-      </div>
-      <button class="btn-order" id="btnOrder" onclick="handlePayment()">
-        <i class="ti ti-shopping-cart" style="font-size:16px"></i>
-        <span id="btnOrderText">ثبت سفارش</span>
-      </button>
+      <div class="pay-notice"><i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><span>درگاه پرداخت هنوز پیکربندی نشده است.<br>برای خرید اشتراک با پشتیبانی تماس بگیرید: <strong>09212302379</strong></span></div>
+      <button class="btn-order" id="btnOrder" onclick="handlePayment()"><i class="ti ti-shopping-cart" style="font-size:16px"></i><span id="btnOrderText">ثبت سفارش</span></button>
     </div>
   </div>
 </div>
@@ -1085,22 +933,9 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
       <div class="ft-logo">🛍 بازار<em>نو</em></div>
       <div class="ft-desc">بازارچه آنلاین ایران — خرید و فروش رایگان، سریع و مطمئن</div>
     </div>
-    <div class="ft-col">
-      <h4>بازارنو</h4>
-      <a onclick="goHome()">آگهی‌ها</a>
-      <a onclick="goSell()">ثبت آگهی رایگان</a>
-      <a onclick="openAdModal()">تبلیغ ویژه</a>
-      <a onclick="switchPage('rules')">قوانین و مقررات</a>
-    </div>
-    <div class="ft-col">
-      <h4>راهنما</h4>
-      <a onclick="goSell()">نحوه ثبت آگهی</a>
-      <a onclick="switchPage('rules')">ایمنی در معاملات</a>
-      <a onclick="openAdModal()">راهنمای تبلیغات</a>
-      <a href="tel:09212302379">تماس با ما</a>
-    </div>
-    <div class="ft-support">
-      <h4>پشتیبانی ۲۴/۷</h4>
+    <div class="ft-col"><h4>بازارنو</h4><a onclick="goHome()">آگهی‌ها</a><a onclick="goSell()">ثبت آگهی رایگان</a><a onclick="openAdModal()">تبلیغ ویژه</a><a onclick="switchPage('rules')">قوانین و مقررات</a></div>
+    <div class="ft-col"><h4>راهنما</h4><a onclick="goSell()">نحوه ثبت آگهی</a><a onclick="switchPage('rules')">ایمنی در معاملات</a><a onclick="openAdModal()">راهنمای تبلیغات</a><a href="tel:09212302379">تماس با ما</a></div>
+    <div class="ft-support"><h4>پشتیبانی ۲۴/۷</h4>
       <a class="ft-contact-lnk" href="tel:09212302379"><i class="ti ti-phone"></i>09212302379</a>
       <a class="ft-contact-lnk" href="https://ble.ir/ma_shahripour" target="_blank" rel="noopener"><i class="ti ti-brand-telegram"></i>@ma_shahripour</a>
       <a class="ft-contact-lnk" href="https://ble.ir/bazar_no" target="_blank" rel="noopener"><i class="ti ti-speakerphone"></i>کانال @bazar_no</a>
@@ -1122,52 +957,67 @@ footer{background:var(--ink);color:rgba(255,255,255,.65);font-size:13px;padding:
 ══════════════════════════════════════════════════════ */
 const SUPABASE_URL = 'https://ffpzdohwrhdrdgtczzjc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J8zWi6EO4xP3LxmsS2gXig_HY3aHycL';
-const ADMIN_EMAIL  = 'admin@gmail.com';
-const PAGE_SIZE    = 20; // آگهی در هر صفحه
+const ADMIN_EMAIL  = 'admin@gmail.com'; // ← ایمیل ادمین خودت رو اینجا بذار
+const PAGE_SIZE    = 20;
 
-// ─── پیکربندی درگاه پرداخت ───────────────────────────
-// برای فعال‌سازی: enabled را true کنید و اطلاعات را پر کنید
 const PAYMENT_CONFIG = {
-  enabled: false,                        // ← true کن بعد از پیکربندی
-  merchantId: 'YOUR_MERCHANT_ID',        // ← شناسه پذیرنده زرین‌پال
-  callbackUrl: window.location.href,     // ← آدرس بازگشت
+  enabled: false,
+  merchantId: 'YOUR_MERCHANT_ID',
+  callbackUrl: window.location.href,
   gateway: 'zarinpal'
 };
-// ─────────────────────────────────────────────────────
 
 const EMOJIS = {
   'موبایل و تبلت':'📱','کامپیوتر و لپ‌تاپ':'💻','لوازم خانگی':'🏠',
   'پوشاک و کفش':'👗','کتاب و تحصیل':'📚','خودرو و موتور':'🚗',
   'ورزش و سرگرمی':'⚽','وسایل کودک':'🧸','سایر':'📦'
 };
-
 const PLANS = {
-  normal:  { label:'معمولی',      icon:'',   cls:'',              priority:0, days:0   },
-  weekly:  { label:'ویژه ۷روزه',  icon:'⚡', cls:'plan-weekly',  priority:1, days:7   },
-  monthly: { label:'طلایی ماهانه',icon:'🥇', cls:'plan-monthly', priority:2, days:30  },
-  diamond: { label:'الماس ۳ماهه', icon:'💎', cls:'plan-diamond', priority:3, days:90  }
+  normal:  {label:'معمولی',       icon:'',   cls:'',             priority:0, days:0 },
+  weekly:  {label:'ویژه ۷روزه',   icon:'⚡', cls:'plan-weekly',  priority:1, days:7 },
+  monthly: {label:'طلایی ماهانه', icon:'🥇', cls:'plan-monthly', priority:2, days:30},
+  diamond: {label:'الماس ۳ماهه',  icon:'💎', cls:'plan-diamond', priority:3, days:90}
 };
+const PLAN_PRICES = {weekly:50000, monthly:150000, diamond:300000};
 
-const PLAN_PRICES = { weekly:50000, monthly:150000, diamond:300000 };
+/* ══════════════════════════════════════════════════════
+   XSS PROTECTION — تابع امن برای همه خروجی‌ها
+══════════════════════════════════════════════════════ */
+function escapeHtml(str) {
+  if(str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function safeNum(n) {
+  const v = parseInt(String(n||0).replace(/\D/g,''));
+  return isNaN(v) ? 0 : v;
+}
+function safeTxt(el, text) {
+  // برای عناصر DOM — textContent به جای innerHTML
+  if(el) el.textContent = text || '';
+}
 
 /* ══════════════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════════════ */
-let ST = { cat:'', sort:'newest', q:'' };
+let ST = {cat:'', sort:'newest', q:''};
 let cond = 'نو', pickedFiles = [], activeAd = null, currentData = [], isAdPost = false, phoneShown = false, supOpen = false;
 let saved = new Set(JSON.parse(localStorage.getItem('bz_saved') || '[]'));
 let currentUser = null, isAdmin = false;
 let adminCurrentTab = 'pending';
-let userPlansCache = {};    // user_id → plan record
-let currentPage = 0;
-let hasMorePages = false;
+let userPlansCache = {};
+let currentPage = 0, hasMorePages = false;
 let selectedPlan = 'weekly';
 
 /* ══════════════════════════════════════════════════════
-   SUPABASE INIT
+   SUPABASE
 ══════════════════════════════════════════════════════ */
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true }
+  auth: {persistSession:true, autoRefreshToken:true}
 });
 
 /* ══════════════════════════════════════════════════════
@@ -1175,11 +1025,11 @@ const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 ══════════════════════════════════════════════════════ */
 function toast(msg, type='') {
   const e = document.getElementById('toast');
-  e.innerHTML = msg; e.className = 'toast on ' + type;
+  e.textContent = msg; e.className = 'toast on ' + type;
   clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('on'), 3000);
 }
 function fmtFA(n) {
-  if(n === null || n === undefined || n === '') return '—';
+  if(n===null||n===undefined||n==='') return '—';
   const num = parseInt(String(n).replace(/\D/g,''));
   if(isNaN(num)) return '—';
   return num.toLocaleString('fa-IR');
@@ -1191,33 +1041,28 @@ function fmtEN(n) {
 function relTime(ts) {
   if(!ts) return '—';
   const d = Date.now() - new Date(ts).getTime();
-  if(d < 60000) return 'همین الان';
-  if(d < 3600000) return Math.floor(d/60000) + ' دقیقه پیش';
-  if(d < 86400000) return Math.floor(d/3600000) + ' ساعت پیش';
-  if(d < 604800000) return Math.floor(d/86400000) + ' روز پیش';
+  if(d<60000) return 'همین الان';
+  if(d<3600000) return Math.floor(d/60000)+' دقیقه پیش';
+  if(d<86400000) return Math.floor(d/3600000)+' ساعت پیش';
+  if(d<604800000) return Math.floor(d/86400000)+' روز پیش';
   return new Date(ts).toLocaleDateString('fa-IR');
 }
-function isNew(ts) { return ts && Date.now() - new Date(ts).getTime() < 3600000 * 6; }
-
+function isNew(ts) { return ts && Date.now()-new Date(ts).getTime() < 3600000*6; }
 function isPlanActive(pd) {
-  if(!pd || pd.plan === 'normal' || !pd.plan) return false;
+  if(!pd||pd.plan==='normal'||!pd.plan) return false;
   if(!pd.plan_expires_at) return false;
   return new Date(pd.plan_expires_at) > new Date();
 }
-
 function getUserPlan(userId) {
   if(!userId) return 'normal';
   const pd = userPlansCache[userId];
-  if(!pd || !isPlanActive(pd)) return 'normal';
+  if(!pd||!isPlanActive(pd)) return 'normal';
   return pd.plan;
 }
-
 function getPlanExpiry(plan) {
-  const now = new Date();
-  const days = PLANS[plan]?.days || 0;
+  const days = PLANS[plan]?.days||0;
   if(!days) return null;
-  const d = new Date(now);
-  d.setDate(d.getDate() + days);
+  const d = new Date(); d.setDate(d.getDate()+days);
   return d.toISOString();
 }
 
@@ -1226,46 +1071,36 @@ function getPlanExpiry(plan) {
 ══════════════════════════════════════════════════════ */
 async function initAuth() {
   try {
-    const { data: { session } } = await SB.auth.getSession();
+    const {data:{session}} = await SB.auth.getSession();
     if(session) await setUser(session.user);
-  } catch(e) { console.warn('Auth init error:', e); }
-
-  SB.auth.onAuthStateChange(async (_ev, session) => {
-    await setUser(session ? session.user : null);
-  });
+  } catch(e) { console.warn('Auth init:', e); }
+  SB.auth.onAuthStateChange(async(_ev, session) => { await setUser(session?session.user:null); });
 }
 
 async function setUser(user) {
   currentUser = user;
   const guestEl = document.getElementById('navGuest');
   const userEl  = document.getElementById('navUser');
-
   if(user) {
     isAdmin = (user.email === ADMIN_EMAIL);
     guestEl.style.display = 'none';
     userEl.style.display  = 'flex';
-
     const displayName = user.user_metadata?.name || user.email.split('@')[0];
     const avatarUrl   = user.user_metadata?.avatar_url || '';
     const initial     = (displayName||'ک').charAt(0).toUpperCase();
-
     const navAv = document.getElementById('navAvatar');
-    navAv.innerHTML = avatarUrl ? `<img src="${avatarUrl}" alt="" loading="lazy">` : initial;
+    navAv.innerHTML = avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" alt="" loading="lazy">` : escapeHtml(initial);
     document.getElementById('navEmail').textContent = displayName;
     document.getElementById('adminNavBtn').style.display = isAdmin ? 'flex' : 'none';
-
     document.getElementById('profileGuest').style.display = 'none';
     document.getElementById('profileUser').style.display  = 'block';
     const profAv = document.getElementById('profileAvatar');
-    profAv.innerHTML = avatarUrl ? `<img src="${avatarUrl}" alt="" loading="lazy">` : initial;
+    profAv.innerHTML = avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" alt="" loading="lazy">` : escapeHtml(initial);
     document.getElementById('profileName').textContent  = displayName;
     document.getElementById('profileEmail').textContent = user.email;
-    document.getElementById('profileSince').innerHTML   = `<i class="ti ti-calendar" style="font-size:11px"></i> عضو از ${new Date(user.created_at || Date.now()).toLocaleDateString('fa-IR')}`;
-
+    document.getElementById('profileSince').innerHTML   = `<i class="ti ti-calendar" style="font-size:11px"></i> عضو از ${new Date(user.created_at||Date.now()).toLocaleDateString('fa-IR')}`;
     await loadMyPlan();
     updateSellPage();
-
-    // رفرش آگهی‌ها بعد از لاگین
     render();
   } else {
     isAdmin = false;
@@ -1282,23 +1117,18 @@ async function setUser(user) {
 async function loadMyPlan() {
   if(!currentUser) return;
   try {
-    const { data } = await SB.from('user_plans')
-      .select('plan, plan_expires_at, updated_at')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();   // ← maybeSingle به‌جای single — خطا نمیده اگه نبود
-
-    const plan = (data && isPlanActive(data)) ? data.plan : 'normal';
-    const pd = PLANS[plan] || PLANS.normal;
+    const {data} = await SB.from('user_plans').select('plan,plan_expires_at,updated_at').eq('user_id',currentUser.id).maybeSingle();
+    const plan = (data&&isPlanActive(data)) ? data.plan : 'normal';
+    const pd = PLANS[plan]||PLANS.normal;
     const row = document.getElementById('profilePlanRow');
-    if(plan !== 'normal') {
+    if(plan!=='normal') {
       const exp = data?.plan_expires_at ? new Date(data.plan_expires_at).toLocaleDateString('fa-IR') : '';
-      row.innerHTML = `<span class="plan-badge ${pd.cls}">${pd.icon} اشتراک ${pd.label}</span>${exp ? `<span style="font-size:11px;color:var(--t3)">تا ${exp}</span>` : ''}`;
+      row.innerHTML = `<span class="plan-badge ${escapeHtml(pd.cls)}">${escapeHtml(pd.icon)} اشتراک ${escapeHtml(pd.label)}</span>${exp?`<span style="font-size:11px;color:var(--t3)">تا ${escapeHtml(exp)}</span>`:''}`;
     } else {
       row.innerHTML = `<span class="plan-badge" style="background:var(--sand);color:var(--t2)">کاربر معمولی</span><button onclick="openAdModal()" style="font-size:11px;color:var(--mint);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:700">ارتقا ↗</button>`;
     }
-    // آپدیت کش
     if(data) userPlansCache[currentUser.id] = data;
-  } catch(e) { console.warn('loadMyPlan error:', e); }
+  } catch(e) { console.warn('loadMyPlan:', e); }
 }
 
 function updateSellPage() {
@@ -1306,25 +1136,19 @@ function updateSellPage() {
   const form = document.getElementById('formArea');
   const succ = document.getElementById('successArea');
   if(currentUser) {
-    gate.style.display = 'none';
-    if(succ.style.display === 'none' || succ.style.display === '') form.style.display = 'block';
+    gate.style.display='none';
+    if(succ.style.display==='none'||succ.style.display==='') form.style.display='block';
   } else {
-    gate.style.display = 'block';
-    form.style.display = 'none';
-    succ.style.display = 'none';
+    gate.style.display='block'; form.style.display='none'; succ.style.display='none';
   }
 }
 
 /* ══════════════════════════════════════════════════════
    AUTH MODAL
 ══════════════════════════════════════════════════════ */
-function openAuthModal(tab='login') {
-  document.getElementById('authModalBg').classList.add('on');
-  switchAuthTab(tab);
-}
+function openAuthModal(tab='login') { document.getElementById('authModalBg').classList.add('on'); switchAuthTab(tab); }
 function closeAuthModal() { document.getElementById('authModalBg').classList.remove('on'); }
 document.getElementById('authModalBg').addEventListener('click', e => { if(e.target===e.currentTarget) closeAuthModal(); });
-
 function switchAuthTab(tab) {
   document.getElementById('authLoginPanel').style.display    = tab==='login'    ? 'block' : 'none';
   document.getElementById('authRegisterPanel').style.display = tab==='register' ? 'block' : 'none';
@@ -1339,17 +1163,11 @@ async function doLogin() {
   errEl.classList.remove('on');
   if(!email||!pass){ errEl.textContent='ایمیل و رمز را وارد کن'; errEl.classList.add('on'); return; }
   const btn = document.getElementById('btnLogin');
-  btn.disabled=true; btn.innerHTML='⏳ در حال ورود...';
+  btn.disabled=true; btn.textContent='⏳ در حال ورود...';
   try {
-    const {data, error} = await SB.auth.signInWithPassword({email, password:pass});
-    if(error) {
-      const msg = error.message==='Invalid login credentials' ? 'ایمیل یا رمز اشتباه است' : 'خطا: '+error.message;
-      errEl.textContent=msg; errEl.classList.add('on');
-    } else {
-      closeAuthModal();
-      if(email===ADMIN_EMAIL){ toast('✅ خوش آمدی ادمین!','ok'); switchPage('admin'); }
-      else toast('✅ خوش آمدی!','ok');
-    }
+    const {error} = await SB.auth.signInWithPassword({email, password:pass});
+    if(error) { errEl.textContent = error.message==='Invalid login credentials'?'ایمیل یا رمز اشتباه است':'خطا: '+error.message; errEl.classList.add('on'); }
+    else { closeAuthModal(); if(email===ADMIN_EMAIL){toast('✅ خوش آمدی ادمین!','ok');switchPage('admin');}else toast('✅ خوش آمدی!','ok'); }
   } catch(e) { errEl.textContent='خطا در اتصال'; errEl.classList.add('on'); }
   btn.disabled=false; btn.innerHTML='<i class="ti ti-login" style="font-size:16px"></i>ورود';
 }
@@ -1366,14 +1184,11 @@ async function doRegister() {
   if(pass.length<6){ errEl.textContent='رمز باید حداقل ۶ کاراکتر باشد'; errEl.classList.add('on'); return; }
   if(pass!==pass2){ errEl.textContent='تکرار رمز مطابقت ندارد'; errEl.classList.add('on'); return; }
   const btn = document.getElementById('btnRegister');
-  btn.disabled=true; btn.innerHTML='⏳ در حال ثبت...';
+  btn.disabled=true; btn.textContent='⏳ در حال ثبت...';
   try {
     const {error} = await SB.auth.signUp({email, password:pass, options:{data:{name}}});
     if(error){ errEl.textContent='خطا: '+error.message; errEl.classList.add('on'); }
-    else {
-      closeAuthModal();
-      toast('🎉 ثبت‌نام موفق! به بازارنو خوش آمدی','ok');
-    }
+    else { closeAuthModal(); toast('🎉 ثبت‌نام موفق! به بازارنو خوش آمدی','ok'); }
   } catch(e) { errEl.textContent='خطا در اتصال'; errEl.classList.add('on'); }
   btn.disabled=false; btn.innerHTML='<i class="ti ti-user-plus" style="font-size:16px"></i>ثبت‌نام';
 }
@@ -1386,48 +1201,43 @@ async function doLogout() {
 }
 
 /* ══════════════════════════════════════════════════════
-   AVATAR UPLOAD
+   AVATAR
 ══════════════════════════════════════════════════════ */
 document.getElementById('avatarInput').addEventListener('change', async function() {
   if(!currentUser||!this.files[0]) return;
   const file = this.files[0];
-  if(file.size > 3*1024*1024){ toast('حداکثر ۳MB','err'); return; }
+  if(file.size>3*1024*1024){ toast('حداکثر ۳MB','err'); return; }
   toast('⏳ در حال آپلود عکس...');
   const ext = file.name.split('.').pop()||'jpg';
-  const fp = `avatars/${currentUser.id}.${ext}`;
+  const fp  = `avatars/${currentUser.id}.${ext}`;
   const {error:upErr} = await SB.storage.from('images').upload(fp, file, {upsert:true, contentType:file.type});
-  if(upErr){ toast('خطا در آپلود: '+upErr.message,'err'); return; }
+  if(upErr){ toast('خطا در آپلود','err'); return; }
   const {data:{publicUrl}} = SB.storage.from('images').getPublicUrl(fp);
-  const {error:updateErr} = await SB.auth.updateUser({data:{avatar_url: publicUrl+'?t='+Date.now()}});
-  if(updateErr){ toast('خطا: '+updateErr.message,'err'); return; }
-  const imgHtml = `<img src="${publicUrl}?t=${Date.now()}" alt="" loading="lazy">`;
+  const {error} = await SB.auth.updateUser({data:{avatar_url:publicUrl+'?t='+Date.now()}});
+  if(error){ toast('خطا: '+error.message,'err'); return; }
+  const imgHtml = `<img src="${escapeHtml(publicUrl)}?t=${Date.now()}" alt="" loading="lazy">`;
   document.getElementById('profileAvatar').innerHTML = imgHtml;
-  document.getElementById('navAvatar').innerHTML = imgHtml;
+  document.getElementById('navAvatar').innerHTML     = imgHtml;
   toast('✅ عکس پروفایل بروز شد','ok');
   this.value='';
 });
 
 /* ══════════════════════════════════════════════════════
-   LOAD USER PLANS (batch) — کش کردن
+   PLANS CACHE
 ══════════════════════════════════════════════════════ */
 async function loadUserPlansCache() {
   try {
     const {data} = await SB.from('user_plans').select('user_id,plan,plan_expires_at,updated_at');
     userPlansCache = {};
     (data||[]).forEach(p => { userPlansCache[p.user_id] = p; });
-  } catch(e) { console.warn('Plans cache error:', e); }
+  } catch(e) { console.warn('Plans cache:', e); }
 }
 
 /* ══════════════════════════════════════════════════════
-   RENDER — با اولویت‌بندی و صفحه‌بندی
+   RENDER — ضد XSS با escapeHtml
 ══════════════════════════════════════════════════════ */
-let renderDebounceT = null;
 async function render(loadMore=false) {
-  if(!loadMore) {
-    currentPage = 0;
-    currentData = [];
-  }
-
+  if(!loadMore) { currentPage=0; currentData=[]; }
   const grid = document.getElementById('adsGrid');
 
   if(!currentUser) {
@@ -1438,10 +1248,9 @@ async function render(loadMore=false) {
       <div class="login-gate-btns">
         <button onclick="openAuthModal('login')" class="btn-first"><i class="ti ti-login" style="font-size:14px"></i>ورود به حساب</button>
         <button onclick="openAuthModal('register')" style="display:inline-flex;align-items:center;gap:6px;background:var(--sand);color:var(--forest);border:none;border-radius:var(--pill);padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer"><i class="ti ti-user-plus" style="font-size:14px"></i>ثبت‌نام رایگان</button>
-      </div>
-    </div>`;
-    document.getElementById('hTotal').textContent = '—';
-    document.getElementById('resCnt').textContent = '—';
+      </div></div>`;
+    document.getElementById('hTotal').textContent='—';
+    document.getElementById('resCnt').textContent='—';
     return;
   }
 
@@ -1449,170 +1258,148 @@ async function render(loadMore=false) {
     grid.innerHTML = Array(6).fill(`<div class="skel"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line s"></div><div class="skel-line p"></div></div>`).join('');
   }
 
-  // لود پلن‌ها
   await loadUserPlansCache();
 
-  // Query
   let q = SB.from('listings').select('*').eq('status','approved');
   if(ST.cat) q = q.eq('cat', ST.cat);
   if(ST.q) {
-    const safe = ST.q.replace(/[%_]/g, '\\$&');
+    const safe = ST.q.replace(/[%_]/g,'\\$&');
     q = q.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,city.ilike.%${safe}%,brand.ilike.%${safe}%`);
   }
-  if(ST.sort==='cheapest')  q = q.order('price', {ascending:true});
-  else if(ST.sort==='expensive') q = q.order('price', {ascending:false});
-  else q = q.order('created_at', {ascending:false});
-
-  q = q.range(currentPage * PAGE_SIZE, (currentPage+1) * PAGE_SIZE);
+  if(ST.sort==='cheapest') q = q.order('price',{ascending:true});
+  else if(ST.sort==='expensive') q = q.order('price',{ascending:false});
+  else q = q.order('created_at',{ascending:false});
+  q = q.range(currentPage*PAGE_SIZE, (currentPage+1)*PAGE_SIZE);
 
   const {data, error} = await q;
   if(error) {
-    console.error('Fetch error:', error);
-    grid.innerHTML = `<div class="empty"><span class="ei">⚠️</span><h3>خطا در بارگذاری</h3><p>${error.message}</p></div>`;
+    grid.innerHTML = `<div class="empty"><span class="ei">⚠️</span><h3>خطا در بارگذاری</h3><p>${escapeHtml(error.message)}</p></div>`;
     return;
   }
 
-  const newItems = data || [];
+  const newItems = data||[];
   hasMorePages = newItems.length > PAGE_SIZE;
   const pageItems = newItems.slice(0, PAGE_SIZE);
 
   if(!loadMore) currentData = pageItems;
   else currentData = [...currentData, ...pageItems];
 
-  const total = currentData.filter(a=>a.status==='approved').length;
-  document.getElementById('resCnt').textContent = currentData.length + (hasMorePages ? '+ آگهی' : ' آگهی');
-  document.getElementById('hTotal').textContent = fmtFA(total) || '۰';
+  document.getElementById('resCnt').textContent = currentData.length+(hasMorePages?'+ آگهی':' آگهی');
+  document.getElementById('hTotal').textContent = fmtFA(currentData.length)||'۰';
 
   if(!currentData.length) {
-    grid.innerHTML = `<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای نیست'}</h3><p>${ST.q?'برای «'+ST.q+'» چیزی پیدا نشد.':'اولین نفر باش!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()"><i class="ti ti-plus"></i>ثبت اولین آگهی</button>':''}</div>`;
+    grid.innerHTML = `<div class="empty"><span class="ei">📋</span><h3>${ST.q?'نتیجه‌ای پیدا نشد':'هنوز آگهی‌ای نیست'}</h3><p>${ST.q?'برای «'+escapeHtml(ST.q)+'» چیزی پیدا نشد.':'اولین نفر باش!'}</p>${!ST.q?'<button class="btn-first" onclick="goSell()"><i class="ti ti-plus"></i>ثبت اولین آگهی</button>':''}</div>`;
     return;
   }
 
-  // اولویت‌بندی مانند دیوار: diamond > monthly > weekly > normal
-  const diamonds = currentData.filter(a => getUserPlan(a.user_id)==='diamond');
-  const golds    = currentData.filter(a => getUserPlan(a.user_id)==='monthly');
-  const weeklies = currentData.filter(a => getUserPlan(a.user_id)==='weekly');
-  const normals  = currentData.filter(a => getUserPlan(a.user_id)==='normal');
+  const diamonds = currentData.filter(a=>getUserPlan(a.user_id)==='diamond');
+  const golds    = currentData.filter(a=>getUserPlan(a.user_id)==='monthly');
+  const weeklies = currentData.filter(a=>getUserPlan(a.user_id)==='weekly');
+  const normals  = currentData.filter(a=>getUserPlan(a.user_id)==='normal');
 
   let html = '';
-  if(diamonds.length) {
-    html += `<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--diamond)"><i class="ti ti-diamond" style="font-size:11px"></i>اشتراک الماس</div><div class="sponsored-line" style="background:rgba(99,102,241,.25)"></div></div>`;
-    html += diamonds.map(cardHtml).join('');
-  }
-  if(golds.length) {
-    html += `<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--amber)"><i class="ti ti-medal" style="font-size:11px"></i>اشتراک طلایی</div><div class="sponsored-line"></div></div>`;
-    html += golds.map(cardHtml).join('');
-  }
-  if(weeklies.length) {
-    html += `<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--green)"><i class="ti ti-star" style="font-size:11px"></i>اشتراک ویژه</div><div class="sponsored-line" style="background:rgba(37,176,103,.25)"></div></div>`;
-    html += weeklies.map(cardHtml).join('');
-  }
-  if(normals.length && (diamonds.length||golds.length||weeklies.length)) {
-    html += `<div class="sponsored-row" style="margin-top:4px"><div class="sponsored-lbl" style="color:var(--t3)">سایر آگهی‌ها</div><div class="sponsored-line" style="background:rgba(0,0,0,.07)"></div></div>`;
-  }
-  html += normals.map(cardHtml).join('');
-
-  if(hasMorePages) {
-    html += `<div class="load-more-wrap"><button class="btn-load-more" onclick="loadMoreAds()"><i class="ti ti-refresh" style="font-size:14px"></i>نمایش بیشتر</button></div>`;
-  }
+  if(diamonds.length){html+=`<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--diamond)"><i class="ti ti-diamond" style="font-size:11px"></i>اشتراک الماس</div><div class="sponsored-line" style="background:rgba(99,102,241,.25)"></div></div>`;html+=diamonds.map(cardHtml).join('');}
+  if(golds.length){html+=`<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--amber)"><i class="ti ti-medal" style="font-size:11px"></i>اشتراک طلایی</div><div class="sponsored-line"></div></div>`;html+=golds.map(cardHtml).join('');}
+  if(weeklies.length){html+=`<div class="sponsored-row"><div class="sponsored-lbl" style="color:var(--green)"><i class="ti ti-star" style="font-size:11px"></i>اشتراک ویژه</div><div class="sponsored-line" style="background:rgba(37,176,103,.25)"></div></div>`;html+=weeklies.map(cardHtml).join('');}
+  if(normals.length&&(diamonds.length||golds.length||weeklies.length)){html+=`<div class="sponsored-row" style="margin-top:4px"><div class="sponsored-lbl" style="color:var(--t3)">سایر آگهی‌ها</div><div class="sponsored-line" style="background:rgba(0,0,0,.07)"></div></div>`;}
+  html+=normals.map(cardHtml).join('');
+  if(hasMorePages){html+=`<div class="load-more-wrap"><button class="btn-load-more" onclick="loadMoreAds()"><i class="ti ti-refresh" style="font-size:14px"></i>نمایش بیشتر</button></div>`;}
 
   if(!loadMore) {
     grid.innerHTML = html;
   } else {
-    // حذف دکمه قبلی و اضافه کردن
     const oldBtn = grid.querySelector('.load-more-wrap');
     if(oldBtn) oldBtn.remove();
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     while(tmp.firstChild) grid.appendChild(tmp.firstChild);
   }
-
-  // Event listeners
   grid.querySelectorAll('.adcard').forEach(c => c.addEventListener('click', () => openModal(c.dataset.id)));
 }
 
-function loadMoreAds() {
-  currentPage++;
-  render(true);
-}
+function loadMoreAds() { currentPage++; render(true); }
 
+/* ═══ CARD HTML — ضد XSS — عمودی ═══ */
 function cardHtml(ad) {
-  const em = EMOJIS[ad.cat]||'📦';
-  const img0 = ad.images && ad.images.length ? ad.images[0] : null;
-  const isSaved = saved.has(ad.id);
-  const fresh = isNew(ad.created_at);
+  if(!ad||!ad.id) return '';
 
+  const em     = EMOJIS[ad.cat]||'📦';
+  const imgs   = Array.isArray(ad.images) ? ad.images.filter(Boolean) : [];
+  const img0   = imgs[0]||null;
+  const isSaved = saved.has(ad.id);
+  const fresh  = isNew(ad.created_at);
+
+  // ← همه رشته‌های کاربر escape میشن
+  const safeId    = escapeHtml(ad.id);
+  const safeTitle = escapeHtml(ad.title||'بدون عنوان');
+  const safeCat   = escapeHtml(ad.cat||'سایر');
+  const safeCity  = escapeHtml(ad.city||'—');
+
+  // وضعیت کالا
   let ctC='', ctT='';
   if(ad.cond==='نو'){ctC='ct-new';ctT='نو';}
   else if(ad.cond==='در حد نو'){ctC='ct-good';ctT='در حد نو';}
   else if(ad.cond==='کارکرده سالم'){ctC='ct-used';ctT='کارکرده';}
   else if(ad.cond==='نیاز به تعمیر'){ctC='ct-fix';ctT='نیاز تعمیر';}
 
+  // badge اشتراک
   const plan = getUserPlan(ad.user_id);
-  let topBadge = '';
-  let cardCls = '';
-  if(plan==='diamond'){
-    topBadge = '<span class="ad-diamond-badge">💎 الماس</span>';
-    cardCls = ' is-diamond';
-  } else if(plan==='monthly'){
-    topBadge = '<span class="ad-gold-badge">🥇 طلایی</span>';
-    cardCls = ' is-gold';
-  } else if(plan==='weekly'){
-    topBadge = '<span class="ad-weekly-badge">⚡ ویژه</span>';
-    cardCls = ' is-ad';
-  } else if(fresh) {
-    topBadge = '<span class="new-badge">جدید</span>';
-  }
+  let topBadge='', cardCls='';
+  if(plan==='diamond'){topBadge='<span class="ad-diamond-badge">💎 الماس</span>';cardCls=' is-diamond';}
+  else if(plan==='monthly'){topBadge='<span class="ad-gold-badge">🥇 طلایی</span>';cardCls=' is-gold';}
+  else if(plan==='weekly'){topBadge='<span class="ad-weekly-badge">⚡ ویژه</span>';cardCls=' is-ad';}
+  else if(fresh){topBadge='<span class="new-badge">جدید</span>';}
 
-  const priceNum = parseInt(String(ad.price||0).replace(/\D/g,''));
-  const priceStr = priceNum > 0 ? priceNum.toLocaleString('fa-IR') : 'توافقی';
+  // قیمت
+  const priceNum = safeNum(ad.price);
+  const priceStr = priceNum>0 ? priceNum.toLocaleString('fa-IR') : 'توافقی';
+  const nego     = ad.nego==='بله';
 
-  return `<div class="adcard${cardCls}" data-id="${ad.id}">
+  // ساخت عکس یا placeholder
+  const imgHtml = img0
+    ? `<img src="${escapeHtml(img0)}" loading="lazy" alt="${safeTitle}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const emojiHtml = `<div class="adcard-emoji" style="${img0?'display:none':''}">‌${em}</div>`;
+
+  return `<div class="adcard${cardCls}" data-id="${safeId}">
     <div class="adcard-img">
-      ${img0
-        ? `<img src="${img0}" loading="lazy" alt="${ad.title||''}" onerror="this.parentElement.innerHTML='<div class=\\"adcard-emoji\\">${em}</div>'">`
-        : `<div class="adcard-emoji">${em}</div>`}
-      ${ctT ? `<span class="cond-tag ${ctC}">${ctT}</span>` : ''}
+      ${imgHtml}${emojiHtml}
+      ${ctT?`<span class="cond-tag ${ctC}">${ctT}</span>`:''}
       ${topBadge}
-      <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();handleFav('${ad.id}',this)" aria-label="نشان کن">
+      <button class="fav-btn ${isSaved?'on':''}" onclick="event.stopPropagation();handleFav('${safeId}',this)" aria-label="نشان کن">
         <i class="ti ti-heart${isSaved?'-filled':''}"></i>
       </button>
     </div>
     <div class="adcard-body">
-      <div class="adcard-cat">${ad.cat||'سایر'}</div>
-      <div class="adcard-title">${ad.title||'بدون عنوان'}</div>
-      <div class="adcard-loc"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city||'—'} · ${relTime(ad.created_at)}</div>
+      <div class="adcard-cat">${safeCat}</div>
+      <div class="adcard-title">${safeTitle}</div>
+      <div class="adcard-loc"><i class="ti ti-map-pin" style="font-size:10px"></i>${safeCity} · ${relTime(ad.created_at)}</div>
       <div class="adcard-foot">
-        <div class="adcard-price">${priceStr}<small>تومان${ad.nego==='بله'?' · توافقی':''}</small></div>
+        <div class="adcard-price">${priceStr}<small>تومان${nego?' · توافقی':''}</small></div>
         <div class="see-btn"><i class="ti ti-eye" style="font-size:11px"></i>مشاهده</div>
       </div>
     </div>
   </div>`;
 }
 
-/* نشان: فقط لاگین‌شده‌ها */
 function handleFav(id, btn) {
-  if(!currentUser) { openAuthModal('login'); toast('برای نشان کردن ابتدا وارد شو','err'); return; }
+  if(!currentUser){ openAuthModal('login'); toast('برای نشان کردن ابتدا وارد شو','err'); return; }
   toggleSave(id, btn);
 }
 
 /* ══════════════════════════════════════════════════════
-   DETAIL MODAL
+   DETAIL MODAL — textContent برای همه داده‌های کاربر
 ══════════════════════════════════════════════════════ */
 async function openModal(id) {
-  if(!currentUser) { openAuthModal('login'); return; }
+  if(!currentUser){ openAuthModal('login'); return; }
   let ad = currentData.find(a=>a.id===id);
   if(!ad) {
-    // لود مستقیم از دیتابیس
     const {data} = await SB.from('listings').select('*').eq('id',id).maybeSingle();
     if(!data) return;
-    ad = data;
-    currentData.push(ad);
+    ad=data; currentData.push(ad);
   }
   activeAd=ad; phoneShown=false;
-
-  // بروزرسانی views در بک‌گراند
-  SB.from('listings').update({views:(parseInt(ad.views)||0)+1}).eq('id',id).then(()=>{});
+  SB.from('listings').update({views:(safeNum(ad.views))+1}).eq('id',id).then(()=>{});
 
   const imgs = Array.isArray(ad.images) ? ad.images.filter(Boolean) : [];
   const mImg  = document.getElementById('mImg');
@@ -1620,58 +1407,123 @@ async function openModal(id) {
 
   if(imgs.length) {
     mImg.src=imgs[0]; mImg.style.display='block'; mEmoji.style.display='none';
-    mImg.onerror = () => { mImg.style.display='none'; mEmoji.style.display='flex'; mEmoji.textContent=EMOJIS[ad.cat]||'📦'; };
+    mImg.onerror=()=>{mImg.style.display='none';mEmoji.style.display='flex';mEmoji.textContent=EMOJIS[ad.cat]||'📦';};
   } else {
-    mImg.style.display='none'; mEmoji.style.display='flex'; mEmoji.textContent=EMOJIS[ad.cat]||'📦';
+    mImg.style.display='none'; mEmoji.style.display='flex';
+    mEmoji.textContent = EMOJIS[ad.cat]||'📦'; // textContent — safe
   }
 
-  document.getElementById('mThumbs').innerHTML = imgs.length > 1
-    ? imgs.map((s,i)=>`<div class="m-thumb ${i===0?'on':''}" onclick="switchImg('${s}',this)"><img src="${s}" loading="lazy" alt=""></div>`).join('') : '';
+  // thumbnails
+  const thumbsEl = document.getElementById('mThumbs');
+  thumbsEl.innerHTML = '';
+  if(imgs.length>1) {
+    imgs.forEach((s,i) => {
+      const div = document.createElement('div');
+      div.className = 'm-thumb'+(i===0?' on':'');
+      div.onclick = () => switchImg(s, div);
+      const img = document.createElement('img');
+      img.src=s; img.loading='lazy'; img.alt='';
+      div.appendChild(img);
+      thumbsEl.appendChild(div);
+    });
+  }
 
-  document.getElementById('mCat').innerHTML = `<i class="ti ti-tag" style="font-size:11px"></i>${ad.cat||'آگهی'}`;
+  // cat — safe با textContent
+  const mCat = document.getElementById('mCat');
+  mCat.innerHTML = '<i class="ti ti-tag" style="font-size:11px"></i>';
+  mCat.appendChild(document.createTextNode(ad.cat||'آگهی'));
+
   document.getElementById('mAdBanner').style.display = ad.is_ad ? 'flex' : 'none';
+
+  // title — textContent
   document.getElementById('mTitle').textContent = ad.title||'بدون عنوان';
 
-  const priceNum = parseInt(String(ad.price||0).replace(/\D/g,''));
-  document.getElementById('mPrice').innerHTML = (priceNum>0 ? priceNum.toLocaleString('fa-IR') : 'توافقی') + ' <small>تومان</small>';
-  document.getElementById('mNego').innerHTML = ad.nego==='بله' ? '<span class="nego-chip"><i class="ti ti-repeat" style="font-size:10px"></i>قابل مذاکره</span>' : '';
-  document.getElementById('mSeller').innerHTML = `<div class="seller-av">${(ad.name||'ن').charAt(0)}</div><div><div class="seller-nm">${ad.name||'ناشناس'}</div><div class="seller-mt"><i class="ti ti-map-pin" style="font-size:10px"></i>${ad.city||'—'}</div></div>`;
+  // price — safe
+  const priceNum = safeNum(ad.price);
+  const mPrice = document.getElementById('mPrice');
+  mPrice.innerHTML = '';
+  const priceText = document.createTextNode((priceNum>0?priceNum.toLocaleString('fa-IR'):'توافقی')+' ');
+  const smallEl = document.createElement('small');
+  smallEl.textContent = 'تومان';
+  mPrice.appendChild(priceText);
+  mPrice.appendChild(smallEl);
 
+  const mNego = document.getElementById('mNego');
+  mNego.innerHTML = '';
+  if(ad.nego==='بله') {
+    mNego.innerHTML = '<span class="nego-chip"><i class="ti ti-repeat" style="font-size:10px"></i>قابل مذاکره</span>';
+  }
+
+  // seller box — safe
+  const mSeller = document.getElementById('mSeller');
+  mSeller.innerHTML = '';
+  const avDiv = document.createElement('div'); avDiv.className='seller-av';
+  avDiv.textContent = (ad.name||'ن').charAt(0);
+  const infoDiv = document.createElement('div');
+  const nmDiv = document.createElement('div'); nmDiv.className='seller-nm';
+  nmDiv.textContent = ad.name||'ناشناس';
+  const mtDiv = document.createElement('div'); mtDiv.className='seller-mt';
+  mtDiv.innerHTML = '<i class="ti ti-map-pin" style="font-size:10px"></i>';
+  mtDiv.appendChild(document.createTextNode(ad.city||'—'));
+  infoDiv.appendChild(nmDiv); infoDiv.appendChild(mtDiv);
+  mSeller.appendChild(avDiv); mSeller.appendChild(infoDiv);
+
+  // details chips — safe
   const details = [
-    {l:'وضعیت', v:ad.cond||'—'},
+    {l:'وضعیت',v:ad.cond||'—'},
     {l:'دسته',  v:ad.cat||'—'},
     {l:'شهر',   v:ad.city||'—'},
     {l:'ثبت',   v:relTime(ad.created_at)},
     ...(ad.brand ? [{l:'برند',v:ad.brand}] : [])
   ];
-  document.getElementById('mDetails').innerHTML = details.map(x=>`<div class="dchip"><div class="dl">${x.l}</div><div class="dv">${x.v}</div></div>`).join('');
-  document.getElementById('mDesc').textContent = ad.description || ad.desc || 'توضیحاتی وارد نشده.';
+  const mDetails = document.getElementById('mDetails');
+  mDetails.innerHTML = '';
+  details.forEach(x => {
+    const chip = document.createElement('div'); chip.className='dchip';
+    const dl = document.createElement('div'); dl.className='dl'; dl.textContent=x.l;
+    const dv = document.createElement('div'); dv.className='dv'; dv.textContent=x.v;
+    chip.appendChild(dl); chip.appendChild(dv);
+    mDetails.appendChild(chip);
+  });
 
+  // desc — textContent (ضد XSS)
+  document.getElementById('mDesc').textContent = ad.description||ad.desc||'توضیحاتی وارد نشده.';
+
+  // phone reset
   document.getElementById('phoneReveal').style.display='none';
   document.getElementById('mCallBtn').innerHTML='<i class="ti ti-phone"></i>نمایش شماره';
 
-  const isSavedNow = saved.has(ad.id);
-  document.getElementById('mSaveBtn').innerHTML = `<i class="ti ti-heart${isSavedNow?'-filled':''}"></i>${isSavedNow?'نشان شده':'نشان کن'}`;
-  document.getElementById('mViews').innerHTML = `<span><i class="ti ti-eye"></i>${((parseInt(ad.views)||0)+1).toLocaleString('fa-IR')} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
+  // save btn
+  const on = saved.has(ad.id);
+  document.getElementById('mSaveBtn').innerHTML = `<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
+
+  // views
+  const mViews = document.getElementById('mViews');
+  const viewCount = (safeNum(ad.views)+1).toLocaleString('fa-IR');
+  mViews.innerHTML = `<span><i class="ti ti-eye"></i>${viewCount} بازدید</span><span><i class="ti ti-calendar"></i>${relTime(ad.created_at)}</span>`;
+
   document.getElementById('modalBg').classList.add('on');
 }
 
-function switchImg(s,el) {
-  const mImg = document.getElementById('mImg');
+function switchImg(s, el) {
+  const mImg=document.getElementById('mImg');
   mImg.src=s; mImg.style.display='block';
   document.getElementById('mEmoji').style.display='none';
-  document.querySelectorAll('.m-thumb').forEach(t=>t.classList.remove('on')); el.classList.add('on');
+  document.querySelectorAll('.m-thumb').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
 }
+
 document.getElementById('mClose').onclick = () => document.getElementById('modalBg').classList.remove('on');
-document.getElementById('modalBg').addEventListener('click', e => { if(e.target===e.currentTarget) e.currentTarget.classList.remove('on'); });
+document.getElementById('modalBg').addEventListener('click', e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('on');});
 
 document.getElementById('mCallBtn').onclick = () => {
   if(!activeAd) return;
   if(!phoneShown) {
-    phoneShown = true;
+    phoneShown=true;
     const pr = document.getElementById('phoneReveal');
-    pr.textContent = '📞 ' + (activeAd.phone||'—'); pr.style.display = 'block';
-    document.getElementById('mCallBtn').innerHTML = '<i class="ti ti-copy"></i>کپی شماره';
+    pr.textContent = '📞 '+(activeAd.phone||'—');
+    pr.style.display='block';
+    document.getElementById('mCallBtn').innerHTML='<i class="ti ti-copy"></i>کپی شماره';
     toast('شماره نمایش داده شد','ok');
   } else {
     navigator.clipboard?.writeText(activeAd.phone||'').then(()=>toast('📋 شماره کپی شد','ok')).catch(()=>toast('شماره: '+(activeAd.phone||'—')));
@@ -1681,186 +1533,159 @@ document.getElementById('mSaveBtn').onclick = () => {
   if(!activeAd) return;
   if(!currentUser){ openAuthModal('login'); return; }
   toggleSave(activeAd.id, null);
-  const on = saved.has(activeAd.id);
-  document.getElementById('mSaveBtn').innerHTML = `<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
+  const on=saved.has(activeAd.id);
+  document.getElementById('mSaveBtn').innerHTML=`<i class="ti ti-heart${on?'-filled':''}"></i>${on?'نشان شده':'نشان کن'}`;
 };
 
 /* ══════════════════════════════════════════════════════
    SAVED
 ══════════════════════════════════════════════════════ */
 function updateBadge() {
-  const n = saved.size;
-  document.getElementById('svBadge').textContent = n;
-  document.getElementById('svBadge').style.display = n ? 'flex' : 'none';
-  document.getElementById('mtBadge').textContent = n;
-  document.getElementById('mtBadge').style.display = n ? 'flex' : 'none';
+  const n=saved.size;
+  document.getElementById('svBadge').textContent=n;
+  document.getElementById('svBadge').style.display=n?'flex':'none';
+  document.getElementById('mtBadge').textContent=n;
+  document.getElementById('mtBadge').style.display=n?'flex':'none';
 }
 updateBadge();
 
 function toggleSave(id, btn) {
-  if(saved.has(id)){ saved.delete(id); toast('آگهی از نشان‌ها حذف شد'); }
-  else             { saved.add(id);    toast('🔖 آگهی نشان شد','ok'); }
-  localStorage.setItem('bz_saved', JSON.stringify([...saved]));
-  if(btn) {
-    const isFav = saved.has(id);
-    btn.classList.toggle('on', isFav);
-    btn.innerHTML = `<i class="ti ti-heart${isFav?'-filled':''}"></i>`;
-  }
+  if(saved.has(id)){saved.delete(id);toast('آگهی از نشان‌ها حذف شد');}
+  else{saved.add(id);toast('🔖 آگهی نشان شد','ok');}
+  localStorage.setItem('bz_saved',JSON.stringify([...saved]));
+  if(btn){const f=saved.has(id);btn.classList.toggle('on',f);btn.innerHTML=`<i class="ti ti-heart${f?'-filled':''}"></i>`;}
   updateBadge();
 }
-
 function clearAllSaved() {
-  if(!currentUser){ openAuthModal('login'); return; }
+  if(!currentUser){openAuthModal('login');return;}
   if(!saved.size) return;
-  saved.clear(); localStorage.setItem('bz_saved','[]'); updateBadge(); renderSaved(); toast('همه نشان‌ها حذف شد');
+  saved.clear();localStorage.setItem('bz_saved','[]');updateBadge();renderSaved();toast('همه نشان‌ها حذف شد');
 }
-
 async function renderSaved() {
-  const grid = document.getElementById('savedGrid');
-  if(!currentUser) {
-    grid.innerHTML = `<div class="login-gate"><div class="gate-icon">🔐</div><h3>برای مشاهده نشان‌ها وارد شو</h3><p></p><div class="login-gate-btns"><button onclick="openAuthModal('login')" class="btn-first">ورود</button></div></div>`;
-    return;
-  }
-  if(!saved.size) {
-    grid.innerHTML = '<div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>';
-    return;
-  }
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--t3)">در حال بارگذاری...</div>';
+  const grid=document.getElementById('savedGrid');
+  if(!currentUser){grid.innerHTML=`<div class="login-gate"><div class="gate-icon">🔐</div><h3>برای مشاهده نشان‌ها وارد شو</h3><p></p><div class="login-gate-btns"><button onclick="openAuthModal('login')" class="btn-first">ورود</button></div></div>`;return;}
+  if(!saved.size){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>هنوز آگهی‌ای نشان نشده</h3><p>روی ❤️ هر آگهی بزن تا اینجا ذخیره بشه</p></div>';return;}
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--t3)">در حال بارگذاری...</div>';
   try {
-    const {data} = await SB.from('listings').select('*').in('id',[...saved]);
-    if(!data||!data.length) {
-      grid.innerHTML = '<div class="saved-empty"><span class="se-i">🔖</span><h3>آگهی‌ها حذف شده‌اند</h3></div>';
-      return;
-    }
-    // پلن‌ها
+    const {data}=await SB.from('listings').select('*').in('id',[...saved]);
+    if(!data||!data.length){grid.innerHTML='<div class="saved-empty"><span class="se-i">🔖</span><h3>آگهی‌ها حذف شده‌اند</h3></div>';return;}
     await loadUserPlansCache();
-    // اضافه به کش
-    data.forEach(d=>{ if(!currentData.find(c=>c.id===d.id)) currentData.push(d); });
-    grid.innerHTML = data.map(cardHtml).join('');
+    data.forEach(d=>{if(!currentData.find(c=>c.id===d.id))currentData.push(d);});
+    grid.innerHTML=data.map(cardHtml).join('');
     grid.querySelectorAll('.adcard').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
-  } catch(e) {
-    grid.innerHTML = '<div class="saved-empty"><span class="se-i">⚠️</span><h3>خطا در بارگذاری</h3></div>';
-  }
+  } catch(e){grid.innerHTML='<div class="saved-empty"><span class="se-i">⚠️</span><h3>خطا در بارگذاری</h3></div>';}
 }
 
 /* ══════════════════════════════════════════════════════
    SUBMIT LISTING
 ══════════════════════════════════════════════════════ */
 document.getElementById('submitBtn').addEventListener('click', async () => {
-  if(!currentUser){ openAuthModal('login'); return; }
-  const title = document.getElementById('fTitle').value.trim();
-  const cat   = document.getElementById('fCat').value;
+  if(!currentUser){openAuthModal('login');return;}
+  const title  = document.getElementById('fTitle').value.trim();
+  const cat    = document.getElementById('fCat').value;
   const priceRaw = document.getElementById('fPrice').value.replace(/[^0-9]/g,'').trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const city  = document.getElementById('fCity').value.trim();
+  const phone  = document.getElementById('fPhone').value.trim();
+  const city   = document.getElementById('fCity').value.trim();
   const description = document.getElementById('fDesc').value.trim();
-  const nego  = document.getElementById('fNego').value;
-  const name  = document.getElementById('fName').value.trim();
-  const brand = document.getElementById('fBrand').value.trim();
+  const nego   = document.getElementById('fNego').value;
+  const name   = document.getElementById('fName').value.trim();
+  const brand  = document.getElementById('fBrand').value.trim();
 
-  if(!title){ toast('⚠️ عنوان رو بنویس','err'); return; }
-  if(!cat)  { toast('⚠️ دسته‌بندی انتخاب کن','err'); return; }
-  if(!priceRaw){ toast('⚠️ قیمت وارد کن','err'); return; }
-  if(!phone || phone.replace(/\D/g,'').length !== 11){ toast('⚠️ شماره معتبر ۱۱ رقمی وارد کن','err'); return; }
-  if(!city) { toast('⚠️ شهر رو بنویس','err'); return; }
+  if(!title){toast('⚠️ عنوان رو بنویس','err');return;}
+  if(!cat){toast('⚠️ دسته‌بندی انتخاب کن','err');return;}
+  if(!priceRaw){toast('⚠️ قیمت وارد کن','err');return;}
+  if(!phone||phone.replace(/\D/g,'').length!==11){toast('⚠️ شماره معتبر ۱۱ رقمی وارد کن','err');return;}
+  if(!city){toast('⚠️ شهر رو بنویس','err');return;}
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.innerHTML = '⏳ در حال ثبت...';
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='⏳ در حال ثبت...';
 
-  let imageUrls = [];
+  let imageUrls=[];
   for(const file of pickedFiles) {
-    const ext = file.name.split('.').pop().toLowerCase()||'jpg';
-    const fp = `listings/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const {error:upErr} = await SB.storage.from('images').upload(fp, file, {contentType:file.type});
-    if(!upErr) {
-      const {data:{publicUrl}} = SB.storage.from('images').getPublicUrl(fp);
-      imageUrls.push(publicUrl);
-    }
+    const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+    const fp=`listings/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const {error:upErr}=await SB.storage.from('images').upload(fp, file, {contentType:file.type});
+    if(!upErr){const {data:{publicUrl}}=SB.storage.from('images').getPublicUrl(fp);imageUrls.push(publicUrl);}
   }
 
-  const displayName = currentUser.user_metadata?.name || name || 'ناشناس';
-  const price = parseInt(priceRaw) || 0;
-
-  const {error} = await SB.from('listings').insert([{
+  const displayName = currentUser.user_metadata?.name||name||'ناشناس';
+  const price = parseInt(priceRaw)||0;
+  const {error}=await SB.from('listings').insert([{
     title, cat, cond, description, brand, price, nego, phone, city,
-    name: displayName, images: imageUrls, is_ad: isAdPost,
-    status: 'pending', user_id: currentUser.id,
-    views: 0, updated_at: new Date().toISOString()
+    name:displayName, images:imageUrls, is_ad:isAdPost,
+    status:'pending', user_id:currentUser.id, views:0,
+    updated_at:new Date().toISOString()
   }]);
 
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-check" style="font-size:16px"></i>ثبت آگهی';
-  if(error){ toast('❌ خطا: '+error.message,'err'); return; }
+  btn.disabled=false; btn.innerHTML='<i class="ti ti-check" style="font-size:16px"></i>ثبت آگهی';
+  if(error){toast('❌ خطا: '+error.message,'err');return;}
 
   document.getElementById('formArea').style.display='none';
-  document.getElementById('sicCard').innerHTML = [
+  // سیک فرم
+  const rows=[
     {l:'عنوان',  v:title},
     {l:'قیمت',   v:price.toLocaleString('fa-IR')+' تومان'},
     {l:'شهر',    v:city},
     {l:'تماس',   v:phone},
     {l:'وضعیت',  v:'⏳ در انتظار تأیید'}
-  ].map(r=>`<div class="sic-r"><span class="sl">${r.l}</span><span>${r.v}</span></div>`).join('');
+  ];
+  document.getElementById('sicCard').innerHTML = rows.map(r=>`<div class="sic-r"><span class="sl">${escapeHtml(r.l)}</span><span>${escapeHtml(r.v)}</span></div>`).join('');
   document.getElementById('successArea').style.display='';
   render();
 });
 
 /* ══════════════════════════════════════════════════════
-   PROFILE — آگهی‌های من
+   PROFILE — آگهی‌های من + حذف
 ══════════════════════════════════════════════════════ */
 async function loadMyListings() {
   if(!currentUser) return;
   const container = document.getElementById('myListings');
-  container.innerHTML = '<div class="profile-empty">در حال بارگذاری...</div>';
+  container.innerHTML='<div class="profile-empty">در حال بارگذاری...</div>';
   try {
-    const {data, error} = await SB.from('listings')
-      .select('*').eq('user_id', currentUser.id)
-      .order('created_at', {ascending:false});
-    if(error || !data || !data.length) {
-      container.innerHTML = '<div class="profile-empty">هنوز آگهی‌ای ثبت نکردی 📋</div>';
-      document.getElementById('pStatTotal').textContent='۰';
-      document.getElementById('pStatApproved').textContent='۰';
-      document.getElementById('pStatPending').textContent='۰';
+    const {data, error}=await SB.from('listings').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+    if(error||!data||!data.length){
+      container.innerHTML='<div class="profile-empty">هنوز آگهی‌ای ثبت نکردی 📋</div>';
+      ['pStatTotal','pStatApproved','pStatPending'].forEach(id=>document.getElementById(id).textContent='۰');
       return;
     }
     document.getElementById('pStatTotal').textContent    = fmtFA(data.length);
     document.getElementById('pStatApproved').textContent = fmtFA(data.filter(a=>a.status==='approved').length);
     document.getElementById('pStatPending').textContent  = fmtFA(data.filter(a=>a.status==='pending').length);
+
     container.innerHTML = data.map(ad => {
       const sb = ad.status==='approved'
         ? '<span class="approved-chip">✅ تأیید شده</span>'
         : ad.status==='rejected'
         ? '<span class="rejected-chip">❌ رد شده</span>'
-        : '<span class="pending-chip">⏳ در انتظار تأیید</span>';
-      const img = ad.images && ad.images[0];
-      return `<div class="admin-row" id="myad-${ad.id}">
-        ${img ? `<img class="admin-row-img" src="${img}" alt="" loading="lazy" onerror="this.innerHTML='${EMOJIS[ad.cat]||'📦'}'">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
+        : '<span class="pending-chip">⏳ در انتظار</span>';
+      const img = ad.images&&ad.images[0];
+      const safeId    = escapeHtml(ad.id);
+      const safeTitle = escapeHtml(ad.title||'بدون عنوان');
+      return `<div class="admin-row" id="myad-${safeId}">
+        ${img?`<img class="admin-row-img" src="${escapeHtml(img)}" alt="" loading="lazy">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
         <div class="admin-row-info">
-          <div class="admin-row-title">${ad.title}</div>
+          <div class="admin-row-title">${safeTitle}</div>
           <div class="admin-row-meta">
             <span>${fmtFA(ad.price)} تومان</span>
-            <span>${ad.city||'—'}</span>
+            <span>${escapeHtml(ad.city||'—')}</span>
             <span>${relTime(ad.created_at)}</span>
             ${sb}
           </div>
         </div>
         <div class="admin-row-actions">
-          <button class="btn-del-ad" onclick="deleteMyListing('${ad.id}')"><i class="ti ti-trash"></i>حذف</button>
+          <button class="btn-del-ad" onclick="deleteMyListing('${safeId}')"><i class="ti ti-trash"></i>حذف</button>
         </div>
       </div>`;
     }).join('');
-  } catch(e) {
-    container.innerHTML = '<div class="profile-empty">خطا در بارگذاری</div>';
-  }
+  } catch(e) { container.innerHTML='<div class="profile-empty">خطا در بارگذاری</div>'; }
 }
 
 async function deleteMyListing(id) {
   if(!confirm('این آگهی حذف شود؟')) return;
-  const {error} = await SB.from('listings').delete().eq('id',id).eq('user_id',currentUser.id);
-  if(error){ toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){toast('خطا: '+error.message,'err');return;}
   document.getElementById('myad-'+id)?.remove();
   toast('آگهی حذف شد','ok');
-  // بروزرسانی آمار
-  const total = document.getElementById('pStatTotal');
-  if(total) total.textContent = fmtFA(Math.max(0, parseInt(String(total.textContent).replace(/\D/g,''))-1));
   render();
 }
 
@@ -1870,75 +1695,64 @@ async function deleteMyListing(id) {
 async function loadAdminData() {
   if(!isAdmin) return;
   try {
-    const [r1,r2,r3] = await Promise.all([
+    const [r1,r2,r3]=await Promise.all([
       SB.from('listings').select('id',{count:'exact',head:true}).eq('status','pending'),
       SB.from('listings').select('id',{count:'exact',head:true}).eq('status','approved'),
       SB.from('listings').select('id',{count:'exact',head:true}).eq('status','rejected'),
     ]);
-    document.getElementById('aStat1').textContent = fmtFA(r1.count)||'0';
-    document.getElementById('aStat2').textContent = fmtFA(r2.count)||'0';
-    document.getElementById('aStat3').textContent = fmtFA(r3.count)||'0';
-
-    const {data:ud} = await SB.from('listings').select('user_id').not('user_id','is',null);
-    const uniq = new Set((ud||[]).map(r=>r.user_id));
-    document.getElementById('aStat4').textContent = fmtFA(uniq.size)||'0';
-
-    // پرداخت‌ها
-    try {
-      const {count:payCount} = await SB.from('payments').select('id',{count:'exact',head:true});
-      document.getElementById('aStat5').textContent = fmtFA(payCount)||'0';
-    } catch(e) { document.getElementById('aStat5').textContent = '—'; }
-
+    document.getElementById('aStat1').textContent=fmtFA(r1.count)||'0';
+    document.getElementById('aStat2').textContent=fmtFA(r2.count)||'0';
+    document.getElementById('aStat3').textContent=fmtFA(r3.count)||'0';
+    const {data:ud}=await SB.from('listings').select('user_id').not('user_id','is',null);
+    const uniq=new Set((ud||[]).map(r=>r.user_id));
+    document.getElementById('aStat4').textContent=fmtFA(uniq.size)||'0';
+    try{const {count}=await SB.from('payments').select('id',{count:'exact',head:true});document.getElementById('aStat5').textContent=fmtFA(count)||'0';}catch(e){document.getElementById('aStat5').textContent='—';}
     adminShowTab(adminCurrentTab);
-  } catch(e) { console.error('Admin load error:', e); }
+  } catch(e) { console.error('Admin load:', e); }
 }
 
 async function adminShowTab(tab) {
-  adminCurrentTab = tab;
+  adminCurrentTab=tab;
   closeUserDetail();
-  document.querySelectorAll('.admin-tab').forEach((t,i) =>
-    t.classList.toggle('on', ['pending','approved','rejected','users','payments'][i]===tab)
-  );
-  const container = document.getElementById('adminListings');
-  container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--t3)">در حال بارگذاری...</div>';
+  document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('on',['pending','approved','rejected','users','payments'][i]===tab));
+  const container=document.getElementById('adminListings');
+  container.innerHTML='<div style="padding:2rem;text-align:center;color:var(--t3)">در حال بارگذاری...</div>';
 
-  if(tab === 'users') {
-    await adminShowUsers(container); return;
-  }
-  if(tab === 'payments') {
-    await adminShowPayments(container); return;
-  }
+  if(tab==='users'){await adminShowUsers(container);return;}
+  if(tab==='payments'){await adminShowPayments(container);return;}
 
-  const {data, error} = await SB.from('listings').select('*').eq('status',tab).order('created_at',{ascending:false}).limit(50);
-  if(error) {
-    container.innerHTML = `<div style="color:var(--red);padding:1rem;background:var(--paper);border-radius:var(--r)">
-      <b>⚠️ خطای دسترسی</b><br>مطمئن شو RLS Policy ادمین اجرا شده:<br>
-      <code style="font-size:11px;direction:ltr;display:block;background:var(--sand);padding:8px;border-radius:6px;margin-top:8px;word-break:break-all">
-      CREATE POLICY "admin_all" ON listings FOR ALL USING (true) WITH CHECK (true);
-      </code></div>`;
+  const {data, error}=await SB.from('listings').select('*').eq('status',tab).order('created_at',{ascending:false}).limit(50);
+  if(error){
+    container.innerHTML=`<div style="color:var(--red);padding:1rem;background:var(--paper);border-radius:var(--r)"><b>⚠️ خطای دسترسی</b><br>مطمئن شو RLS Policy ادمین اجرا شده:<br><code style="font-size:11px;direction:ltr;display:block;background:var(--sand);padding:8px;border-radius:6px;margin-top:8px">CREATE POLICY "admin_all" ON listings FOR ALL USING (true) WITH CHECK (true);</code></div>`;
     return;
   }
-  if(!data||!data.length) { container.innerHTML='<div class="profile-empty">آگهی‌ای در این بخش وجود ندارد</div>'; return; }
+  if(!data||!data.length){container.innerHTML='<div class="profile-empty">آگهی‌ای در این بخش وجود ندارد</div>';return;}
 
   container.innerHTML = data.map(ad => {
-    const img = ad.images && ad.images[0];
-    return `<div class="admin-row" id="arow-${ad.id}">
-      ${img ? `<img class="admin-row-img" src="${img}" alt="" loading="lazy">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
+    const img=ad.images&&ad.images[0];
+    const safeId    = escapeHtml(ad.id);
+    const safeTitle = escapeHtml(ad.title||'بدون عنوان');
+    const safeCity  = escapeHtml(ad.city||'—');
+    const safePhone = escapeHtml(ad.phone||'—');
+    const safeName  = escapeHtml(ad.name||'');
+    const safeDesc  = escapeHtml((ad.description||ad.desc||'').substring(0,120));
+    return `<div class="admin-row" id="arow-${safeId}">
+      ${img?`<img class="admin-row-img" src="${escapeHtml(img)}" alt="" loading="lazy">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
       <div class="admin-row-info">
-        <div class="admin-row-title">${ad.title||'بدون عنوان'}</div>
+        <div class="admin-row-title">${safeTitle}</div>
         <div class="admin-row-meta">
           <span>${fmtFA(ad.price)} تومان</span>
-          <span>${ad.city||'—'}</span>
-          <span>${ad.phone||'—'}</span>
+          <span>${safeCity}</span>
+          <span>${safePhone}</span>
           <span>${relTime(ad.created_at)}</span>
-          ${ad.name?`<span style="font-weight:600;color:var(--t2)">👤 ${ad.name}</span>`:''}
+          ${safeName?`<span style="font-weight:600;color:var(--t2)">👤 ${safeName}</span>`:''}
         </div>
-        ${ad.description||ad.desc ? `<div style="font-size:12px;color:var(--t2);margin-top:6px;line-height:1.6">${(ad.description||ad.desc||'').substring(0,120)}...</div>` : ''}
+        ${safeDesc?`<div style="font-size:12px;color:var(--t2);margin-top:6px;line-height:1.6">${safeDesc}${(ad.description||ad.desc||'').length>120?'...':''}</div>`:''}
       </div>
       <div class="admin-row-actions">
-        ${tab!=='approved' ? `<button class="btn-approve" onclick="adminAction('${ad.id}','approved')"><i class="ti ti-check"></i>تأیید</button>` : ''}
-        ${tab!=='rejected' ? `<button class="btn-reject"  onclick="adminAction('${ad.id}','rejected')">رد</button>` : ''}
-        <button class="btn-del-ad" onclick="adminDelete('${ad.id}')"><i class="ti ti-trash"></i></button>
+        ${tab!=='approved'?`<button class="btn-approve" onclick="adminAction('${safeId}','approved')"><i class="ti ti-check"></i>تأیید</button>`:''}
+        ${tab!=='rejected'?`<button class="btn-reject" onclick="adminAction('${safeId}','rejected')">رد</button>`:''}
+        <button class="btn-del-ad" onclick="adminDelete('${safeId}')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
@@ -1946,371 +1760,260 @@ async function adminShowTab(tab) {
 
 async function adminShowUsers(container) {
   await loadUserPlansCache();
-  const {data} = await SB.from('listings').select('user_id,name,created_at').not('user_id','is',null);
-  const userMap = {};
-  (data||[]).forEach(r => {
-    if(!userMap[r.user_id]) userMap[r.user_id] = {id:r.user_id, name:r.name, firstSeen:r.created_at, count:0};
+  const {data}=await SB.from('listings').select('user_id,name,created_at').not('user_id','is',null);
+  const userMap={};
+  (data||[]).forEach(r=>{
+    if(!userMap[r.user_id]) userMap[r.user_id]={id:r.user_id,name:r.name,firstSeen:r.created_at,count:0};
     userMap[r.user_id].count++;
   });
-  const users = Object.values(userMap);
-  if(!users.length){ container.innerHTML='<div class="profile-empty">هیچ کاربری آگهی ثبت نکرده</div>'; return; }
-
-  container.innerHTML = `<div class="users-wrap">
-    <table class="users-table">
-      <thead><tr><th>کاربر</th><th>آگهی</th><th>اشتراک</th><th>انقضا</th><th>اولین فعالیت</th></tr></thead>
-      <tbody>${users.map(u => {
-        const pd = userPlansCache[u.id];
-        const activePlan = (pd && isPlanActive(pd)) ? pd.plan : 'normal';
-        const expiry = pd?.plan_expires_at ? new Date(pd.plan_expires_at).toLocaleDateString('fa-IR') : '—';
-        return `<tr onclick="adminViewUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')">
-          <td><span class="user-av">${(u.name||'ک').charAt(0)}</span>${u.name||'ناشناس'}</td>
-          <td>${u.count} آگهی</td>
-          <td>
-            <select class="plan-select" onclick="event.stopPropagation()" onchange="adminSetPlan('${u.id}','${(u.name||'').replace(/'/g,"\\'")}',this.value)">
-              <option value="normal"  ${activePlan==='normal' ?'selected':''}>معمولی</option>
-              <option value="weekly"  ${activePlan==='weekly' ?'selected':''}>⚡ ویژه ۷روزه</option>
-              <option value="monthly" ${activePlan==='monthly'?'selected':''}>🥇 طلایی ماهانه</option>
-              <option value="diamond" ${activePlan==='diamond'?'selected':''}>💎 الماس ۳ماهه</option>
-            </select>
-          </td>
-          <td style="font-size:11px;color:var(--t3)">${activePlan!=='normal'?expiry:'—'}</td>
-          <td style="font-size:11px;color:var(--t3)">${relTime(u.firstSeen)}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>
-  </div>`;
+  const users=Object.values(userMap);
+  if(!users.length){container.innerHTML='<div class="profile-empty">هیچ کاربری آگهی ثبت نکرده</div>';return;}
+  container.innerHTML=`<div class="users-wrap"><table class="users-table">
+    <thead><tr><th>کاربر</th><th>آگهی</th><th>اشتراک</th><th>انقضا</th><th>اولین فعالیت</th></tr></thead>
+    <tbody>${users.map(u=>{
+      const pd=userPlansCache[u.id];
+      const activePlan=(pd&&isPlanActive(pd))?pd.plan:'normal';
+      const expiry=pd?.plan_expires_at?new Date(pd.plan_expires_at).toLocaleDateString('fa-IR'):'—';
+      const safeUid  = escapeHtml(u.id);
+      const safeName = escapeHtml(u.name||'ناشناس').replace(/'/g,"\\&#39;");
+      return `<tr onclick="adminViewUser('${safeUid}','${safeName}')">
+        <td><span class="user-av">${escapeHtml((u.name||'ک').charAt(0))}</span>${escapeHtml(u.name||'ناشناس')}</td>
+        <td>${u.count} آگهی</td>
+        <td><select class="plan-select" onclick="event.stopPropagation()" onchange="adminSetPlan('${safeUid}','${safeName}',this.value)">
+          <option value="normal" ${activePlan==='normal'?'selected':''}>معمولی</option>
+          <option value="weekly" ${activePlan==='weekly'?'selected':''}>⚡ ویژه</option>
+          <option value="monthly" ${activePlan==='monthly'?'selected':''}>🥇 طلایی</option>
+          <option value="diamond" ${activePlan==='diamond'?'selected':''}>💎 الماس</option>
+        </select></td>
+        <td style="font-size:11px;color:var(--t3)">${activePlan!=='normal'?expiry:'—'}</td>
+        <td style="font-size:11px;color:var(--t3)">${relTime(u.firstSeen)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
 }
 
 async function adminShowPayments(container) {
   try {
-    const {data, error} = await SB.from('payments').select('*').order('created_at',{ascending:false}).limit(50);
+    const {data,error}=await SB.from('payments').select('*').order('created_at',{ascending:false}).limit(50);
     if(error) throw error;
-    if(!data||!data.length){ container.innerHTML='<div class="profile-empty">هنوز پرداختی ثبت نشده</div>'; return; }
-    container.innerHTML = data.map(p => `
-      <div class="payment-row">
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:13px">${PLANS[p.plan]?.icon||''} ${PLANS[p.plan]?.label||p.plan}</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:3px">${p.amount?.toLocaleString('fa-IR')||'—'} تومان · ${relTime(p.created_at)}</div>
-          ${p.ref_id ? `<div style="font-size:10px;color:var(--mint);margin-top:2px">Ref: ${p.ref_id}</div>` : ''}
-        </div>
-        <span class="pay-status ${p.status==='success'?'success':p.status==='pending'?'pending':'failed'}">
-          ${p.status==='success'?'✅ موفق':p.status==='pending'?'⏳ در انتظار':'❌ ناموفق'}
-        </span>
+    if(!data||!data.length){container.innerHTML='<div class="profile-empty">هنوز پرداختی ثبت نشده</div>';return;}
+    container.innerHTML=data.map(p=>`<div class="payment-row">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${PLANS[p.plan]?.icon||''} ${escapeHtml(PLANS[p.plan]?.label||p.plan)}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px">${(p.amount||0).toLocaleString('fa-IR')} تومان · ${relTime(p.created_at)}</div>
+        ${p.ref_id?`<div style="font-size:10px;color:var(--mint);margin-top:2px">Ref: ${escapeHtml(p.ref_id)}</div>`:''}
       </div>
-    `).join('');
-  } catch(e) {
-    container.innerHTML = '<div class="profile-empty">جدول پرداخت‌ها هنوز ساخته نشده. SQL را اجرا کن.</div>';
-  }
+      <span class="pay-status ${p.status==='success'?'success':p.status==='pending'?'pending':'failed'}">
+        ${p.status==='success'?'✅ موفق':p.status==='pending'?'⏳ در انتظار':'❌ ناموفق'}
+      </span>
+    </div>`).join('');
+  } catch(e){container.innerHTML='<div class="profile-empty">جدول پرداخت‌ها هنوز ساخته نشده</div>';}
 }
 
 async function adminViewUser(userId, userName) {
-  const panel = document.getElementById('userDetailPanel');
-  const content = document.getElementById('udpContent');
-  document.getElementById('udpTitle').textContent = `آگهی‌های ${userName||'کاربر'}`;
+  const panel=document.getElementById('userDetailPanel');
+  const content=document.getElementById('udpContent');
+  document.getElementById('udpTitle').textContent='آگهی‌های '+userName;
   panel.classList.add('on');
-  content.innerHTML = '<div style="padding:1rem;color:var(--t3)">در حال بارگذاری...</div>';
-  panel.scrollIntoView({behavior:'smooth', block:'start'});
-
+  content.innerHTML='<div style="padding:1rem;color:var(--t3)">در حال بارگذاری...</div>';
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
   try {
-    const {data, error} = await SB.from('listings').select('*').eq('user_id',userId).order('created_at',{ascending:false});
-    if(error || !data || !data.length) {
-      content.innerHTML = '<div class="profile-empty" style="padding:1rem">این کاربر هنوز آگهی ثبت نکرده.</div>';
-      return;
-    }
-    content.innerHTML = data.map(ad => {
-      const sb = ad.status==='approved'
-        ? '<span class="approved-chip">✅ تأیید</span>'
-        : ad.status==='rejected'
-        ? '<span class="rejected-chip">❌ رد</span>'
-        : '<span class="pending-chip">⏳ انتظار</span>';
-      const img = ad.images && ad.images[0];
-      return `<div class="admin-row" style="margin-bottom:6px" id="arow-${ad.id}">
-        ${img ? `<img class="admin-row-img" src="${img}" alt="" loading="lazy">` : `<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
+    const {data,error}=await SB.from('listings').select('*').eq('user_id',userId).order('created_at',{ascending:false});
+    if(error||!data||!data.length){content.innerHTML='<div class="profile-empty" style="padding:1rem">این کاربر هنوز آگهی ثبت نکرده.</div>';return;}
+    content.innerHTML=data.map(ad=>{
+      const sb=ad.status==='approved'?'<span class="approved-chip">✅ تأیید</span>':ad.status==='rejected'?'<span class="rejected-chip">❌ رد</span>':'<span class="pending-chip">⏳ انتظار</span>';
+      const img=ad.images&&ad.images[0];
+      const safeId=escapeHtml(ad.id);
+      return `<div class="admin-row" style="margin-bottom:6px" id="arow-${safeId}">
+        ${img?`<img class="admin-row-img" src="${escapeHtml(img)}" alt="" loading="lazy">`:`<div class="admin-row-img">${EMOJIS[ad.cat]||'📦'}</div>`}
         <div class="admin-row-info">
-          <div class="admin-row-title">${ad.title}</div>
-          <div class="admin-row-meta"><span>${fmtFA(ad.price)} تومان</span><span>${ad.city||'—'}</span><span>${relTime(ad.created_at)}</span>${sb}</div>
+          <div class="admin-row-title">${escapeHtml(ad.title||'بدون عنوان')}</div>
+          <div class="admin-row-meta"><span>${fmtFA(ad.price)} تومان</span><span>${escapeHtml(ad.city||'—')}</span><span>${relTime(ad.created_at)}</span>${sb}</div>
         </div>
         <div class="admin-row-actions">
-          ${ad.status!=='approved' ? `<button class="btn-approve" onclick="adminAction('${ad.id}','approved')"><i class="ti ti-check"></i>تأیید</button>` : ''}
-          ${ad.status!=='rejected' ? `<button class="btn-reject"  onclick="adminAction('${ad.id}','rejected')">رد</button>` : ''}
-          <button class="btn-del-ad" onclick="adminDelete('${ad.id}')"><i class="ti ti-trash"></i></button>
+          ${ad.status!=='approved'?`<button class="btn-approve" onclick="adminAction('${safeId}','approved')"><i class="ti ti-check"></i>تأیید</button>`:''}
+          ${ad.status!=='rejected'?`<button class="btn-reject" onclick="adminAction('${safeId}','rejected')">رد</button>`:''}
+          <button class="btn-del-ad" onclick="adminDelete('${safeId}')"><i class="ti ti-trash"></i></button>
         </div>
       </div>`;
     }).join('');
-  } catch(e) {
-    content.innerHTML = '<div class="profile-empty" style="padding:1rem">خطا در بارگذاری</div>';
-  }
+  } catch(e){content.innerHTML='<div class="profile-empty" style="padding:1rem">خطا در بارگذاری</div>';}
 }
+function closeUserDetail(){document.getElementById('userDetailPanel').classList.remove('on');document.getElementById('udpContent').innerHTML='';}
 
-function closeUserDetail() {
-  document.getElementById('userDetailPanel').classList.remove('on');
-  document.getElementById('udpContent').innerHTML = '';
-}
-
-/* تغییر اشتراک کاربر توسط ادمین */
 async function adminSetPlan(userId, userName, plan) {
-  const expiresAt = getPlanExpiry(plan);
-  const now = new Date().toISOString();
-
-  // upsert با conflict روی user_id
-  const {error} = await SB.from('user_plans').upsert({
-    user_id: userId,
-    user_name: userName,
-    plan: plan,
-    plan_expires_at: expiresAt,
-    updated_at: now
-  }, {
-    onConflict: 'user_id',
-    ignoreDuplicates: false
-  });
-
-  if(error) {
-    console.error('Set plan error:', error);
-    toast('خطا: '+error.message,'err'); return;
-  }
-
-  // بروز cache
-  userPlansCache[userId] = { user_id:userId, plan, plan_expires_at:expiresAt, updated_at:now };
-
-  const pInfo = PLANS[plan]||PLANS.normal;
-  const expStr = expiresAt ? new Date(expiresAt).toLocaleDateString('fa-IR') : '';
+  const expiresAt=getPlanExpiry(plan);
+  const now=new Date().toISOString();
+  const {error}=await SB.from('user_plans').upsert({user_id:userId,user_name:userName,plan,plan_expires_at:expiresAt,updated_at:now},{onConflict:'user_id',ignoreDuplicates:false});
+  if(error){toast('خطا: '+error.message,'err');return;}
+  userPlansCache[userId]={user_id:userId,plan,plan_expires_at:expiresAt,updated_at:now};
+  const pInfo=PLANS[plan]||PLANS.normal;
+  const expStr=expiresAt?new Date(expiresAt).toLocaleDateString('fa-IR'):'';
   toast(`✅ اشتراک ${pInfo.icon} ${pInfo.label} برای ${userName} فعال شد${expStr?' (تا '+expStr+')':''}`, 'ok');
-  render(); // رفرش لیست
+  render();
 }
 
 async function adminAction(id, status) {
-  const {error} = await SB.from('listings').update({status, updated_at:new Date().toISOString()}).eq('id',id);
-  if(error){ toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){toast('خطا: '+error.message,'err');return;}
   document.getElementById('arow-'+id)?.remove();
-  toast(status==='approved' ? '✅ تأیید شد' : '❌ رد شد','ok');
+  toast(status==='approved'?'✅ تأیید شد':'❌ رد شد','ok');
   loadAdminData(); render();
 }
-
 async function adminDelete(id) {
   if(!confirm('این آگهی حذف شود؟')) return;
-  const {error} = await SB.from('listings').delete().eq('id',id);
-  if(error){ toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').delete().eq('id',id);
+  if(error){toast('خطا: '+error.message,'err');return;}
   document.getElementById('arow-'+id)?.remove();
   toast('آگهی حذف شد','ok'); loadAdminData();
 }
-
 async function adminDeleteAll(status) {
-  const label = status==='approved' ? 'تأیید شده' : 'رد شده';
+  const label=status==='approved'?'تأیید شده':'رد شده';
   if(!confirm(`⚠️ همه آگهی‌های ${label} حذف شوند؟`)) return;
-  const {error} = await SB.from('listings').delete().eq('status', status);
-  if(error){ toast('خطا: '+error.message,'err'); return; }
+  const {error}=await SB.from('listings').delete().eq('status',status);
+  if(error){toast('خطا: '+error.message,'err');return;}
   toast(`همه آگهی‌های ${label} حذف شدند`,'ok');
   loadAdminData(); render();
 }
 
 /* ══════════════════════════════════════════════════════
-   PAYMENT SYSTEM (آماده — غیرفعال)
+   PAYMENT
 ══════════════════════════════════════════════════════ */
-function selPkg(el) {
-  document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  selectedPlan = el.dataset.plan || 'weekly';
-}
-
+function selPkg(el){document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('on'));el.classList.add('on');selectedPlan=el.dataset.plan||'weekly';}
 async function handlePayment() {
-  if(!currentUser) { openAuthModal('login'); closeAdModal(); return; }
-
-  if(!PAYMENT_CONFIG.enabled) {
-    // درگاه پیکربندی نشده
-    toast('📞 با پشتیبانی تماس بگیرید: 09212302379','ok');
-    return;
-  }
-
-  // ─── این بخش بعد از فعال‌سازی درگاه اجرا می‌شود ───────────
-  const plan = selectedPlan;
-  const amount = PLAN_PRICES[plan] || 50000;
-  const btn = document.getElementById('btnOrder');
-  const btnText = document.getElementById('btnOrderText');
-  btn.disabled = true; btnText.textContent = '⏳ در حال اتصال به درگاه...';
-
-  try {
-    // ثبت پرداخت در دیتابیس
-    const {data:payData, error:payErr} = await SB.from('payments').insert([{
-      user_id: currentUser.id, plan, amount,
-      status: 'pending', gateway: PAYMENT_CONFIG.gateway,
-      updated_at: new Date().toISOString()
-    }]).select().single();
-    if(payErr) throw payErr;
-
-    // اتصال به درگاه زرین‌پال (نیاز به Edge Function)
-    // const res = await fetch('/api/payment/request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ payment_id: payData.id, amount, merchant_id: PAYMENT_CONFIG.merchantId, callback_url: PAYMENT_CONFIG.callbackUrl }) });
-    // const {authority, payment_url} = await res.json();
-    // window.location.href = payment_url;
-
-    toast('درگاه پرداخت آماده اتصال است','ok');
-  } catch(e) {
-    toast('خطا در اتصال به درگاه: '+e.message,'err');
-  }
-  btn.disabled = false; btnText.textContent = 'ثبت سفارش';
-  // ─────────────────────────────────────────────────────────
+  if(!currentUser){openAuthModal('login');closeAdModal();return;}
+  if(!PAYMENT_CONFIG.enabled){toast('📞 با پشتیبانی تماس بگیرید: 09212302379','ok');return;}
+  const btn=document.getElementById('btnOrder');
+  btn.disabled=true; document.getElementById('btnOrderText').textContent='⏳ در حال اتصال...';
+  toast('درگاه پرداخت آماده اتصال است','ok');
+  btn.disabled=false; document.getElementById('btnOrderText').textContent='ثبت سفارش';
 }
 
 /* ══════════════════════════════════════════════════════
    AD MODAL
 ══════════════════════════════════════════════════════ */
-function openAdModal() { document.getElementById('adModalBg').classList.add('on'); }
-function closeAdModal() { document.getElementById('adModalBg').classList.remove('on'); }
-document.getElementById('adModalBg').addEventListener('click', e => { if(e.target===e.currentTarget) closeAdModal(); });
+function openAdModal(){document.getElementById('adModalBg').classList.add('on');}
+function closeAdModal(){document.getElementById('adModalBg').classList.remove('on');}
+document.getElementById('adModalBg').addEventListener('click', e=>{if(e.target===e.currentTarget)closeAdModal();});
 
 /* ══════════════════════════════════════════════════════
    SUPPORT
 ══════════════════════════════════════════════════════ */
-function toggleSupport() {
-  supOpen = !supOpen;
-  document.getElementById('supMenu').classList.toggle('on', supOpen);
-  document.getElementById('supBtn').innerHTML = supOpen
-    ? '<i class="ti ti-x" style="font-size:17px"></i>بستن'
-    : '<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی';
+function toggleSupport(){
+  supOpen=!supOpen;
+  document.getElementById('supMenu').classList.toggle('on',supOpen);
+  document.getElementById('supBtn').innerHTML=supOpen?'<i class="ti ti-x" style="font-size:17px"></i>بستن':'<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی';
 }
-function closeSupport() {
-  supOpen = false;
-  document.getElementById('supMenu').classList.remove('on');
-  document.getElementById('supBtn').innerHTML = '<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی';
-}
-document.addEventListener('click', e => { if(supOpen && !e.target.closest('.support-float')) closeSupport(); });
+function closeSupport(){supOpen=false;document.getElementById('supMenu').classList.remove('on');document.getElementById('supBtn').innerHTML='<i class="ti ti-headset" style="font-size:17px"></i>پشتیبانی';}
+document.addEventListener('click', e=>{if(supOpen&&!e.target.closest('.support-float'))closeSupport();});
 
 /* ══════════════════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════════════════ */
 function switchPage(p) {
-  document.querySelectorAll('.page').forEach(e => e.classList.toggle('on', e.id==='page-'+p));
-  document.querySelectorAll('.nav-lnk,.nav-saved').forEach(b => b.classList.toggle('on', b.dataset && b.dataset.to===p));
-  document.querySelectorAll('.mtab').forEach(b => b.classList.toggle('on', b.dataset.to===p));
-  window.scrollTo({top:0, behavior:'smooth'});
+  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='page-'+p));
+  document.querySelectorAll('.nav-lnk,.nav-saved').forEach(b=>b.classList.toggle('on',b.dataset&&b.dataset.to===p));
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('on',b.dataset.to===p));
+  window.scrollTo({top:0,behavior:'smooth'});
   if(p==='saved')   renderSaved();
   if(p==='profile') loadMyListings();
   if(p==='sell')    updateSellPage();
-  if(p==='admin') {
-    if(!isAdmin){ toast('⚠️ دسترسی ندارید','err'); switchPage('home'); return; }
-    loadAdminData();
-  }
+  if(p==='admin')   { if(!isAdmin){toast('⚠️ دسترسی ندارید','err');switchPage('home');return;} loadAdminData(); }
 }
-function goHome() { switchPage('home'); }
-function goSell() { resetForm(); switchPage('sell'); }
-
-document.querySelectorAll('.nav-lnk,.nav-saved,.mtab').forEach(b => b.addEventListener('click', () => {
-  if(b.dataset.to==='sell') resetForm();
-  switchPage(b.dataset.to);
-}));
-document.getElementById('btnNew').onclick = () => { resetForm(); switchPage('sell'); };
+function goHome(){switchPage('home');}
+function goSell(){resetForm();switchPage('sell');}
+document.querySelectorAll('.nav-lnk,.nav-saved,.mtab').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.to==='sell')resetForm();switchPage(b.dataset.to);}));
+document.getElementById('btnNew').onclick=()=>{resetForm();switchPage('sell');};
 
 /* ══════════════════════════════════════════════════════
    SEARCH
 ══════════════════════════════════════════════════════ */
 let searchDebounce;
-document.getElementById('navQ').addEventListener('input', function() {
-  clearTimeout(searchDebounce);
-  ST.q = this.value.trim();
-  searchDebounce = setTimeout(render, 400);
+document.getElementById('navQ').addEventListener('input', function(){
+  clearTimeout(searchDebounce); ST.q=this.value.trim();
+  searchDebounce=setTimeout(render,400);
 });
-
-function heroSearch() {
-  ST.q   = document.getElementById('heroQ').value.trim();
-  ST.cat = document.getElementById('heroCat').value;
-  document.getElementById('navQ').value = ST.q;
-  document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('on', c.dataset.cat===ST.cat));
-  document.getElementById('resLbl').textContent = ST.cat || 'جدیدترین آگهی‌ها';
+function heroSearch(){
+  ST.q=document.getElementById('heroQ').value.trim();
+  ST.cat=document.getElementById('heroCat').value;
+  document.getElementById('navQ').value=ST.q;
+  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.toggle('on',c.dataset.cat===ST.cat));
+  document.getElementById('resLbl').textContent=ST.cat||'جدیدترین آگهی‌ها';
   goHome(); render();
 }
-
-document.getElementById('catsRow').addEventListener('click', e => {
-  const c = e.target.closest('.cat-chip'); if(!c) return;
+document.getElementById('catsRow').addEventListener('click', e=>{
+  const c=e.target.closest('.cat-chip'); if(!c) return;
   document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
-  ST.cat = c.dataset.cat;
-  document.getElementById('resLbl').textContent = c.dataset.cat || 'جدیدترین آگهی‌ها';
+  ST.cat=c.dataset.cat;
+  document.getElementById('resLbl').textContent=c.dataset.cat||'جدیدترین آگهی‌ها';
   render();
 });
-
-document.querySelectorAll('.sort-b').forEach(b => b.addEventListener('click', () => {
+document.querySelectorAll('.sort-b').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.sort-b').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  ST.sort = b.dataset.sort; render();
+  ST.sort=b.dataset.sort; render();
 }));
 
 /* ══════════════════════════════════════════════════════
    FILE UPLOAD
 ══════════════════════════════════════════════════════ */
-const uz = document.getElementById('uploadZone');
-uz.addEventListener('click', () => document.getElementById('fileInput').click());
-uz.addEventListener('dragover',  e => { e.preventDefault(); uz.style.borderColor='var(--mint)'; });
-uz.addEventListener('dragleave', () => { uz.style.borderColor=''; });
-uz.addEventListener('drop', e => {
+const uz=document.getElementById('uploadZone');
+uz.addEventListener('click',()=>document.getElementById('fileInput').click());
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.style.borderColor='var(--mint)';});
+uz.addEventListener('dragleave',()=>{uz.style.borderColor='';});
+uz.addEventListener('drop',e=>{
   e.preventDefault(); uz.style.borderColor='';
-  const dt = new DataTransfer();
+  const dt=new DataTransfer();
   [...e.dataTransfer.files].filter(f=>f.type.startsWith('image')).forEach(f=>dt.items.add(f));
-  document.getElementById('fileInput').files = dt.files;
+  document.getElementById('fileInput').files=dt.files;
   document.getElementById('fileInput').dispatchEvent(new Event('change'));
 });
-
-document.getElementById('fileInput').addEventListener('change', function() {
-  [...this.files].forEach(f => {
-    if(pickedFiles.length >= 8){ toast('حداکثر ۸ عکس','err'); return; }
-    if(!f.type.startsWith('image')){ toast('فقط عکس','err'); return; }
-    if(f.size > 10*1024*1024){ toast('حداکثر ۱۰MB','err'); return; }
+document.getElementById('fileInput').addEventListener('change', function(){
+  [...this.files].forEach(f=>{
+    if(pickedFiles.length>=8){toast('حداکثر ۸ عکس','err');return;}
+    if(!f.type.startsWith('image')){toast('فقط عکس','err');return;}
+    if(f.size>10*1024*1024){toast('حداکثر ۱۰MB','err');return;}
     pickedFiles.push(f);
-    const r = new FileReader();
-    r.onload = ev => {
-      const d = document.createElement('div'); d.className='thumb';
-      const img = document.createElement('img'); img.src=ev.target.result; img.alt='';
-      const del = document.createElement('button'); del.className='tdel'; del.textContent='×';
-      del.onclick = () => { pickedFiles.splice(pickedFiles.indexOf(f),1); d.remove(); };
+    const r=new FileReader();
+    r.onload=ev=>{
+      const d=document.createElement('div'); d.className='thumb';
+      const img=document.createElement('img'); img.src=ev.target.result; img.alt='';
+      const del=document.createElement('button'); del.className='tdel'; del.textContent='×';
+      del.onclick=()=>{pickedFiles.splice(pickedFiles.indexOf(f),1);d.remove();};
       d.appendChild(img); d.appendChild(del);
       document.getElementById('thumbRow').appendChild(d);
     };
     r.readAsDataURL(f);
-  });
-  this.value='';
+  }); this.value='';
 });
 
 /* ══════════════════════════════════════════════════════
    FORM HELPERS
 ══════════════════════════════════════════════════════ */
-document.getElementById('condGrid').addEventListener('click', e => {
-  const b = e.target.closest('.copt'); if(!b) return;
-  document.querySelectorAll('.copt').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  cond = b.dataset.v;
+document.getElementById('condGrid').addEventListener('click', e=>{
+  const b=e.target.closest('.copt'); if(!b) return;
+  document.querySelectorAll('.copt').forEach(x=>x.classList.remove('on')); b.classList.add('on'); cond=b.dataset.v;
 });
-document.getElementById('fTitle').addEventListener('input', function() { document.getElementById('tc').textContent = this.value.length; });
-document.getElementById('fDesc').addEventListener('input',  function() { document.getElementById('dc').textContent = this.value.length; });
-document.getElementById('fPrice').addEventListener('input', function() {
-  const r = this.value.replace(/[^0-9]/g,'');
-  if(r) this.value = parseInt(r).toLocaleString('en');
-  else this.value = '';
+document.getElementById('fTitle').addEventListener('input', function(){document.getElementById('tc').textContent=this.value.length;});
+document.getElementById('fDesc').addEventListener('input',  function(){document.getElementById('dc').textContent=this.value.length;});
+document.getElementById('fPrice').addEventListener('input', function(){
+  const r=this.value.replace(/[^0-9]/g,'');
+  this.value = r ? parseInt(r).toLocaleString('en') : '';
 });
-
-function setAd(v) {
-  isAdPost = v;
-  document.getElementById('tnAd').classList.toggle('on', !v);
-  document.getElementById('tyAd').classList.toggle('on', v);
-  document.getElementById('tnAd').classList.toggle('off', v);
-  document.getElementById('tyAd').classList.toggle('off', !v);
-}
-
-function resetForm() {
+function setAd(v){isAdPost=v;document.getElementById('tnAd').classList.toggle('on',!v);document.getElementById('tyAd').classList.toggle('on',v);document.getElementById('tnAd').classList.toggle('off',v);document.getElementById('tyAd').classList.toggle('off',!v);}
+function resetForm(){
   document.getElementById('successArea').style.display='none';
-  ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fName','fBrand'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value='';
-  });
-  document.getElementById('tc').textContent='0';
-  document.getElementById('dc').textContent='0';
-  document.getElementById('thumbRow').innerHTML='';
-  pickedFiles=[]; cond='نو'; isAdPost=false;
+  ['fTitle','fCat','fPrice','fPhone','fCity','fDesc','fName','fBrand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('tc').textContent='0'; document.getElementById('dc').textContent='0';
+  document.getElementById('thumbRow').innerHTML=''; pickedFiles=[]; cond='نو'; isAdPost=false;
   document.querySelectorAll('.copt').forEach((b,i)=>b.classList.toggle('on',i===0));
-  setAd(false);
-  updateSellPage();
+  setAd(false); updateSellPage();
 }
 
 /* ══════════════════════════════════════════════════════
    START
 ══════════════════════════════════════════════════════ */
 initAuth();
-
-// رندر اولیه آگهی‌ها بعد از 100ms (منتظر auth)
-setTimeout(() => { if(!currentUser) render(); }, 100);
+setTimeout(()=>{if(!currentUser)render();},100);
 </script>
 </body>
 </html>
