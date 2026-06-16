@@ -13,103 +13,162 @@
 :root{
   --ink:#0E1A14;--forest:#14542E;--green:#1A7A47;--mint:#25B067;--lime:#7ED957;
   --cream:#F5F0E8;--sand:#EBE4D5;--paper:#FDFBF7;
-  --red:#D94F3D;--amber:#E8A020;
+  --red:#D94F3D;--amber:#E8A020;--amber-l:#FEF6E4;
   --card:#fff;--bd:rgba(14,26,20,.09);--bd2:rgba(14,26,20,.16);
   --t1:#0E1A14;--t2:#3D5045;--t3:#7A9080;
-  --r:16px;--rsm:10px;--pill:999px;
-  --shg:0 8px 24px rgba(37,176,103,.25);
+  --r:14px;--rsm:9px;--pill:999px;
+  --shg:0 6px 28px rgba(26,122,71,.32);--shh:0 14px 44px rgba(14,26,20,.13);
+  --diamond:#6366f1;--gold:#E8A020;--weekly:#25B067;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Vazirmatn',sans-serif;direction:rtl;background:var(--cream);color:var(--t1);font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased}
-button,input,select,textarea{font-family:'Vazirmatn',sans-serif;border:none;outline:none}
+button{font-family:'Vazirmatn',sans-serif;cursor:pointer;border:none;background:none;outline:none;}
+input,select,textarea{font-family:'Vazirmatn',sans-serif;outline:none;}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;display:block}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#b8c8be;border-radius:4px}
 
-/* انیمیشن‌ها */
+/* ═══ ANIMATIONS ═══ */
 @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes gridMove{from{background-position:0 0}to{background-position:36px 36px}}
 @keyframes glowPulse{0%,100%{opacity:.8}50%{opacity:1.3}}
-@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes navIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cardReveal{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 
-/* نوار منو */
+/* ═══ NAV ═══ */
 .nav{
-  position:sticky;top:0;z-index:90;height:68px;padding:0 1.5rem;
+  position:sticky;top:0;z-index:90;height:70px;padding:0 1.5rem;
   display:flex;align-items:center;gap:15px;
-  background:rgba(253,251,247,.95);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--bd);box-shadow:0 4px 20px rgba(0,0,0,.03);
+  background:rgba(253,251,247,.95);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--bd);
+  animation:navIn .4s ease;
+  box-shadow:0 4px 20px rgba(14,26,20,.04);
 }
-.logo{font-size:22px;font-weight:800;color:var(--forest);display:flex;align-items:center;gap:6px;}
-.logo:hover{animation:logoFloat 1s ease infinite}
+.logo{
+  font-size:22px;font-weight:800;color:var(--forest);letter-spacing:-1px;
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+}
 .logo em{color:var(--mint);font-style:normal}
-
-/* ارتقای ظاهر دکمه‌های ناوبری (هاور جذاب‌تر با خط زیرین) */
-.nav-links {display:flex;align-items:center;gap:5px;}
-.nav-lnk {
-  position:relative;padding:8px 14px;color:var(--t2);font-size:13px;font-weight:600;
-  border-radius:var(--rsm);transition:all .3s ease;cursor:pointer;
-}
-.nav-lnk::after {
-  content:'';position:absolute;bottom:0;left:50%;right:50%;height:2px;
-  background:var(--mint);border-radius:2px;transition:all .3s cubic-bezier(.4,0,.2,1);
-}
-.nav-lnk:hover {color:var(--forest);background:var(--sand);}
-.nav-lnk:hover::after {left:15%;right:15%;}
-.nav-lnk.on {color:var(--forest);font-weight:800;}
-.nav-lnk.on::after {left:15%;right:15%;background:var(--forest);}
+.logo .logo-icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(26,122,71,.3))}
 
 .sp{flex:1}
-.btn-new{
-  height:40px;padding:0 20px;background:linear-gradient(135deg,var(--forest),var(--green));
-  color:var(--lime);border-radius:var(--pill);font-size:13px;font-weight:700;
-  display:flex;align-items:center;gap:6px;box-shadow:var(--shg);transition:all .3s;cursor:pointer;
+
+/* استایل جدید دکمه‌های بالا (آگهی‌ها، نشان‌ها) */
+.nav-links {display:flex;align-items:center;gap:10px;}
+.nav-lnk{
+  padding:8px 16px;color:var(--t2);font-size:14px;font-weight:600;
+  border-radius:var(--rsm);transition:all .3s ease;
+  position:relative;display:flex;align-items:center;gap:6px;
 }
-.btn-new:hover{background:linear-gradient(135deg,var(--green),var(--mint));transform:translateY(-2px);box-shadow:0 12px 30px rgba(37,176,103,.35)}
+.nav-lnk i {font-size:18px;}
+.nav-lnk::after{
+  content:'';position:absolute;bottom:0;left:50%;right:50%;height:3px;
+  background:var(--mint);border-radius:3px 3px 0 0;transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.nav-lnk:hover{background:var(--sand);color:var(--forest)}
+.nav-lnk:hover::after{left:15%;right:15%}
+.nav-lnk.on{color:var(--forest);font-weight:800}
+.nav-lnk.on::after{left:15%;right:15%;background:var(--forest)}
 
-/* هیرو و سرچ باکس (مرتب‌تر و مدرن‌تر) */
-.hero{background:var(--ink);padding:60px 1rem;position:relative;overflow:hidden;text-align:center;}
-.hero h1{color:#fff;font-size:38px;font-weight:800;margin-bottom:15px;animation:fadeInUp .6s ease;}
-.hero h1 span{color:var(--lime);}
-.hero p{color:rgba(255,255,255,.7);font-size:15px;margin-bottom:30px;animation:fadeInUp .6s ease .1s both;}
+.btn-new{
+  height:42px;padding:0 20px;background:linear-gradient(135deg,var(--forest),var(--green));
+  color:var(--lime);border-radius:var(--pill);font-size:14px;font-weight:700;
+  display:flex;align-items:center;gap:8px;box-shadow:var(--shg);transition:all .25s;
+}
+.btn-new:hover{background:linear-gradient(135deg,var(--green),var(--mint));transform:translateY(-2px);box-shadow:0 8px 32px rgba(26,122,71,.4)}
 
+/* ═══ PAGES ═══ */
+.page{display:none}.page.on{display:block;animation:fadeIn .3s ease}
+
+/* ═══ HERO & SEARCH ═══ */
+.hero{background:var(--ink);padding:70px 1rem 50px;overflow:hidden;position:relative;text-align:center;}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(126,217,87,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(126,217,87,.07) 1px,transparent 1px);background-size:36px 36px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 100%);animation:gridMove 8s linear infinite}
+.hero-inner{position:relative;z-index:1;color:#fff;animation:fadeInUp .8s ease}
+.hero h1{font-size:clamp(28px,6vw,48px);font-weight:800;letter-spacing:-1.5px;margin-bottom:15px;}
+.hero h1 .acc{color:var(--lime);text-shadow:0 0 30px rgba(126,217,87,.4)}
+.hero-sub{font-size:15px;opacity:.7;margin-bottom:2.5rem;}
+
+/* استایل جدید و خفن‌تر سرچ بار وسط صفحه */
 .hero-sb{
-  max-width:650px;margin:0 auto;display:flex;background:#fff;
-  border-radius:var(--pill);overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4);
-  padding:6px;animation:scaleIn .6s ease .2s both;transition:all .3s ease;
+  max-width:680px;margin:0 auto;display:flex;background:var(--card);
+  border-radius:var(--pill);padding:8px;box-shadow:0 20px 60px rgba(0,0,0,.4);
+  animation:scaleIn .7s ease .3s both;transition:all .3s ease;
   border:2px solid transparent;
 }
 .hero-sb:focus-within{
-  border-color:var(--mint);box-shadow:0 15px 50px rgba(37,176,103,.3);
+  border-color:var(--mint);
+  box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 4px rgba(37,176,103,.15);
   transform:translateY(-3px);
 }
 .hero-sb input{
-  flex:1;height:48px;padding:0 20px;font-size:14px;color:var(--t1);background:transparent;
+  flex:1;padding:0 20px;height:50px;border:none;background:transparent;
+  font-size:15px;color:var(--t1);font-weight:500;
 }
-.hero-sb input::placeholder{color:var(--t3);}
+.hero-sb input::placeholder{color:var(--t3)}
 .hero-sb select{
-  padding:0 15px;background:var(--sand);border-radius:var(--pill);
-  font-size:13px;color:var(--t2);cursor:pointer;margin-right:6px;font-weight:600;
+  border:none;background:var(--sand);border-radius:var(--pill);
+  padding:0 20px;margin-right:8px;font-size:14px;color:var(--t2);
+  font-weight:600;cursor:pointer;transition:.2s;
 }
+.hero-sb select:hover{background:var(--cream)}
 .hero-sb button{
-  background:var(--forest);color:var(--lime);height:48px;padding:0 28px;
-  border-radius:var(--pill);font-size:14px;font-weight:700;display:flex;
-  align-items:center;gap:8px;margin-right:6px;transition:.3s;cursor:pointer;
+  background:linear-gradient(135deg,var(--mint),var(--green));color:#fff;
+  border-radius:var(--pill);padding:0 30px;font-size:15px;font-weight:700;
+  display:flex;align-items:center;gap:8px;margin-right:8px;transition:.3s;
 }
-.hero-sb button:hover{background:var(--mint);color:#fff;}
+.hero-sb button:hover{background:linear-gradient(135deg,var(--green),var(--forest));box-shadow:0 6px 20px rgba(26,122,71,.3)}
 
-/* پنل ادمین - ظاهر جدول کاربران */
-.admin-wrap {max-width:1000px;margin:2rem auto;padding:2rem;background:#fff;border-radius:var(--r);box-shadow:0 10px 30px rgba(0,0,0,.05);}
-.admin-hd {display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;border-bottom:1px solid var(--bd);padding-bottom:1rem;}
-.admin-hd h2 {font-size:22px;color:var(--ink);font-weight:800;}
-.admin-table {width:100%;border-collapse:collapse;text-align:right;}
-.admin-table th {background:var(--sand);color:var(--t2);padding:12px 15px;font-size:13px;}
-.admin-table th:first-child{border-radius:0 8px 8px 0;}
-.admin-table th:last-child{border-radius:8px 0 0 8px;}
-.admin-table td {padding:15px;border-bottom:1px solid var(--bd);font-size:14px;color:var(--t1);font-weight:500;}
-.admin-table tr:hover td {background:var(--cream);}
-.user-avatar {width:32px;height:32px;border-radius:50%;background:var(--mint);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;margin-left:10px;vertical-align:middle;}
-.delete-user-btn {color:var(--red);background:rgba(217,79,61,.1);padding:6px 12px;border-radius:var(--pill);font-size:12px;cursor:pointer;font-weight:700;transition:.2s;}
-.delete-user-btn:hover {background:var(--red);color:#fff;}
+/* ═══ GRID & CARDS ═══ */
+.grid-wrap{padding:3rem 1rem 5rem;max-width:1140px;margin:0 auto}
+.ads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+
+.adcard{
+  background:var(--card);border:1px solid var(--bd);border-radius:var(--r);
+  overflow:hidden;cursor:pointer;transition:all .3s ease;
+  display:flex;flex-direction:column;position:relative;
+  animation:cardReveal .5s ease both;
+}
+.adcard:hover{border-color:var(--mint);box-shadow:0 16px 40px rgba(14,26,20,.1);transform:translateY(-6px)}
+.adcard-img{width:100%;aspect-ratio:4/3;background:var(--sand);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.adcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.adcard:hover .adcard-img img{transform:scale(1.08)}
+.adcard-body{padding:15px;flex:1;display:flex;flex-direction:column;}
+.adcard-cat{font-size:10px;font-weight:800;color:var(--mint);margin-bottom:6px}
+.adcard-title{font-size:14px;font-weight:700;line-height:1.6;margin-bottom:8px;color:var(--t1)}
+.adcard-price{font-size:16px;font-weight:800;color:var(--forest);margin-top:auto;}
+
+/* ═══ ADMIN PANEL (بخش مدیریت کاربران) ═══ */
+.admin-page {max-width:1140px;margin:3rem auto;padding:0 1rem;}
+.admin-card {
+  background:#fff;border-radius:var(--r);border:1px solid var(--bd);
+  box-shadow:0 10px 40px rgba(14,26,20,.05);overflow:hidden;
+}
+.admin-header {
+  background:var(--sand);padding:20px 25px;display:flex;
+  justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);
+}
+.admin-header h2 {font-size:18px;font-weight:800;color:var(--ink);}
+.users-table {width:100%;border-collapse:collapse;text-align:right;}
+.users-table th {padding:15px 25px;font-size:13px;color:var(--t2);border-bottom:2px solid var(--bd);}
+.users-table td {padding:15px 25px;font-size:14px;color:var(--t1);border-bottom:1px solid var(--bd);font-weight:500;}
+.users-table tr:hover td {background:var(--paper);}
+.users-table tr:last-child td {border-bottom:none;}
+.user-info {display:flex;align-items:center;gap:12px;}
+.u-avatar {
+  width:36px;height:36px;border-radius:50%;background:var(--forest);color:var(--lime);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
+}
+.u-details strong {display:block;font-size:14px;color:var(--ink);}
+.u-details span {font-size:12px;color:var(--t3);}
+.btn-del-user {
+  background:rgba(217,79,61,.1);color:var(--red);padding:6px 14px;
+  border-radius:var(--pill);font-size:12px;font-weight:700;transition:.2s;
+}
+.btn-del-user:hover {background:var(--red);color:#fff;}
 
 </style>
 </head>
@@ -124,6 +183,7 @@ img{max-width:100%;display:block}
     <a href="#" class="nav-lnk on"><i class="ti ti-home"></i> صفحه اصلی</a>
     <a href="#" class="nav-lnk"><i class="ti ti-layout-grid"></i> آگهی‌ها</a>
     <a href="#" class="nav-lnk"><i class="ti ti-bookmark"></i> نشان‌ها</a>
+    <a href="#" class="nav-lnk" onclick="document.getElementById('home-pg').classList.remove('on'); document.getElementById('admin-pg').classList.add('on');"><i class="ti ti-shield-lock"></i> پنل مدیریت</a>
   </div>
 
   <div class="sp"></div>
@@ -133,56 +193,90 @@ img{max-width:100%;display:block}
   </button>
 </nav>
 
-<div class="hero">
-  <h1>خرید و فروش آسان در <span>بازارنو</span></h1>
-  <p>دنبال چی می‌گردی؟ از بین هزاران آگهی در دسته‌بندی‌های مختلف پیدا کن!</p>
-  
-  <div class="hero-sb">
-    <input type="text" placeholder="مثلاً: لپ‌تاپ ایسوس، دوچرخه کوهستان...">
-    <select>
-      <option value="all">همه دسته‌ها</option>
-      <option value="tech">لوازم الکترونیکی</option>
-      <option value="home">خانه و آشپزخانه</option>
-      <option value="cars">وسایل نقلیه</option>
-    </select>
-    <button><i class="ti ti-search"></i> جستجو</button>
+<div id="home-pg" class="page on">
+  <div class="hero">
+    <div class="hero-inner">
+      <h1>خرید و فروش در <span class="acc">بازارنو</span></h1>
+      <p class="hero-sub">به راحتی بگرد، پیدا کن و با بهترین قیمت معامله کن</p>
+      
+      <div class="hero-sb">
+        <input type="text" placeholder="به دنبال چه چیزی هستید؟ مثلاً: دوچرخه، لپ‌تاپ...">
+        <select>
+          <option value="all">همه دسته‌ها</option>
+          <option value="tech">الکترونیک</option>
+          <option value="cars">وسایل نقلیه</option>
+        </select>
+        <button><i class="ti ti-search"></i> جستجو</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="ads-grid">
+      <div class="adcard">
+        <div class="adcard-img">
+          <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80" alt="Laptop">
+        </div>
+        <div class="adcard-body">
+          <div class="adcard-cat">لوازم الکترونیکی</div>
+          <div class="adcard-title">لپ‌تاپ اپل مک‌بوک پرو M1 تمیز</div>
+          <div class="adcard-price">۴۵,۰۰۰,۰۰۰ تومان</div>
+        </div>
+      </div>
+      <div class="adcard">
+        <div class="adcard-img">
+          <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&q=80" alt="Bike">
+        </div>
+        <div class="adcard-body">
+          <div class="adcard-cat">ورزش و سرگرمی</div>
+          <div class="adcard-title">دوچرخه کوهستان جاینت سایز ۲۶</div>
+          <div class="adcard-price">۸,۵۰۰,۰۰۰ تومان</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="admin-wrap" id="admin-panel">
-  <div class="admin-hd">
-    <h2>پنل مدیریت بازارنو</h2>
-    <div class="nav-links">
-       <a href="#" class="nav-lnk on">لیست کاربران</a>
-       <a href="#" class="nav-lnk">مدیریت آگهی‌ها</a>
-       </div>
-  </div>
-
-  <div class="admin-content">
-    <table class="admin-table">
+<div id="admin-pg" class="page admin-page">
+  <div class="admin-card">
+    <div class="admin-header">
+      <h2>لیست کاربران ثبت‌نام شده</h2>
+      <button class="nav-lnk" style="background:var(--cream);border:1px solid var(--bd);" onclick="document.getElementById('admin-pg').classList.remove('on'); document.getElementById('home-pg').classList.add('on');">بازگشت به سایت</button>
+    </div>
+    <table class="users-table">
       <thead>
         <tr>
-          <th>نام و ایمیل کاربر</th>
-          <th>تاریخ ثبت‌نام</th>
+          <th>مشخصات کاربر</th>
+          <th>تاریخ عضویت</th>
           <th>عملیات</th>
         </tr>
       </thead>
-      <tbody id="users-table-body">
+      <tbody id="admin-users-list">
         <tr>
           <td>
-            <div class="user-avatar">ع</div>
-            علی محمدی (ali@example.com)
+            <div class="user-info">
+              <div class="u-avatar">ع</div>
+              <div class="u-details">
+                <strong>علی رضایی</strong>
+                <span>ali.rez@example.com</span>
+              </div>
+            </div>
           </td>
-          <td>۲۶ خرداد ۱۴۰۵</td>
-          <td><button class="delete-user-btn">حذف کاربر</button></td>
+          <td>۲۴ خرداد ۱۴۰۵</td>
+          <td><button class="btn-del-user">حذف کاربر</button></td>
         </tr>
         <tr>
           <td>
-            <div class="user-avatar">س</div>
-            سارا احمدی (sara@example.com)
+            <div class="user-info">
+              <div class="u-avatar" style="background:#6366f1;">س</div>
+              <div class="u-details">
+                <strong>سارا محمدی</strong>
+                <span>sara_m@example.com</span>
+              </div>
+            </div>
           </td>
-          <td>۲۵ خرداد ۱۴۰۵</td>
-          <td><button class="delete-user-btn">حذف کاربر</button></td>
+          <td>۲۰ اردیبهشت ۱۴۰۵</td>
+          <td><button class="btn-del-user">حذف کاربر</button></td>
         </tr>
       </tbody>
     </table>
@@ -190,18 +284,16 @@ img{max-width:100%;display:block}
 </div>
 
 <script>
-  // ==========================================
-  // کلید سوپابیس اینجاست! (خطوط زیر را ویرایش کن)
-  // ==========================================
-  const supabaseUrl = 'https://YOUR_SUPABASE_PROJECT_URL.supabase.co';
-  const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  // =======================================================
+  // محل قرارگیری کلید سوپابیس (Supabase URL & Anon Key)
+  // این کدها در خط ۲۸۷ تا ۲۸۹ قرار دارند.
+  // =======================================================
+  const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
+  const supabaseKey = 'YOUR_ANON_KEY';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-  // منطق ساده برای نمایش لیست کاربران از سوپابیس در آینده در اینجا قرار میگیرد
-  // async function fetchUsers() {
-  //   const { data, error } = await supabase.from('users').select('*');
-  //   // اضافه کردن لاجیک رندر کردن در #users-table-body
-  // }
+  // در اینجا می‌توانی کدهای مربوط به دریافت لیست کاربران از دیتابیس
+  // و نمایش آن‌ها در بخش <tbody id="admin-users-list"> را بنویسی.
 </script>
 
 </body>
